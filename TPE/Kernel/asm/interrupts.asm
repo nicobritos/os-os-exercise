@@ -26,6 +26,13 @@ EXTERN sys_write
 EXTERN sys_clear
 EXTERN sys_pixel
 EXTERN sys_time
+EXTERN sys_getpid
+EXTERN sys_fork
+EXTERN sys_execve
+EXTERN sys_kill
+EXTERN sys_getpriority
+EXTERN sys_setpriority
+EXTERN sys_ptrace
 
 
 SECTION .text
@@ -191,6 +198,28 @@ _syscall:
   cmp rdi, 0x07		; syscall de pixel
   je .syscallPixel
 
+  cmp rdi, 39     ; getpid
+  je .syscallGetpid
+
+  cmp rdi, 57     ; fork
+  je .syscallFork
+
+  cmp rdi, 59     ; execve
+  je .syscallExecve
+
+  cmp rdi, 62     ; kill
+  je .syscallKill
+
+  cmp rdi, 140    ; getpriority
+  je .syscallGetpriority
+
+  cmp rdi, 141    ; setpriority
+  je .syscallSetpriority
+
+  cmp rdi, 101    ; ptrace
+  je .syscallPtrace
+
+
 .cont:
 	mov rsp, rbp
   pop rbp
@@ -237,6 +266,48 @@ _syscall:
 .syscallTicksPerSecond:
   mov rdi, rsi
   call sys_ticks_per_second
+  jmp .cont
+
+.syscallGetpid:
+  call sys_getpid
+  jmp .cont
+
+.syscallFork:
+  call sys_fork
+  jmp .cont
+
+.syscallExecve:
+  mov rdi, rsi
+  mov rsi, rdx
+  mov rdx, rcx
+  call sys_execve
+  jmp .cont
+
+.syscallKill:
+  mov rdi, rsi
+  mov rsi, rdx
+  call sys_kill
+  jmp .cont
+
+.syscallGetpriority:
+  mov rdi, rsi
+  mov rsi, rdx
+  call sys_getpriority
+  jmp .cont
+
+.syscallSetpriority:
+  mov rdi, rsi
+  mov rsi, rdx
+  mov rdx, rcx
+  call sys_setpriority
+  jmp .cont
+
+.syscallPtrace:
+  mov rdi, rsi
+  mov rsi, rdx
+  mov rdx, rcx
+  mov rcx, r8
+  call sys_ptrace
   jmp .cont
 
 
