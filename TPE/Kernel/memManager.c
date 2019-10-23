@@ -7,8 +7,9 @@ void createLeftChild(Node * parent, uint64_t size, uint64_t pid);
 void createRightChild(Node * parent, uint64_t childsBlockSize, uint64_t size, uint64_t pid);
 // void recPrint(Node * node, int depth);
 Node * nextFreeSpaceForNode();
+bool pfreeRec(uint64_t pid, void * address, Node * current);
 
-Node * root = TREE_ADDRESS;
+Node * root = TREE_ADDRESS; 
 bool isOccupiedNodeSpace[MAX_NODES];
 uint64_t lastUsedIndex; // Of the isOccupiedNodeSpace array
 
@@ -51,13 +52,19 @@ void * recursiveBuddyAlloc(uint64_t size, uint64_t pid, uint64_t childBlockSize,
     if(parentBlockSize <= childBlockSize) // Me pasé
         return NULL;
     
-    if(parent->left == NULL){ // Tengo lugar y esta aca
+    if(parent->left == NULL){
+        createLeftChild(parent, size, pid);
+        parentBlockSize /= 2;
+        Node * parentsParent = parent;
+        parent = parent->left;
         while(parentBlockSize > childBlockSize){ // Creo siempre a la izquierda hasta llegar al tamaño
             createLeftChild(parent, size, pid);
             parent = parent->left;
             parentBlockSize /= 2;
         }
         parent->isFull = TRUE;
+        if(parentsParent->left == parent)
+            parentsParent->isFull = TRUE;
         return parent->address;
     }
     if(!(parent->left->isFull)){
@@ -67,10 +74,12 @@ void * recursiveBuddyAlloc(uint64_t size, uint64_t pid, uint64_t childBlockSize,
                 parent->isFull = TRUE;
             }
         }
+        return ans;
     }
     if(parent->right == NULL){
         createRightChild(parent, parentBlockSize/2, size, pid);
         parentBlockSize /= 2;
+        Node * parentsParent = parent;
         parent = parent->right;
         while(parentBlockSize > childBlockSize){ // Creo siempre a la izquierda hasta llegar al tamaño
             createLeftChild(parent, size, pid);
@@ -78,13 +87,17 @@ void * recursiveBuddyAlloc(uint64_t size, uint64_t pid, uint64_t childBlockSize,
             parentBlockSize /= 2;
         }
         parent->isFull = TRUE;
+        if(parentsParent->right == parent)
+            parentsParent->isFull = TRUE;
         return parent->address;
     }
     if(!(parent->right->isFull)){
-        void * ans = recursiveBuddyAlloc(size, pid, childBlockSize, parent->right, parentBlockSize/2);
+        void * ans = recursiveBuddyAlloc(size, pid, childBlockSize, parent->right, parentBlockSize/2); //ACASDASDASDASDASDASDASDASDASDASDA
         if(ans != NULL){
-            if(parent->right->isFull)
-                parent->isFull = TRUE;
+            if((parent->right->left != NULL) && (parent->right->right != NULL) && (parent->right->left->isFull) && (parent->right->right->isFull)){
+                parent->right->isFull = TRUE;
+                parent->isFull = TRUE; // YA CHEQUE ANTES QUE LEFT ESTABA FULL
+            }
         }
         return ans;
     }
@@ -125,18 +138,14 @@ Node * nextFreeSpaceForNode(){
 // }
 
 // void recPrint(Node * node, int depth){
-//     for (int i = 0; i < depth; i++)
-//     {
-//         printf("\t");
-//     }
-//     printf("%p\n", node->address);
+//     printf("address = %p - pid = %" PRId64 " - isFull = %d\n", node->address, node->pid, node->isFull);
     
 //     if(node->left != NULL){
 //         for (int i = 0; i < depth; i++)
 //         {
 //             printf("\t");
 //         }
-//         printf("LEFT CHILD\n");
+//         printf("LEFT CHILD - ");
 //         recPrint(node->left, depth + 1);
 //     }
     
@@ -145,8 +154,50 @@ Node * nextFreeSpaceForNode(){
 //         {
 //             printf("\t");
 //         }
-//         printf("RIGHT CHILD\n");
+//         printf("RIGHT CHILD - ");
 //         recPrint(node->right, depth + 1);
 //     }
 
 // }
+
+void pfree(uint64_t pid, void * address){
+    pfreeRec(pid, address, root);
+}
+
+bool pfreeRec(uint64_t pid, void * address, Node * current){
+    if(current == NULL)
+        return FALSE;
+    if((current->left == NULL) && (current->right == NULL)){
+        if((pid == current->pid) && (address == current->address)){
+            return TRUE; // liberar
+        }
+        return FALSE; // no liberar
+    }
+
+    if(current->left == NULL){
+        if(pfreeRec(pid, address, current->right)){
+            current->right = NULL;
+            return TRUE;
+        }
+    }
+    if(current->right == NULL){
+        if(pfreeRec(pid, address, current->left)){
+            current->left = NULL;
+            return TRUE;
+        }
+    }
+    if(pfreeRec(pid, address, current->left) == FALSE){
+        if(pfreeRec(pid, address, current->right)){
+            current->right = NULL;
+        }
+    }
+    else{
+        current->left = NULL;
+    }
+    if(current->isFull){
+        if((current->left == NULL || !(current->left->isFull)) || (current->right == NULL || !(current->right->isFull)))
+            current->isFull = FALSE;
+    }
+    return FALSE;
+    
+}
