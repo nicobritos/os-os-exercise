@@ -3,12 +3,13 @@
 
 	#include <types.h>
 
-	void init_scheduler();
-	void run_scheduler();
-	void run_process(process_t process);
-	void kill_process(process_t process);
-	void lock_process(process_t process);
-	void unlock_process(process_t process);
-	void get_processes();
-	void get_current_process();
+	typedef enum {HIGH = 0, LOW} t_priority;
+
+	void runScheduler();
+	void addProcess(t_process process, t_priority priority);
+	void killProcess(t_process process);
+	void blockProcess(t_process process);
+	void unblockProcess(t_process process);
+	void getProcesses();
+	void getCurrentProcess();
 #endif
