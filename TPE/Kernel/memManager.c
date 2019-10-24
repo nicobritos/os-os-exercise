@@ -201,3 +201,8 @@ bool pfreeRec(uint64_t pid, void * address, Node * current){
     return FALSE;
     
 }
+
+void * prealloc(void * ptr, uint64_t newSize, uint64_t pid){
+    pfree(pid, ptr);
+    pmalloc(newSize, pid);
+}
