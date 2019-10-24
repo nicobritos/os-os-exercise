@@ -17,7 +17,9 @@
 
 typedef char bool;
 
-/* BUDDY */
+#ifdef MODO_BUDDY
+/* -------------------------------BUDDY-------------------------------*/
+
 typedef struct Node{ // SI SE CAMBIA, HAY QUE CAMBIAR EL DEFINE DE MAX_NODES
     int size;
     void * address;
@@ -42,51 +44,6 @@ bool isOccupiedNodeSpace[MAX_NODES];
 uint64_t lastUsedIndex; // Of the isOccupiedNodeSpace array
 
 
-/* FREE LIST */
-typedef struct ListNode // SI SE CAMBIA, HAY QUE CAMBIAR EL DEFINE DE MAX_LIST_NODES
-{
-    struct ListNode * next;
-    struct ListNode * prev;
-    void * data;
-}ListNode;
-
-typedef struct List // SI SE CAMBIA, HAY QUE CAMBIAR EL DEFINE DE MAX_LIST_NODES
-{
-    ListNode * head;
-    ListNode * last;
-}List;
-
-ListNode * nextFreeSpaceForListNode();
-void pListFree(void * address);
-void addNode(void * address);
-void freeListInitializer();
-
-List * list = TREE_ADDRESS;
-bool isOccupiedNodeSpace[MAX_LIST_NODES];
-uint64_t lastUsedListNodeIndex; // Of the isOccupiedNodeSpace array
-
-
-
-void initializeMemoryManager(){
-    buddyInitializer();
-}
-
-/* Auxiliar, constructor de nodo */
-
-void * pmalloc(uint64_t size, uint64_t pid){
-    return buddyAlloc(size, pid); // Marca la direccion como ocupada en el arbol del buddy
-}
-
-void pfree(uint64_t pid, void * address){
-    pBuddyFreeRec(pid, address, root);
-}
-
-void * prealloc(void * ptr, uint64_t newSize, uint64_t pid){
-    pfree(pid, ptr);
-    return pmalloc(newSize, pid);
-}
-
-/* BUDDY IMPLEMENTATION */
 void buddyInitializer(){
     isOccupiedNodeSpace[0] = TRUE;
     lastUsedIndex = 0;
@@ -201,32 +158,6 @@ Node * nextFreeSpaceForNode(){
     return NULL;
 }
 
-// void printTree(){
-//     recPrint(root, 0);
-// }
-
-// void recPrint(Node * node, int depth){
-//     printf("address = %p - pid = %" PRId64 " - isFull = %d\n", node->address, node->pid, node->isFull);
-    
-//     if(node->left != NULL){
-//         for (int i = 0; i < depth; i++)
-//         {
-//             printf("\t");
-//         }
-//         printf("LEFT CHILD - ");
-//         recPrint(node->left, depth + 1);
-//     }
-    
-//     if(node->right != NULL){
-//         for (int i = 0; i < depth; i++)
-//         {
-//             printf("\t");
-//         }
-//         printf("RIGHT CHILD - ");
-//         recPrint(node->right, depth + 1);
-//     }
-// }
-
 bool pBuddyFreeRec(uint64_t pid, void * address, Node * current){
     if(current == NULL)
         return FALSE;
@@ -265,6 +196,72 @@ bool pBuddyFreeRec(uint64_t pid, void * address, Node * current){
     
 }
 
+// void printTree(){
+//     recPrint(root, 0);
+// }
+
+// void recPrint(Node * node, int depth){
+//     printf("address = %p - pid = %" PRId64 " - isFull = %d\n", node->address, node->pid, node->isFull);
+    
+//     if(node->left != NULL){
+//         for (int i = 0; i < depth; i++)
+//         {
+//             printf("\t");
+//         }
+//         printf("LEFT CHILD - ");
+//         recPrint(node->left, depth + 1);
+//     }
+    
+//     if(node->right != NULL){
+//         for (int i = 0; i < depth; i++)
+//         {
+//             printf("\t");
+//         }
+//         printf("RIGHT CHILD - ");
+//         recPrint(node->right, depth + 1);
+//     }
+// }
+#endif
+
+#ifdef MODO_FREE_LIST
+/* -------------------------------FREE LIST-------------------------------*/
+typedef struct ListNode // SI SE CAMBIA, HAY QUE CAMBIAR EL DEFINE DE MAX_LIST_NODES
+{
+    struct ListNode * next;
+    struct ListNode * prev;
+    void * data;
+}ListNode;
+
+typedef struct List // SI SE CAMBIA, HAY QUE CAMBIAR EL DEFINE DE MAX_LIST_NODES
+{
+    ListNode * head;
+    ListNode * last;
+}List;
+
+typedef struct
+{
+    void * startingAddress;
+    uint64_t blocks;
+}TableRow;
+
+typedef TableRow Table[MAX_LIST_NODES];
+
+Table table;
+
+ListNode * nextFreeSpaceForListNode();
+void pListFree(void * address);
+void addNode(void * address);
+void freeListInitializer();
+void * lookAndRemoveBlocksRec(ListNode * node, uint64_t blocks);
+void * lookAndRemoveBlocks(uint64_t blocks);
+uint64_t freeTableRow();
+void * pListMalloc(uint64_t size);
+int64_t lookInTable(void * address);
+
+List * list = TREE_ADDRESS;
+bool isOccupiedNodeSpace[MAX_LIST_NODES];
+uint64_t lastUsedListNodeIndex; // Of the isOccupiedNodeSpace array
+
 void freeListInitializer(){
     // list = malloc(TREE_MAX_SIZE); // CAMBIAR ESTO
     List listHeader;
@@ -272,11 +269,15 @@ void freeListInitializer(){
     memcpy(list, &listHeader, sizeof(*list));
     for (uint64_t i = 0; i < MAX_LIST_NODES; i++)
     {
+        table[i].startingAddress = NULL;
+        table[i].blocks = 0;
         addNode(MEM_STARTING_ADDRESS + i * MIN_PAGE_SIZE);
     }   
 }
 
 void addNode(void * address){
+    if((address - MEM_STARTING_ADDRESS)% MIN_PAGE_SIZE != 0) // No es un address valido
+        return;
     ListNode node;
     node.prev = list->last;
     node.next = NULL;
@@ -301,6 +302,111 @@ ListNode * nextFreeSpaceForListNode(){
 }
 
 void pListFree(void * address){
-    //addNode(address);
+    int64_t index = lookInTable(address);
+    if(index == -1)
+        return;
+    for(int i=0; i<table[index].blocks; i++){
+        addNode(address + i*MIN_PAGE_SIZE);
+    }
+    table[index].startingAddress = NULL;
+    table[index].blocks = 0;
+}
 
+int64_t lookInTable(void * address){
+    for (uint64_t i = 0; i < MAX_LIST_NODES; i++)
+    {
+        if(table[i].startingAddress == address)
+            return i;
+    }
+    return -1;
+    
+}
+
+void * pListMalloc(uint64_t size){
+    uint64_t blocks;
+    for (blocks = 0; blocks * MIN_PAGE_SIZE < size; blocks++);
+    uint64_t index = freeTableRow();
+    if(index == MAX_LIST_NODES + 1)
+        return NULL;
+    table[index].startingAddress = lookAndRemoveBlocks(blocks);
+    table[index].blocks = blocks;
+}
+
+uint64_t freeTableRow(){
+    for(uint64_t i = 0; i<MAX_LIST_NODES; i++){
+        if(table[i].startingAddress == NULL)
+            return i;
+    }
+    return MAX_LIST_NODES + 1;
+}
+
+void * lookAndRemoveBlocks(uint64_t blocks){
+    return lookAndRemoveBlocksRec(list->head, blocks);
+}
+
+void * lookAndRemoveBlocksRec(ListNode * node, uint64_t blocks){
+    if(blocks == 1){
+        if(node->prev == NULL){
+            list->head = node->next;
+        }
+        else{
+            node->prev->next = node -> next;
+        }
+        return node->data;
+    }
+    ListNode * current = list -> head;
+    while(current != NULL){
+        if(current->data == node->data + MIN_PAGE_SIZE){
+            lookAndRemoveBlocksRec(current->data, blocks - 1);
+            if(node->prev == NULL){
+                list->head = node->next;
+            }
+            else{
+                node->prev->next = node -> next;
+            }
+        }
+        current = current->next;
+    }
+}
+#endif
+
+/* -------------------------------GENERIC-------------------------------*/
+
+void initializeMemoryManager(){
+    #ifdef MODO_BUDDY
+    buddyInitializer();
+    #endif
+    #ifdef MODO_FREE_LIST
+    freeListInitializer();
+    #endif
+}
+
+void * pmalloc(uint64_t size, uint64_t pid){
+    #ifdef MODO_BUDDY
+    return buddyAlloc(size, pid); // Marca la direccion como ocupada en el arbol del buddy
+    #endif
+    #ifdef MODO_FREE_LIST
+    return pListMalloc(size);
+    #endif
+}
+
+void pfree(uint64_t pid, void * address){
+    #ifdef MODO_BUDDY
+    pBuddyFreeRec(pid, address, root);
+    #endif
+    #ifdef MODO_FREE_LIST
+    pListFree(address);
+    #endif
+    
+}
+
+void * prealloc(void * ptr, uint64_t newSize, uint64_t pid){
+    #ifdef MODO_BUDDY
+    pfree(pid, ptr);
+    return pmalloc(newSize, pid);
+    #endif
+    #ifdef MODO_FREE_LIST
+    pListFree(ptr);
+    return pListMalloc(newSize);
+    #endif
 }

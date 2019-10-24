@@ -2,6 +2,7 @@
 #define _MEM_MANAGER_H_
 
 #include <stdint.h>
+#include "modoMemManager.h"
 
 #define MEM_STARTING_ADDRESS ((void *)0x0000000000100000) // Tiene que haber 1MB continuo libre desde aca
 
