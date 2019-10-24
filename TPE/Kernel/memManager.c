@@ -246,9 +246,15 @@ typedef struct
 
 typedef TableRow Table[MAX_LIST_NODES];
 
+struct occupiedRow
+{
+    bool isOccupied;
+    ListNode * address;
+};
+
 Table table;
 
-ListNode * nextFreeSpaceForListNode();
+ListNode * nextFreeSpaceForListNode(void * address);
 void pListFree(void * address);
 void addNode(void * address);
 void freeListInitializer();
@@ -257,46 +263,55 @@ void * lookAndRemoveBlocks(uint64_t blocks);
 uint64_t freeTableRow();
 void * pListMalloc(uint64_t size);
 int64_t lookInTable(void * address);
+int64_t findMemIndex(ListNode * node);
 
 List * list = TREE_ADDRESS;
-bool isOccupiedNodeSpace[MAX_LIST_NODES];
+struct occupiedRow isOccupiedNodeSpace[MAX_LIST_NODES];
 uint64_t lastUsedListNodeIndex; // Of the isOccupiedNodeSpace array
 
-void freeListInitializer(){
-    // list = malloc(TREE_MAX_SIZE); // CAMBIAR ESTO
-    List listHeader;
-    listHeader.last = listHeader.head = (ListNode * )(list + 1);
-    memcpy(list, &listHeader, sizeof(*list));
+void freeListInitializer(){ // EL NEXT DEL HEAD ME QUEDA EN NULL POR ALGUNA RAZON
+    list->head = list->last = NULL;
     for (uint64_t i = 0; i < MAX_LIST_NODES; i++)
     {
         table[i].startingAddress = NULL;
         table[i].blocks = 0;
-        addNode(MEM_STARTING_ADDRESS + i * MIN_PAGE_SIZE);
+        addNode((char *)MEM_STARTING_ADDRESS + i * MIN_PAGE_SIZE);
     }   
 }
 
 void addNode(void * address){
-    if((address - MEM_STARTING_ADDRESS)% MIN_PAGE_SIZE != 0) // No es un address valido
+    if(((char *)address - (char *)MEM_STARTING_ADDRESS)% MIN_PAGE_SIZE != 0){ // No es un address valido
         return;
-    ListNode node;
-    node.prev = list->last;
-    node.next = NULL;
-    node.data = address;
-    list->last = nextFreeSpaceForListNode();
-    memcpy(list->last, &node, sizeof(node));
+    }
+    if(list->head == NULL){
+        list->last = list->head = nextFreeSpaceForListNode(address);
+        list->head->next = NULL;
+        list->head->prev = NULL;
+        list->head->data = address;
+    }
+    else{
+        list->last->next = nextFreeSpaceForListNode(address);
+        list->last->next->prev = list->last;
+        list->last = list->last->next;
+        list->last->next = NULL;
+        list->last->data = address;
+    }
 }
 
-ListNode * nextFreeSpaceForListNode(){
+ListNode * nextFreeSpaceForListNode(void * address){
     uint64_t i;
     for (i = (lastUsedListNodeIndex + 1) % MAX_LIST_NODES; i != lastUsedListNodeIndex; i = (i + 1) % MAX_LIST_NODES)
     {
-        if(isOccupiedNodeSpace[i] == FALSE){
-            isOccupiedNodeSpace[i] = TRUE;
-            return list->head + i;
+        if(isOccupiedNodeSpace[i].isOccupied == FALSE){
+            isOccupiedNodeSpace[i].isOccupied = TRUE;
+            isOccupiedNodeSpace[i].address = address;
+            return ((ListNode *)(list + 1)) + i;
         }
     }
-    if(isOccupiedNodeSpace[i] == FALSE){ // Por si se libero el ultimo espacio reservado
-        return list->head + i;
+    if(isOccupiedNodeSpace[i].isOccupied == FALSE){ // Por si se libero el ultimo espacio reservado
+        isOccupiedNodeSpace[i].isOccupied = TRUE;
+        isOccupiedNodeSpace[i].address = address;
+        return ((ListNode *)(list + 1)) + i;
     }
     return NULL;
 }
@@ -306,7 +321,7 @@ void pListFree(void * address){
     if(index == -1)
         return;
     for(int i=0; i<table[index].blocks; i++){
-        addNode(address + i*MIN_PAGE_SIZE);
+        addNode((char *)address + i*MIN_PAGE_SIZE);
     }
     table[index].startingAddress = NULL;
     table[index].blocks = 0;
@@ -330,6 +345,7 @@ void * pListMalloc(uint64_t size){
         return NULL;
     table[index].startingAddress = lookAndRemoveBlocks(blocks);
     table[index].blocks = blocks;
+    return table[index].startingAddress;
 }
 
 uint64_t freeTableRow(){
@@ -341,33 +357,78 @@ uint64_t freeTableRow(){
 }
 
 void * lookAndRemoveBlocks(uint64_t blocks){
-    return lookAndRemoveBlocksRec(list->head, blocks);
+    ListNode * node = list->head;
+    void * ans;
+    while(node){
+        if((ans = lookAndRemoveBlocksRec(list->head, blocks)) != NULL)
+            return ans;
+        node = node->next;
+    }
+    return NULL;
 }
 
 void * lookAndRemoveBlocksRec(ListNode * node, uint64_t blocks){
+    if(node == NULL)
+        return NULL;
     if(blocks == 1){
         if(node->prev == NULL){
             list->head = node->next;
+            list->head->prev = NULL;
         }
         else{
             node->prev->next = node -> next;
+            node->prev = NULL;
+            node->next = NULL;
         }
+        isOccupiedNodeSpace[findMemIndex(node)].isOccupied = FALSE;
         return node->data;
     }
     ListNode * current = list -> head;
     while(current != NULL){
-        if(current->data == node->data + MIN_PAGE_SIZE){
-            lookAndRemoveBlocksRec(current->data, blocks - 1);
-            if(node->prev == NULL){
-                list->head = node->next;
-            }
-            else{
-                node->prev->next = node -> next;
+        if(current->data == (char *)node->data + MIN_PAGE_SIZE){
+            void * ans = lookAndRemoveBlocksRec(current, blocks - 1);
+            if(ans != NULL){
+                if(node->prev == NULL){
+                    list->head = node->next;
+                    list->head->prev = NULL;
+                }
+                else{
+                    node->prev->next = node -> next;
+                }
+                isOccupiedNodeSpace[findMemIndex(node)].isOccupied = FALSE;
+                return node->data;
             }
         }
         current = current->next;
     }
+    return NULL;
 }
+
+int64_t findMemIndex(ListNode * node){
+    for(int64_t i=0; i<MAX_LIST_NODES; i++){
+        if(isOccupiedNodeSpace[i].address == node->data){
+            return i;
+        }
+    }
+    return -1;
+}
+
+// void printTable(){
+//     for (int i = 0; i < MAX_LIST_NODES; i++)
+//     {
+//         if((table[i].startingAddress != NULL) && (table[i].blocks != 0))
+//             printf("%d.  %p - %" PRId64 "\n", i, table[i].startingAddress, table[i].blocks);
+//     }
+// }
+
+// void printList(){
+//     for (ListNode * current = list->head; current; current = current->next)
+//     {
+//         printf("%p->", current->data);
+//     }
+//     printf("\n");
+//     printf("%p\n", MIN_PAGE_SIZE);
+// }
 #endif
 
 /* -------------------------------GENERIC-------------------------------*/

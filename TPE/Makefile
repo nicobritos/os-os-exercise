@@ -7,7 +7,7 @@ bootloader:
 buddy:
 	cd Kernel; make buddy
 
-freeList:
+freeList: bootloader userland image
 	cd Kernel; make freeList
 
 kernel:

@@ -1,1 +1,1 @@
-#define MODO_BUDDY
+#define MODO_FREE_LIST
