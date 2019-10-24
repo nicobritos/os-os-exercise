@@ -56,9 +56,15 @@ typedef struct List // SI SE CAMBIA, HAY QUE CAMBIAR EL DEFINE DE MAX_LIST_NODES
     ListNode * last;
 }List;
 
-List * list = TREE_ADDRESS;
-
+ListNode * nextFreeSpaceForListNode();
+void pListFree(void * address);
+void addNode(void * address);
 void freeListInitializer();
+
+List * list = TREE_ADDRESS;
+bool isOccupiedNodeSpace[MAX_LIST_NODES];
+uint64_t lastUsedListNodeIndex; // Of the isOccupiedNodeSpace array
+
 
 
 void initializeMemoryManager(){
@@ -259,8 +265,42 @@ bool pBuddyFreeRec(uint64_t pid, void * address, Node * current){
     
 }
 
-// void freeListInitializer(){
-//     list = malloc(TREE_MAX_SIZE); // CAMBIAR ESTO
-//     List listHead;
-//     listHead.head = c
-// }
+void freeListInitializer(){
+    // list = malloc(TREE_MAX_SIZE); // CAMBIAR ESTO
+    List listHeader;
+    listHeader.last = listHeader.head = (ListNode * )(list + 1);
+    memcpy(list, &listHeader, sizeof(*list));
+    for (uint64_t i = 0; i < MAX_LIST_NODES; i++)
+    {
+        addNode(MEM_STARTING_ADDRESS + i * MIN_PAGE_SIZE);
+    }   
+}
+
+void addNode(void * address){
+    ListNode node;
+    node.prev = list->last;
+    node.next = NULL;
+    node.data = address;
+    list->last = nextFreeSpaceForListNode();
+    memcpy(list->last, &node, sizeof(node));
+}
+
+ListNode * nextFreeSpaceForListNode(){
+    uint64_t i;
+    for (i = (lastUsedListNodeIndex + 1) % MAX_LIST_NODES; i != lastUsedListNodeIndex; i = (i + 1) % MAX_LIST_NODES)
+    {
+        if(isOccupiedNodeSpace[i] == FALSE){
+            isOccupiedNodeSpace[i] = TRUE;
+            return list->head + i;
+        }
+    }
+    if(isOccupiedNodeSpace[i] == FALSE){ // Por si se libero el ultimo espacio reservado
+        return list->head + i;
+    }
+    return NULL;
+}
+
+void pListFree(void * address){
+    //addNode(address);
+
+}
