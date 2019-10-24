@@ -6,10 +6,10 @@
 	typedef enum {HIGH = 0, LOW} t_priority;
 
 	void runScheduler();
-	void addProcess(t_process process, t_priority priority);
+	void addProcess(t_process *process, t_priority priority);
 	void killProcess(t_process process);
-	void blockProcess(t_process process);
-	void unblockProcess(t_process process);
-	void getProcesses();
-	void getCurrentProcess();
+	// void blockProcess(t_process process);
+	// void unblockProcess(t_process process);
+	// void getProcesses();
+	t_process *getCurrentProcess();
 #endif
