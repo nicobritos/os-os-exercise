@@ -1,4 +1,31 @@
-#include "include/memManager.h"
+#include "memManager.h"
+
+#define FALSE 0
+#define TRUE !FALSE
+#define NULL ((void *)0)
+
+#define MEM_SIZE 1048576 // 1 MiB (a parte de la usada para el arbol)
+
+#define TREE_ADDRESS ((void *) 0x0000000000050000)
+#define TREE_END_ADDRESS ((void *) 0x000000000009FFFF)
+#define TREE_MAX_SIZE ((uint64_t)((uint64_t)TREE_END_ADDRESS - (uint64_t)TREE_ADDRESS)) // 327680
+#define MAX_NODES 8192 // 2^(floor(log2((TREE_MAX_SIZE / sizeof(Node))))    (MAXIMA CANTIDAD DE NODOS QUE ENTRAN ENTRE TREE_ADDRESS Y TREE_END_ADDRESS)
+#define MIN_BLOCK_SIZE (MEM_SIZE / MAX_NODES) // 128
+
+#define MAX_LIST_NODES 8192  //2^(floor(log2((TREE_MAX_SIZE - sizeof(List))/ sizeof(ListNode)))    (MAXIMA CANTIDAD DE NODOS QUE ENTRAN ENTRE TREE_ADDRESS Y TREE_END_ADDRESS)
+#define MIN_PAGE_SIZE (MEM_SIZE / MAX_LIST_NODES) // 128
+
+typedef char bool;
+
+/* BUDDY */
+typedef struct Node{ // SI SE CAMBIA, HAY QUE CAMBIAR EL DEFINE DE MAX_NODES
+    int size;
+    void * address;
+    uint64_t pid;
+    struct Node * left;
+    struct Node * right;   // If both ptrs are NULL, then this is a process, else, its a full or partially full node
+    bool isFull;    // To know if the node is partially full, or entirely full (if empty, then there shouldnt be a node)
+}Node;
 
 Node createNode(void * address, uint64_t size, uint64_t pid);
 void * buddyAlloc(uint64_t size, uint64_t pid);
@@ -7,14 +34,54 @@ void createLeftChild(Node * parent, uint64_t size, uint64_t pid);
 void createRightChild(Node * parent, uint64_t childsBlockSize, uint64_t size, uint64_t pid);
 // void recPrint(Node * node, int depth);
 Node * nextFreeSpaceForNode();
-bool pfreeRec(uint64_t pid, void * address, Node * current);
+bool pBuddyFreeRec(uint64_t pid, void * address, Node * current);
+void buddyInitializer();
 
-Node * root = TREE_ADDRESS; 
+Node * root = TREE_ADDRESS;
 bool isOccupiedNodeSpace[MAX_NODES];
 uint64_t lastUsedIndex; // Of the isOccupiedNodeSpace array
 
 
+/* FREE LIST */
+typedef struct ListNode // SI SE CAMBIA, HAY QUE CAMBIAR EL DEFINE DE MAX_LIST_NODES
+{
+    struct ListNode * next;
+    struct ListNode * prev;
+    void * data;
+}ListNode;
+
+typedef struct List // SI SE CAMBIA, HAY QUE CAMBIAR EL DEFINE DE MAX_LIST_NODES
+{
+    ListNode * head;
+    ListNode * last;
+}List;
+
+List * list = TREE_ADDRESS;
+
+void freeListInitializer();
+
+
 void initializeMemoryManager(){
+    buddyInitializer();
+}
+
+/* Auxiliar, constructor de nodo */
+
+void * pmalloc(uint64_t size, uint64_t pid){
+    return buddyAlloc(size, pid); // Marca la direccion como ocupada en el arbol del buddy
+}
+
+void pfree(uint64_t pid, void * address){
+    pBuddyFreeRec(pid, address, root);
+}
+
+void * prealloc(void * ptr, uint64_t newSize, uint64_t pid){
+    pfree(pid, ptr);
+    return pmalloc(newSize, pid);
+}
+
+/* BUDDY IMPLEMENTATION */
+void buddyInitializer(){
     isOccupiedNodeSpace[0] = TRUE;
     lastUsedIndex = 0;
     for (uint64_t i = 1; i < MAX_NODES; i++)
@@ -22,11 +89,10 @@ void initializeMemoryManager(){
         isOccupiedNodeSpace[i] = FALSE;
     }
     
-	Node rootNode = createNode(MEM_STARTING_ADDRESS, sizeof(*root), 0);
+    Node rootNode = createNode(MEM_STARTING_ADDRESS, sizeof(*root), 0);
     memcpy(root, &rootNode, sizeof(*root));
 }
 
-/* Auxiliar, constructor de nodo */
 Node createNode(void * address, uint64_t size, uint64_t pid){
     Node node;
     node.size = size;
@@ -36,10 +102,6 @@ Node createNode(void * address, uint64_t size, uint64_t pid){
     node.right = NULL;
     node.isFull = FALSE;
     return node;
-}
-
-void * pmalloc(uint64_t size, uint64_t pid){
-    return buddyAlloc(size, pid); // Marca la direccion como ocupada en el arbol del buddy
 }
 
 void * buddyAlloc(uint64_t size, uint64_t pid){
@@ -157,14 +219,9 @@ Node * nextFreeSpaceForNode(){
 //         printf("RIGHT CHILD - ");
 //         recPrint(node->right, depth + 1);
 //     }
-
 // }
 
-void pfree(uint64_t pid, void * address){
-    pfreeRec(pid, address, root);
-}
-
-bool pfreeRec(uint64_t pid, void * address, Node * current){
+bool pBuddyFreeRec(uint64_t pid, void * address, Node * current){
     if(current == NULL)
         return FALSE;
     if((current->left == NULL) && (current->right == NULL)){
@@ -175,19 +232,19 @@ bool pfreeRec(uint64_t pid, void * address, Node * current){
     }
 
     if(current->left == NULL){
-        if(pfreeRec(pid, address, current->right)){
+        if(pBuddyFreeRec(pid, address, current->right)){
             current->right = NULL;
             return TRUE;
         }
     }
     if(current->right == NULL){
-        if(pfreeRec(pid, address, current->left)){
+        if(pBuddyFreeRec(pid, address, current->left)){
             current->left = NULL;
             return TRUE;
         }
     }
-    if(pfreeRec(pid, address, current->left) == FALSE){
-        if(pfreeRec(pid, address, current->right)){
+    if(pBuddyFreeRec(pid, address, current->left) == FALSE){
+        if(pBuddyFreeRec(pid, address, current->right)){
             current->right = NULL;
         }
     }
@@ -202,7 +259,8 @@ bool pfreeRec(uint64_t pid, void * address, Node * current){
     
 }
 
-void * prealloc(void * ptr, uint64_t newSize, uint64_t pid){
-    pfree(pid, ptr);
-    pmalloc(newSize, pid);
-}
+// void freeListInitializer(){
+//     list = malloc(TREE_MAX_SIZE); // CAMBIAR ESTO
+//     List listHead;
+//     listHead.head = c
+// }
