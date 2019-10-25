@@ -6,11 +6,20 @@ SOURCES_ASM=$(wildcard asm/*.asm)
 OBJECTS=$(SOURCES:.c=.o)
 OBJECTS_ASM=$(SOURCES_ASM:.asm=.o)
 LOADERSRC=loader.asm
+MODO_H="./include/modoMemManager.h"
 
 LOADEROBJECT=$(LOADERSRC:.asm=.o)
 STATICLIBS=
 
-all: $(KERNEL)
+all: buddy # por default hace buddy
+
+buddy: $(KERNEL)
+	sed -i '1d' $(MODO_H)
+	echo '#define MODO_BUDDY' >> $(MODO_H)
+
+freeList: $(KERNEL)
+	sed -i '1d' $(MODO_H)
+	echo '#define MODO_FREE_LIST' >> $(MODO_H)
 
 $(KERNEL): $(LOADEROBJECT) $(OBJECTS) $(STATICLIBS) $(OBJECTS_ASM)
 	$(LD) $(LDFLAGS) -T kernel.ld -o $(KERNEL) $(LOADEROBJECT) $(OBJECTS) $(OBJECTS_ASM) $(STATICLIBS)

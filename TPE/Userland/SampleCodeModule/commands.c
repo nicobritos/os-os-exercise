@@ -11,7 +11,6 @@ void printHelp() {
     printf("invalidOpCode - Makes a invalid operation exception \n");
     printf("clear - Clears the screen \n");
     printf("exit - Exits the terminal");
-
 }
 
 

@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "naiveConsole.h"
+#include "./include/lib.h"
 
 /*
  * Prototipos
