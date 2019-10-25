@@ -1,15 +1,17 @@
-#include <time.h>
+#include "time.h"
+#include "./include/scheduler.h"
 
-static unsigned long ticks = 0;
+static uint64_t ticks = 0;
 
-void timer_handler() {
+void timer_handler(t_stack *currentProcessStack) {
 	ticks++;
+	runScheduler(currentProcessStack);
 }
 
-int ticks_elapsed() {
+uint64_t ticks_elapsed() {
 	return ticks;
 }
 
-int seconds_elapsed() {
+uint64_t seconds_elapsed() {
 	return ticks / 18;
 }
