@@ -36,9 +36,10 @@ EXTERN sys_ptrace
 
 
 SECTION .text
-
 %macro pushState 0
-  ; TODO: Change to order in struct t_stack
+  push gs
+  push fs
+
   push r15
   push r14
   push r13
@@ -58,11 +59,16 @@ SECTION .text
 	push rax
 
 	push rip
+  push cs
   push rflags
   push rsp
+  push ss
 %endmacro
 
 %macro popState 0
+  pop gs
+  pop fs
+
   pop r15
   pop r14
   pop r13
@@ -82,15 +88,17 @@ SECTION .text
   pop rax
 
   pop rip
+  pop cs
   pop rflags
   pop rsp
+  pop ss
 %endmacro
 
 %macro irqHandlerMaster 1
 	pushState
 
 	mov rdi, %1 ; pasaje de parametro
-  mov rsi, rsp + (18 * 8) ; pasaje de parametro del puntero a los registros (el primero es r15)
+  mov rsi, rsp + ((18 * 8) + (4 * 2)) ; pasaje de parametro del puntero a los registros
 	call irqDispatcher
 
 	; signal pic EOI (End of Interrupt)
