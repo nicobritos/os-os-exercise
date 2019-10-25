@@ -1,15 +1,24 @@
 #ifndef _SCHEDULER_H
 	#define _SCHEDULER_H
 
-	#include <types.h>
-
 	typedef enum {HIGH = 0, LOW} t_priority;
+	typedef struct processListNodeCDT *processListNodeADT;
+	typedef struct processListCDT *processListADT;
 
-	void runScheduler();
-	void addProcess(t_process *process, t_priority priority);
-	void killProcess(t_process process);
-	// void blockProcess(t_process process);
-	// void unblockProcess(t_process process);
-	// void getProcesses();
+	void initialize(t_process *idleProcess);
+	void runScheduler(t_stack *currentProcessStack);
+	uint8_t addProcess(t_process *process, t_priority priority);
+
+	void killProcess(int pid);
 	t_process *getCurrentProcess();
+	int getpid();
+	void lockProcess(int pid);
+	void unlockProcess(int pid);
+	
+	// Process iterator
+	processListADT createProcessList();
+	uint64_t getProcessListLength(processListADT processList);
+	uint8_t hasNextProcess(processListADT processList);
+	t_process getNextProcess(processListADT processList);
+	void freeProcessesList(processListADT processList);
 #endif

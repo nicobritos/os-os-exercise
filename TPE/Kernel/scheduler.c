@@ -1,208 +1,353 @@
 #include <scheduler.h>
 #include <dispatcher.h>
+#include <process.h>
+#include <time.h>
 
-#define QUANTUM 1
+#define QUANTUM 4
 
-typedef struct queueNodeADT *queueNode;
-typedef struct queueADT *queue;
+typedef struct processListNodeCDT {
+	t_process *process;
+	processListNodeADT next;
+} processListNodeCDT;
 
-typedef struct queueNode {
+typedef struct processListCDT {
+	processListNodeADT firstProcessNode;
+	processListNodeADT currentProcessNode;
+	uint64_t length;
+} processListCDT;
+
+typedef struct queueNodeADT *queueNodeCDT;
+typedef struct queueADT *queueCDT;
+
+typedef struct queueNodeCDT {
+	t_priority priority;
     t_process *process;
-    uint64_t timeSpent;
+    uint64_t executedOnTicks;
     queueNodeADT previous;
     queueNodeADT next;
-} queueNode;
+} queueNodeCDT;
 
-typedef struct queue {
-	t_priority originalPriority;
-	t_priority adjustedPriority;
+typedef struct queueCDT {
 	queueNodeADT firstProcessNode;
 	queueNodeADT lastProcessNode;
-} queue;
+	uint64_t count = 0;
+} queueCDT;
+
+static const uint64_t quantumSlice[2] = {QUANTUM * 2, QUANTUM};
 
 static queueNodeADT currentProcessNode = NULL;
-static t_priority currentPriorityQueue = NULL;
-static queueADT highPriorityQueue = NULL;
-static queueADT lowPriorityQueue = NULL;
-static uint64_t processQuantity = 0;
+static queueADT waitingQueue = NULL;
+static queueADT readyQueue = NULL;
 
-void loadNextProcess();
+static uint8_t initialized = 0;
+
+void loadNextProcess(t_stack *currentProcessStack);
+queueNodeADT fetchNextNode();
+void dispatchProcess(t_process *process, t_stack *currentProcessStack);
+void updateProcessState(t_stack *dst, t_stack *src);
+queueNodeADT getNode(int pid, queueADT queue);
+queueNodeADT getNodeReadyQueue(int pid);
+queueNodeADT getNodeWaitingQueue(int pid);
+void removeProcess(queueNodeADT processNode, queueADT queue);
 
 // Public
-void runScheduler() {
-	// Si el que corre es el proceso idle (pid 0) entonces tengo que alojar un proceso si es que hay alguno en Ready.
-	// Como manejar el tema de prioridades?
-	// Hashtable es una. Lo que no se es cuando "resetear" la prioridad de un proceso
-	//
+void initialize(t_process *idleProcess) {
+	idleProcess = idleProcess;
+
+	waitingQueue = malloc(sizeof(queueCDT));
+	waitingQueue->firstProcessNode = waitingQueue->lastProcessNode = NULL;
+
+	readyQueue = malloc(sizeof(queueCDT));
+	readyQueue->firstProcessNode = readyQueue->lastProcessNode = NULL;
+
+	initialized = 1;
+}
+
+void runScheduler(t_stack *currentProcessStack) {
+	if (!initialized) {
+		return;
+	}
 
 	if (currentProcessNode == NULL) {
-		if (processQuantity >= 1) {
-			loadNextProcess();
+		if (readyQueue->count >= 1) {
+			loadNextProcess(currentProcessStack);
 		} else {
-			// loadIdle();
+			dispatchProcess(idleProcess, currentProcessStack);
 		}
 
 		return;
 	}
-	currentProcessNode->timeSpent += getTicks(); // TODO
-	if (currentProcessNode->timeSpent < QUANTUM) return;
+	if (currentProcessNode->state == RUNNING && ticks_elapsed() - currentProcessNode->executedOnTicks < quantumSlice[currentProcessNode->priority]) return;
 
-	loadNextProcess();
+	loadNextProcess(currentProcessStack);
 }
 
-void addProcess(t_process *process, t_priority priority) {
-	queueNodeADT processNode;
+uint8_t addProcess(t_process *process, t_priority priority) {
+	queueNodeADT processNode = malloc(sizeof(queueNodeCDT));
+	if (processNode == NULL) {
+		// TODO: Error
+		return 0;
+	}
+	processNode->priority = priority;
+	processNode->process = process;
+	processNode->executedOnTicks = 0;
+	processNode->next = NULL;
 
-	switch (priority) {
-		case HIGH:
-			if (highPriorityQueue == NULL) {
-				highPriorityQueue = malloc(sizeof(queue));
-				if (highPriorityQueue == NULL) {
-					// TODO: Error
-					return;
-				}
-				processNode = highPriorityQueue->firstProcessNode = highPriorityQueue->lastProcessNode = malloc(sizeof(queueNode));
-				if (procesNode == NULL) {
-					// TODO: Error
-					free(highPriorityQueue);
-					highPriorityQueue = NULL;
-					return;
-				}
-
-				processNode->previous = processNode->next = NULL;
-				highPriorityQueue->originalPriority = highPriorityQueue->adjustedPriority = HIGH;
-
-				if (currentPriorityQueue == NULL) {
-					currentPriorityQueue = highPriorityQueue;
-				}
-			} else {
-				processNode = highPriorityQueue->lastProcessNode->next = malloc(sizeof(queueNode));
-				if (processNode == NULL) {
-					// TODO: Error
-					return;
-				}
-				processNode->previous = highPriorityQueue->lastProcessNode;
-				highPriorityQueue->lastProcessNode = processNode;
-			}
-			break;
-		case LOW:
-			if (lowPriorityQueue == NULL) {
-				lowPriorityQueue = malloc(sizeof(queue));
-				if (lowPriorityQueue == NULL) {
-					// TODO: Error
-					return;
-				}
-				processNode = lowPriorityQueue->firstProcessNode = lowPriorityQueue->lastProcessNode = malloc(sizeof(queueNode));
-				if (procesNode == NULL) {
-					// TODO: Error
-					free(lowPriorityQueue);
-					lowPriorityQueue = NULL;
-					return;
-				}
-
-				processNode->previous = processNode->next = NULL;
-				lowPriorityQueue->originalPriority = lowPriorityQueue->adjustedPriority = HIGH;
-
-				if (currentPriorityQueue == NULL) {
-					currentPriorityQueue = lowPriorityQueue;
-				}
-			} else {
-				processNode = lowPriorityQueue->lastProcessNode->next = malloc(sizeof(queueNode));
-				if (processNode == NULL) {
-					// TODO: Error
-					return;
-				}
-				processNode->previous = lowPriorityQueue->lastProcessNode;
-				lowPriorityQueue->lastProcessNode = processNode;
-			}
-			break;
+	if (readyQueue->firstProcessNode == NULL) {
+		readyQueue->firstProcessNode = readyQueue->lastProcessNode = processNode;
+		processNode->previous = NULL;
+	} else {
+		processNode->previous = readyQueue->lastProcessNode;
+		readyQueue->lastProcessNode = readyQueue->lastProcessNode->next = processNode;
 	}
 
-	procesNode->timeSpent = 0;
-	processNode->process = process;
-	processNode->next = NULL;
-	processQuantity++;	
+	readyQueue->count++;	
+	return 1;
 }
 
 void killProcess(int pid) {
-	queueNodeADT processNode = NULL;
-	queueNodeADT currentNode;
-	queueADT queue = highPriorityQueue;
-
-	while (queue != NULL) {
-		if (queue != NULL) {
-			currentNode = queue->firstProcessNode;
-
-			if (currentNode->process->pid == pid) {
-				processNode = currentNode;
-				break;
-			} else {
-				while (currentNode != NULL && currentNode->process->pid != pid) {
-					currentNode = currentNode->next;
-				}
-				if (currentNode != NULL) {
-					processNode = currentNode;
-					break;
-				}
-			}
-		}
-
-		if (queue == lowPriorityQueue) {
-			queue = NULL;
-		} else {
-			queue = lowPriorityQueue;
-		}
-	}
+	queueNodeADT processNode = getNodeReadyQueue(pid);
 	if (processNode == NULL) {
+		processNode = getNodeWaitingQueue(pid);
+		if (processNode == NULL) return;
+
+		removeProcess(processNode, waitingQueue);
 		return;
 	}
 
-	if (processNode->previous != NULL) {
-		processNode->previous->next = processNode->next;
-	}
-
 	if (processNode == currentProcessNode) {
-		currentProcessNode = processNode->next;
+		processNode->process->state = KILLED;
+	} else {
+		removeProcess(processNode, readyQueue);
 	}
-	free(processNode);
 }
 
 t_process *getCurrentProcess() {
-	return currentProcess != NULL ? currentProcess->process : NULL;
+	return currentProcessNode != NULL ? currentProcessNode->process : NULL;
+}
+
+int getpid() {
+	return currentProcessNode != NULL ? currentProcessNode->process->pid;
+}
+
+void lockProcess(int pid) {
+	// TODO: Race condition
+	queueNodeADT processNode = getNodeReadyQueue(pid);
+	if (processNode == NULL) return;
+	processNode->state = LOCKED;
+	
+	if (processNode != currentProcessNode) {
+		moveNode(processNode, readyQueue, waitingQueue);
+	}
+}
+
+void unlockProcess(int pid) {
+	queueNodeADT processNode = getNodeWaitingQueue(pid);
+	if (processNode == NULL) return;
+	processNode->state = READY;
+	
+	moveNode(processNode, waitingQueue, readyQueue);
+}
+
+processListADT createProcessList() {
+	processListADT processList = malloc(sizeof(processListCDT));
+	processList->currentProcessNode = NULL;
+	processListNodeADT processListNode = NULL;
+	processList->length = 0;
+
+	queueNodeADT processNode = readyQueue->firstProcessNode;
+	while (processNode != NULL) {
+		if (processListNode == NULL) {
+			processListNode = processList->firstProcessNode = malloc(sizeof(processListNodeCDT));
+		} else {
+			processListNode = processListNode->next = malloc(sizeof(processListNodeCDT));
+		}
+
+		processListNode->process = malloc(sizeof(t_process));
+		memcpy(processListNode->process, processNode->process, sizeof(t_process));
+		processList->length++;
+
+		processNode = processNode->next;
+	}
+	if (processListNode != NULL) {
+		processListNode->next = NULL;
+	}
+
+	return processList;
+}
+
+uint8_t hasNextProcess(processListADT processList) {
+	if (processList != NULL) {
+		return processList->currentProcessNode != NULL ? processList->currentProcessNode->next != NULL : processList->firstProcessNode != NULL;
+	}
+	return 0;
+}
+
+uint64_t getProcessListLength(processListADT processList) {
+	return processList != NULL ? processList->length : 0;
 }
 
 
-// Private
-// TODO: Only load READY processes
-void loadNextProcess() {
-	if (currentProcessNode == NULL) {
-		currentProcessNode = queue.firstProcessNode;
-	}
-	
-	// if (currentProcessNode->process->state != READY || currentProcessNode->next == NULL) {
-	if (currentProcessNode->next == NULL) {
-		if (currentPriorityQueue->adjustedPriority == LOW) {
-			currentPriorityQueue->adjustedPriority = currentPriorityQueue->originalPriority;
-			switch (currentPriorityQueue->adjustedPriority) {
-				case HIGH:
-					if (highPriorityQueue != NULL) {
-						currentPriorityQueue = highPriorityQueue;
-						break;
-					}
-				case LOW:
-					if (lowPriorityQueue != NULL) {
-						currentPriorityQueue = lowPriorityQueue;
-						break;
-					}
-			}
-		} else {
-			currentPriorityQueue->adjustedPriority--;
-		}
-		currentProcessNode = currentPriorityQueue->firstProcessNode;
+t_process *getNextProcess(processListADT processList) {
+	if (!hasNextProcess()) return NULL;
+
+	if (processList->currentProcessNode == NULL) {
+		processList->currentProcessNode = processList->firstProcessNode;
 	} else {
-		currentProcessNode = currentProcessNode->next;
+		processList->currentProcessNode = processList->currentProcessNode->next;
 	}
 
-	currentProcessNode->process->state = RUNNING;
-	// dispatchProcess(currentProcessNode->process) TODO: Dispatch currentProcess
+	return processList->currentProcessNode->process;
+}
+
+void freeProcessesList(processListADT processList) {
+	processListNodeADT processListNode = NULL;
+	processListNodeADT auxProcessListNode;
+
+	if (processList != NULL) {
+		processListNode = processList->firstProcessNode;
+		while (processListNode != NULL) {
+			auxProcessListNode = processListNode->next;
+			free(processListNode->process);
+			free(processListNode);
+			processListNode = auxProcessListNode;
+		}
+		free(processList);
+		processList = NULL;
+	}
+}
+
+// Private
+void loadNextProcess(t_stack *currentProcessStack) {
+	queueNodeADT nextProcessNode = fetchNextNode();
+	if (nextProcessNode == NULL) {
+		dispatchProcess(idleProcess, currentProcessStack);
+		return;
+	}
+
+	if (nextProcessNode == currentProcessNode) {
+		currentProcessNode->executedOnTicks = ticks_elapsed();
+	} else {
+		if (currentProcessNode != NULL) {
+			currentProcessNode->process->state = READY;
+			updateProcessState(currentProcessNode->process->state, currentProcessStack);
+		}
+
+		currentProcessNode = nextProcessNode;
+		currentProcessNode->executedOnTicks = ticks_elapsed();
+		dispatchProcess(currentProcessNode->process, currentProcessStack);
+	}
+}
+
+queueNodeADT fetchNextNode() {
+	queueNodeADT currentNode = currentProcessNode;
+	if (currentNode == NULL) { // Solo pasa esto cuando no hay ningun proceso corriendo
+		currentNode = readyQueue->firstProcessNode;
+	} else {
+		currentNode = currentProcessNode->next;
+	}
+
+	while (currentNode != currentProcessNode && readyQueue->count >= 1) {
+		if (currentNode == NULL) {
+			currentNode = readyQueue->firstProcessNode;
+		} else {
+			if (currentNode->process->state == KILLED) {
+				removeProcess(currentNode, readyQueue);
+			} else if (currentNode->process->state == READY) {
+				break;
+			} else if (currentNode->process->state == LOCKED) {
+				moveNode(currentNode, readyQueue, waitingQueue);
+			}
+
+			currentNode = currentProcessNode->next;
+		}
+	}
+	if (readyQueue->count == 0 || currentNode == NULL || currentNode->state != READY) {
+		return NULL;
+	}
+	return currentNode;
+}
+
+void dispatchProcess(t_process *process, t_stack *currentProcessStack) {
+	process->state = RUNNING;
+	updateProcessState(currentProcessStack, process->state);
+}
+
+void updateProcessState(t_stack *dst, t_stack *src) {
+	// TODO: Change to order in struct t_stack
+	dst->r15 = src->r15;
+	dst->r14 = src->r14;
+	dst->r13 = src->r13;
+	dst->r12 = src->r12;
+	dst->r11 = src->r11;
+	dst->r10 = src->r10;
+	dst->r9 = src->r9;
+	dst->r8 = src->r8;
+	
+	dst->rsi = src->rsi;
+	dst->rdi = src->rdi;
+	dst->rbp = src->rbp;
+	
+	dst->rdx = src->rdx;
+	dst->rcx = src->rcx;
+	dst->rbx = src->rbx;
+	dst->rax = src->rax;
+	
+	dst->rip = src->rip;
+	dst->rflags = src->rflags;
+	dst->rsp = src->rsp;
+}
+
+queueNodeADT getNode(int pid, queueADT queue) {
+	queueNodeADT processNode = queue->firstProcessNode;
+
+	while (processNode == NULL || processNode->pid != pid) {
+		processNode = queue->processNode->next;
+	}
+	return processNode;
+}
+
+queueNodeADT getNodeReadyQueue(int pid) {
+	return getNode(pid, readyQueue);
+}
+
+queueNodeADT getNodeWaitingQueue(int pid) {
+	return getNode(pid, waitingQueue);
+}
+
+void removeProcess(queueNodeADT processNode, queueADT queue) {
+	if (processNode->previous != NULL) {
+		processNode->previous->next = processNode->next;
+	} else {
+		queue->firstProcessNode = processNode->next;
+	}
+	if (queue->lastProcessNode == processNode) {
+		queue->lastProcessNode = NULL;
+	}
+
+	free(processNode);
+	queue->count--;
+}
+
+void moveNode(queueNodeADT processNode, queueADT fromQueue, queueADT toQueue) {
+	if (processNode->previous != NULL) {
+		processNode->previous->next = processNode->next;
+	} else {
+		fromQueue->firstProcessNode = processNode->next;
+	}
+	if (processNode->next == NULL) {
+		fromQueue->lastProcessNode = processNode->previous;
+	}
+
+	if (toQueue->firstProcessNode == NULL) {
+		toQueue->firstProcessNode = processNode;
+		toQueue->lastProcessNode = processNode;
+		processNode->next = processNode->previous = NULL;
+	} else {
+		toQueue->lastProcessNode->next = processNode;
+		processNode->previous = toQueue->lastProcessNode;
+		toQueue->lastProcessNode = processNode;
+	}
+
+	processNode->next = NULL;
 }
