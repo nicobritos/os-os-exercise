@@ -1,6 +1,5 @@
-#include <time.h>
-#include <scheduler.h>
-#include <process.h>
+#include "time.h"
+#include "./include/scheduler.h"
 
 static uint64_t ticks = 0;
 

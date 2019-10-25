@@ -1,7 +1,6 @@
-#include <scheduler.h>
-#include <dispatcher.h>
-#include <process.h>
-#include <time.h>
+#include "scheduler.h"
+#include "process.h"
+#include "time.h"
 
 #define QUANTUM 4
 
@@ -14,10 +13,11 @@ typedef struct processListCDT {
 	processListNodeADT firstProcessNode;
 	processListNodeADT currentProcessNode;
 	uint64_t length;
+	uint8_t initialized;
 } processListCDT;
 
-typedef struct queueNodeADT *queueNodeCDT;
-typedef struct queueADT *queueCDT;
+typedef struct queueNodeCDT *queueNodeADT;
+typedef struct queueCDT *queueADT;
 
 typedef struct queueNodeCDT {
 	t_priority priority;
@@ -30,7 +30,7 @@ typedef struct queueNodeCDT {
 typedef struct queueCDT {
 	queueNodeADT firstProcessNode;
 	queueNodeADT lastProcessNode;
-	uint64_t count = 0;
+	uint64_t count;
 } queueCDT;
 
 static const uint64_t quantumSlice[2] = {QUANTUM * 2, QUANTUM};
@@ -41,6 +41,8 @@ static queueADT readyQueue = NULL;
 
 static uint8_t initialized = 0;
 
+static t_process *idleProcess = NULL;
+
 void loadNextProcess(t_stack *currentProcessStack);
 queueNodeADT fetchNextNode();
 void dispatchProcess(t_process *process, t_stack *currentProcessStack);
@@ -49,10 +51,11 @@ queueNodeADT getNode(int pid, queueADT queue);
 queueNodeADT getNodeReadyQueue(int pid);
 queueNodeADT getNodeWaitingQueue(int pid);
 void removeProcess(queueNodeADT processNode, queueADT queue);
+void moveNode(queueNodeADT processNode, queueADT fromQueue, queueADT toQueue);
 
 // Public
-void initialize(t_process *idleProcess) {
-	idleProcess = idleProcess;
+void initScheduler(t_process *_idleProcess) {
+	idleProcess = _idleProcess;
 
 	waitingQueue = malloc(sizeof(queueCDT));
 	waitingQueue->firstProcessNode = waitingQueue->lastProcessNode = NULL;
@@ -77,7 +80,7 @@ void runScheduler(t_stack *currentProcessStack) {
 
 		return;
 	}
-	if (currentProcessNode->state == RUNNING && ticks_elapsed() - currentProcessNode->executedOnTicks < quantumSlice[currentProcessNode->priority]) return;
+	if (currentProcessNode->process->state == RUNNING && ticks_elapsed() - currentProcessNode->executedOnTicks < quantumSlice[currentProcessNode->priority]) return;
 
 	loadNextProcess(currentProcessStack);
 }
@@ -123,18 +126,20 @@ void killProcess(int pid) {
 }
 
 t_process *getCurrentProcess() {
-	return currentProcessNode != NULL ? currentProcessNode->process : NULL;
+	if (currentProcessNode != NULL) return currentProcessNode->process;
+	return idleProcess;
 }
 
 int getpid() {
-	return currentProcessNode != NULL ? currentProcessNode->process->pid;
+	if (currentProcessNode != NULL) return currentProcessNode->process->pid;
+	return 0;
 }
 
 void lockProcess(int pid) {
 	// TODO: Race condition
 	queueNodeADT processNode = getNodeReadyQueue(pid);
 	if (processNode == NULL) return;
-	processNode->state = LOCKED;
+	processNode->process->state = LOCKED;
 	
 	if (processNode != currentProcessNode) {
 		moveNode(processNode, readyQueue, waitingQueue);
@@ -144,7 +149,7 @@ void lockProcess(int pid) {
 void unlockProcess(int pid) {
 	queueNodeADT processNode = getNodeWaitingQueue(pid);
 	if (processNode == NULL) return;
-	processNode->state = READY;
+	processNode->process->state = READY;
 	
 	moveNode(processNode, waitingQueue, readyQueue);
 }
@@ -153,6 +158,7 @@ processListADT createProcessList() {
 	processListADT processList = malloc(sizeof(processListCDT));
 	processList->currentProcessNode = NULL;
 	processListNodeADT processListNode = NULL;
+	processList->initialized = 0;
 	processList->length = 0;
 
 	queueNodeADT processNode = readyQueue->firstProcessNode;
@@ -178,18 +184,28 @@ processListADT createProcessList() {
 
 uint8_t hasNextProcess(processListADT processList) {
 	if (processList != NULL) {
-		return processList->currentProcessNode != NULL ? processList->currentProcessNode->next != NULL : processList->firstProcessNode != NULL;
+		if (!processList->initialized) {
+			return processList->firstProcessNode != NULL;
+		} else {
+			return processList->currentProcessNode->next != NULL;
+		}
 	}
 	return 0;
 }
 
 uint64_t getProcessListLength(processListADT processList) {
-	return processList != NULL ? processList->length : 0;
+	if (processList != NULL) return processList-> length;
+	return 0;
 }
 
 
 t_process *getNextProcess(processListADT processList) {
-	if (!hasNextProcess()) return NULL;
+	if (!hasNextProcess(processList)) return NULL;
+
+	if (!processList->initialized) {
+		processList->initialized = 1;
+		return processList->currentProcessNode = processList->firstProcessNode;
+	}
 
 	if (processList->currentProcessNode == NULL) {
 		processList->currentProcessNode = processList->firstProcessNode;
@@ -230,7 +246,7 @@ void loadNextProcess(t_stack *currentProcessStack) {
 	} else {
 		if (currentProcessNode != NULL) {
 			currentProcessNode->process->state = READY;
-			updateProcessState(currentProcessNode->process->state, currentProcessStack);
+			updateProcessState(currentProcessNode->process->stack, currentProcessStack);
 		}
 
 		currentProcessNode = nextProcessNode;
@@ -262,7 +278,7 @@ queueNodeADT fetchNextNode() {
 			currentNode = currentProcessNode->next;
 		}
 	}
-	if (readyQueue->count == 0 || currentNode == NULL || currentNode->state != READY) {
+	if (readyQueue->count == 0 || currentNode == NULL || currentNode->process->state != READY) {
 		return NULL;
 	}
 	return currentNode;
@@ -270,7 +286,7 @@ queueNodeADT fetchNextNode() {
 
 void dispatchProcess(t_process *process, t_stack *currentProcessStack) {
 	process->state = RUNNING;
-	updateProcessState(currentProcessStack, process->state);
+	updateProcessState(currentProcessStack, process->stack);
 }
 
 void updateProcessState(t_stack *dst, t_stack *src) {
@@ -301,8 +317,8 @@ void updateProcessState(t_stack *dst, t_stack *src) {
 queueNodeADT getNode(int pid, queueADT queue) {
 	queueNodeADT processNode = queue->firstProcessNode;
 
-	while (processNode == NULL || processNode->pid != pid) {
-		processNode = queue->processNode->next;
+	while (processNode == NULL || processNode->process->pid != pid) {
+		processNode = processNode->next;
 	}
 	return processNode;
 }

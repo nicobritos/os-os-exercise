@@ -37,9 +37,6 @@ EXTERN sys_ptrace
 
 SECTION .text
 %macro pushState 0
-  push gs
-  push fs
-
   push r15
   push r14
   push r13
@@ -58,47 +55,38 @@ SECTION .text
 	push rbx
 	push rax
 
-	push rip
-  push cs
-  push rflags
+  pushf
   push rsp
-  push ss
 %endmacro
 
 %macro popState 0
-  pop gs
-  pop fs
-
-  pop r15
-  pop r14
-  pop r13
-  pop r12
-  pop r11
-  pop r10
-  pop r9
-  pop r8
-
-  pop rsi
-  pop rdi
-  pop rbp
-
-  pop rdx
-  pop rcx
-  pop rbx
-  pop rax
-
-  pop rip
-  pop cs
-  pop rflags
   pop rsp
-  pop ss
+  popf
+
+  pop rax
+  pop rbx
+  pop rcx
+  pop rdx
+
+  pop rbp
+  pop rdi
+  pop rsi
+
+  pop r8
+  pop r9
+  pop r10
+  pop r11
+  pop r12
+  pop r13
+  pop r14
+  pop r15
 %endmacro
 
 %macro irqHandlerMaster 1
 	pushState
 
-	mov rdi, %1 ; pasaje de parametro
-  mov rsi, rsp + ((18 * 8) + (4 * 2)) ; pasaje de parametro del puntero a los registros
+  mov rdi, %1 ; pasaje de parametro
+  lea rsi, [rsp + ((18 * 8) + (4 * 2))]; pasaje de parametro del puntero a los registros ((18 * 8) + (4 * 2)) 
 	call irqDispatcher
 
 	; signal pic EOI (End of Interrupt)
@@ -336,6 +324,13 @@ _exception0Handler:
 ;Invalid Opcode handler
 _exceptionInvalidOpcodeHandler:
 	exceptionHandler 1
+
+idle:
+  _start_idle:
+  sti
+  hlt
+  jmp _start_idle
+  ret
 
 haltcpu:
 	cli
