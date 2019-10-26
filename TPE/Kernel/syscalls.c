@@ -2,6 +2,7 @@
 #include "include/keyboard-Driver.h"
 #include "include/videoDriver.h"
 #include "time.h"
+#include "include/memManager.h"
 
 		/* PROTOTIPOS */
 int sys_total_ticks(int * ticks);
@@ -11,6 +12,10 @@ uint64_t sys_read(uint64_t fd, char *buffer, uint64_t size);
 uint64_t sys_write(uint64_t fd, char *buffer, uint64_t size);
 void sys_pixel(uint64_t x, uint64_t y, unsigned char r, unsigned char g, unsigned char b);
 uint64_t * sys_time(uint64_t * time);
+uint64_t sys_used_mem();
+uint64_t sys_free_mem();
+void * sys_malloc(uint64_t size, uint64_t pid);
+void sys_free(void * address, uint64_t pid);
 
 
 
@@ -96,4 +101,17 @@ uint64_t * sys_time(uint64_t * time) {
 	return time;
 }
 
+uint64_t sys_used_mem(){
+	return usedMemory();
+}
 
+uint64_t sys_free_mem(){
+	return freeMemoryLeft();
+}
+
+void * sys_malloc(uint64_t size, uint64_t pid){
+	return pmalloc(size, pid);
+}
+void sys_free(void * address, uint64_t pid){
+	pfree(address, pid);
+}

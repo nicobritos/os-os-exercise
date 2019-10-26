@@ -34,11 +34,14 @@ int parse(char* input){
       invalidOpCodeException();
       return 0;
     }
+    else if(strcmp(input, "mem") == 0){
+      printf("\n%l / %l bytes utilizados", usedMem(), freeMem());
+      return 0;
+    }
     else{
       printf("\nWrong command");
       return 0;
     }
-
 }
 
 
@@ -50,7 +53,7 @@ void shell(){
 
 
     while (!flag) {
-		  printf("\nUser $>");
+		  printf("\nUser $> ");
 		  scanf(buffer, BUFFER_LENGTH);
 		  flag = parse(buffer);
 	  }

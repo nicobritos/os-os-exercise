@@ -1,0 +1,1 @@
+#define MODO_BUDDY
