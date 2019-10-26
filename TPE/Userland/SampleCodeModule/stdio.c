@@ -15,9 +15,9 @@ void putchar(char letter){
 	}
 	else{
 		write(1,&letter, 1);     		/* write -- recibe char * y la longitud (siempre 1) */
+	}
 }
 
-char getchar(){
 int getchar(){
 	char letter = 0;
 	while(1){
@@ -114,6 +114,7 @@ int printf(const char* format, ...){
 // }
 
 
+int scanf(char* string, int bytes, int separator){
 	int c;
 	int i = 0;
 	while (((c = getchar()) != separator) && (i < bytes - 1)) {
