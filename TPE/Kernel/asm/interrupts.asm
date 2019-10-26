@@ -26,52 +26,67 @@ EXTERN sys_write
 EXTERN sys_clear
 EXTERN sys_pixel
 EXTERN sys_time
+EXTERN sys_getpid
+EXTERN sys_fork
+EXTERN sys_execve
+EXTERN sys_kill
+EXTERN sys_getpriority
+EXTERN sys_setpriority
+EXTERN sys_ptrace
 
 
 SECTION .text
-
 %macro pushState 0
-	push rax
-	push rbx
-	push rcx
-	push rdx
-	push rbp
-	push rdi
+  push r15
+  push r14
+  push r13
+  push r12
+  push r11
+  push r10
+  push r9
+  push r8
+
 	push rsi
-	push r8
-	push r9
-	push r10
-	push r11
-	push r12
-	push r13
-	push r14
-	push r15
+	push rdi
+	push rbp
+
+	push rdx
+	push rcx
+	push rbx
+	push rax
+
+  pushf
+  push rsp
 %endmacro
 
 %macro popState 0
-	pop r15
-	pop r14
-	pop r13
-	pop r12
-	pop r11
-	pop r10
-	pop r9
-	pop r8
-	pop rsi
-	pop rdi
-	pop rbp
-	pop rdx
-	pop rcx
-	pop rbx
-	pop rax
+  pop rsp
+  popf
+
+  pop rax
+  pop rbx
+  pop rcx
+  pop rdx
+
+  pop rbp
+  pop rdi
+  pop rsi
+
+  pop r8
+  pop r9
+  pop r10
+  pop r11
+  pop r12
+  pop r13
+  pop r14
+  pop r15
 %endmacro
 
 %macro irqHandlerMaster 1
-
 	pushState
 
-
-	mov rdi, %1 ; pasaje de parametro
+  mov rdi, %1 ; pasaje de parametro
+  lea rsi, [rsp + ((18 * 8) + (4 * 2))]; pasaje de parametro del puntero a los registros ((18 * 8) + (4 * 2)) 
 	call irqDispatcher
 
 	; signal pic EOI (End of Interrupt)
@@ -85,7 +100,7 @@ SECTION .text
 
 
 %macro exceptionHandler 1
-pushState
+  pushState
 
 	mov rdi, %1 ; first parameter
 	mov rsi, rsp ; second parameter
@@ -96,8 +111,6 @@ pushState
 
 	mov qword [rsp],0x400000
 	iretq
-
-
 %endmacro
 
 
@@ -191,6 +204,28 @@ _syscall:
   cmp rdi, 0x07		; syscall de pixel
   je .syscallPixel
 
+  cmp rdi, 39     ; getpid
+  je .syscallGetpid
+
+  cmp rdi, 57     ; fork
+  je .syscallFork
+
+  cmp rdi, 59     ; execve
+  je .syscallExecve
+
+  cmp rdi, 62     ; kill
+  je .syscallKill
+
+  cmp rdi, 140    ; getpriority
+  je .syscallGetpriority
+
+  cmp rdi, 141    ; setpriority
+  je .syscallSetpriority
+
+  cmp rdi, 101    ; ptrace
+  je .syscallPtrace
+
+
 .cont:
 	mov rsp, rbp
   pop rbp
@@ -239,6 +274,48 @@ _syscall:
   call sys_ticks_per_second
   jmp .cont
 
+.syscallGetpid:
+  call sys_getpid
+  jmp .cont
+
+.syscallFork:
+  call sys_fork
+  jmp .cont
+
+.syscallExecve:
+  mov rdi, rsi
+  mov rsi, rdx
+  mov rdx, rcx
+  call sys_execve
+  jmp .cont
+
+.syscallKill:
+  mov rdi, rsi
+  mov rsi, rdx
+  call sys_kill
+  jmp .cont
+
+.syscallGetpriority:
+  mov rdi, rsi
+  mov rsi, rdx
+  call sys_getpriority
+  jmp .cont
+
+.syscallSetpriority:
+  mov rdi, rsi
+  mov rsi, rdx
+  mov rdx, rcx
+  call sys_setpriority
+  jmp .cont
+
+.syscallPtrace:
+  mov rdi, rsi
+  mov rsi, rdx
+  mov rdx, rcx
+  mov rcx, r8
+  call sys_ptrace
+  jmp .cont
+
 
 ;Zero Division Exception
 _exception0Handler:
@@ -247,6 +324,13 @@ _exception0Handler:
 ;Invalid Opcode handler
 _exceptionInvalidOpcodeHandler:
 	exceptionHandler 1
+
+idle:
+  _start_idle:
+  sti
+  hlt
+  jmp _start_idle
+  ret
 
 haltcpu:
 	cli

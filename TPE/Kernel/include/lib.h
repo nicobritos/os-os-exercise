@@ -1,6 +1,7 @@
 #ifndef LIB_H
 #define LIB_H
 
+#define NULL 0
 #include <stdint.h>
 
 void * memset(void * destination, int32_t character, uint64_t length);
