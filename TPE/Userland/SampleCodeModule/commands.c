@@ -10,6 +10,7 @@ void printHelp() {
     printf("zero - Makes a divition by cero exception \n");
     printf("invalidOpCode - Makes a invalid operation exception \n");
     printf("clear - Clears the screen \n");
+	printf("mem - Prints the memory state\n");
     printf("exit - Exits the terminal");
 }
 
@@ -45,4 +46,12 @@ void divisionExc(){
 }
 void invalidOpCodeException() {
 	invalidOpCode();
+}
+
+uint64_t usedMem(){
+	return os_used_mem();
+}
+
+uint64_t freeMem(){
+	return os_free_mem();
 }

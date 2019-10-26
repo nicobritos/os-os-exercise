@@ -4,7 +4,7 @@ all:  bootloader kernel userland image
 bootloader:
 	cd Bootloader; make all
 
-buddy:
+buddy: bootloader userland image
 	cd Kernel; make buddy
 
 freeList: bootloader userland image

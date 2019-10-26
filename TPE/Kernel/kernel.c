@@ -5,6 +5,7 @@
 #include <naiveConsole.h>
 #include "idtLoader.h"
 #include "videoDriver.h"
+#include "memManager.h"
 
 
 extern uint8_t text;
@@ -53,6 +54,7 @@ void * initializeKernelBinary(){
 int main(){	
 	load_idt();
 	((EntryPoint)sampleCodeModuleAddress)();
+	initializeMemoryManager();
 	return 0;
 }
 

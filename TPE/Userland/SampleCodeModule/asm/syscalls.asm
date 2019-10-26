@@ -7,6 +7,10 @@ GLOBAL os_ticks
 GLOBAL os_sec
 GLOBAL os_beep
 GLOBAL os_unbeep
+GLOBAL os_used_mem
+GLOBAL os_free_mem
+GLOBAL os_malloc
+GLOBAL os_free
 
 section .text
 
@@ -158,6 +162,57 @@ os_draw:
 
 	finish				;desarmo stack frame y popeo los registros
 	
+os_used_mem:
+	start
+
+	mov rdi, 0x08
+
+	int 80h
+	finish
+
+os_free_mem:
+	start
+
+	mov rdi, 0x09
+
+	int 80h
+	finish
+
+os_malloc:
+	start
+	
+	; rdi --> size
+	; rsi --> pid
+
+	mov rdx, rsi
+	mov rsi, rdi
+	mov rdi, 0x10
+	
+	; rdi --> codigo de la syscall 
+	; rsi --> size 
+	; rdx --> pid
+
+	int 80h
+	finish
+
+os_free:
+	start
+	
+	; rdi --> address
+	; rsi --> pid
+
+	mov rdx, rsi
+	mov rsi, rdi
+	mov rdi, 0x11
+	
+	; rdi --> codigo de la syscall 
+	; rsi --> address 
+	; rdx --> pid
+
+	int 80h
+	finish
+
+
 section .data
 	time times 6 DW 0
 

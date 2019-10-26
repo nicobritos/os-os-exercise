@@ -37,6 +37,7 @@ int printf(const char* format, ...){
 	char buffer[200];
 	char *str;
 	int length, num;
+	long long unsigned llunum;
 
 	while(*(index) != 0){
 								/* No hay mas argumentos */
@@ -63,8 +64,17 @@ int printf(const char* format, ...){
 				case 'x':
 					num = (int) va_arg(args, int);
 					length = itoa(num, buffer, 16);
+					write(1,buffer, length);
 					index ++;
 					break;
+				case 'l':
+					llunum = (long long unsigned) va_arg(args, long long unsigned);
+					length = itoa(llunum, buffer, 10);
+					write(1, buffer, length);
+					index++;
+					break;
+					
+
 			}
 		}else{
 			putchar(*(index));

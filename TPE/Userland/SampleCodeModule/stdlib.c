@@ -1,4 +1,6 @@
 #include "includes/defines.h"
+#include "includes/syscalls.h"
+#include <stdint.h>
 
 
 /* 
@@ -106,3 +108,10 @@ int atoi(char c){
 	return -1;		//si retorno -1 es que el argumento pasado no era un numero.
 }
 
+void * malloc(uint64_t size){
+	return os_malloc(size, 0); //CAMBIAR 0 POR GETPID
+}
+
+void free(void * address){
+	os_free(address, 0); //CAMBIAR 0 POR GETPID
+}

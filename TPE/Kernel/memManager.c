@@ -491,7 +491,7 @@ void * pmalloc(uint64_t size, uint64_t pid){
     #endif
 }
 
-void pfree(uint64_t pid, void * address){
+void pfree(void * address, uint64_t pid){
     #ifdef MODO_BUDDY
     pBuddyFree(pid, address);
     #endif
@@ -503,7 +503,7 @@ void pfree(uint64_t pid, void * address){
 
 void * prealloc(void * ptr, uint64_t newSize, uint64_t pid){
     #ifdef MODO_BUDDY
-    pfree(pid, ptr);
+    pfree(ptr, pid);
     return pmalloc(newSize, pid);
     #endif
     #ifdef MODO_FREE_LIST
