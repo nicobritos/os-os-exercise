@@ -483,6 +483,8 @@ void initializeMemoryManager(){
 }
 
 void * pmalloc(uint64_t size, uint64_t pid){
+    if(size == 0)
+        return NULL;
     #ifdef MODO_BUDDY
     return buddyAlloc(size, pid); // Marca la direccion como ocupada en el arbol del buddy
     #endif
@@ -492,6 +494,8 @@ void * pmalloc(uint64_t size, uint64_t pid){
 }
 
 void pfree(void * address, uint64_t pid){
+    if(address == NULL)
+        return;
     #ifdef MODO_BUDDY
     pBuddyFree(pid, address);
     #endif

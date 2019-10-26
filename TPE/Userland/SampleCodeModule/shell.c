@@ -39,9 +39,9 @@ int parse(char* input){
       return 0;
     }
     // else if(strcmp(input, "res") == 0){
-    //   int i = 22323;
+    //   uint64_t i = 22323;
     //   void * a = malloc(i);
-    //   printf("\nReserve %d bytes en %l",i, a);
+    //   printf("\nReserve %l bytes en %l",i, a);
     //   printf("\n%l / %l bytes utilizados", usedMem(), freeMem());
     //   free(a);
     //   printf("\n%l / %l bytes utilizados", usedMem(), freeMem());
