@@ -31,17 +31,21 @@ typedef struct Node{ // SI SE CAMBIA, HAY QUE CAMBIAR EL DEFINE DE MAX_NODES
 
 Node createNode(void * address, uint64_t size, uint64_t pid);
 void * buddyAlloc(uint64_t size, uint64_t pid);
-void * recursiveBuddyAlloc(uint64_t size, uint64_t pid, uint64_t childBlockSize, Node * parent, uint64_t parentBlockSize);
+void * recursiveBuddyAlloc(uint64_t size, uint64_t pid, uint64_t blockSizeWanted, Node * current, uint64_t currentLevelSize);
 void createLeftChild(Node * parent, uint64_t size, uint64_t pid);
 void createRightChild(Node * parent, uint64_t childsBlockSize, uint64_t size, uint64_t pid);
 // void recPrint(Node * node, int depth);
 Node * nextFreeSpaceForNode();
+void pBuddyFree(uint64_t pid, void * address);
 bool pBuddyFreeRec(uint64_t pid, void * address, Node * current);
 void buddyInitializer();
+uint64_t freeMemBuddy();
+uint64_t usedMemBuddy();
 
 Node * root = TREE_ADDRESS;
 bool isOccupiedNodeSpace[MAX_NODES];
 uint64_t lastUsedIndex; // Of the isOccupiedNodeSpace array
+uint64_t memUsed;
 
 
 void buddyInitializer(){
@@ -52,8 +56,9 @@ void buddyInitializer(){
         isOccupiedNodeSpace[i] = FALSE;
     }
     
-    Node rootNode = createNode(MEM_STARTING_ADDRESS, sizeof(*root), 0);
+    Node rootNode = createNode(MEM_STARTING_ADDRESS, 0, 0);
     memcpy(root, &rootNode, sizeof(*root));
+    memUsed = 0;
 }
 
 Node createNode(void * address, uint64_t size, uint64_t pid){
@@ -70,63 +75,45 @@ Node createNode(void * address, uint64_t size, uint64_t pid){
 void * buddyAlloc(uint64_t size, uint64_t pid){
     uint64_t childBlockSize;
     for (childBlockSize = MIN_BLOCK_SIZE; childBlockSize < size; childBlockSize *= 2); // Me fijo cual es la menor potencia de 2 que es mayor al size
-    return recursiveBuddyAlloc(size, pid, childBlockSize, root, MEM_SIZE);
+    void * ans = recursiveBuddyAlloc(size, pid, childBlockSize, root, MEM_SIZE);
+    if(ans != NULL)
+        memUsed += childBlockSize;
+    return ans;
 }
 
-void * recursiveBuddyAlloc(uint64_t size, uint64_t pid, uint64_t childBlockSize, Node * parent, uint64_t parentBlockSize){
-    if(parentBlockSize <= childBlockSize) // Me pasé
+void * recursiveBuddyAlloc(uint64_t size, uint64_t pid, uint64_t blockSize, Node * current, uint64_t currentLevelSize){
+    if((current == NULL) || (currentLevelSize < blockSize) || (current->isFull)){ // estado invalido
         return NULL;
-    
-    if(parent->left == NULL){
-        createLeftChild(parent, size, pid);
-        parentBlockSize /= 2;
-        Node * parentsParent = parent;
-        parent = parent->left;
-        while(parentBlockSize > childBlockSize){ // Creo siempre a la izquierda hasta llegar al tamaño
-            createLeftChild(parent, size, pid);
-            parent = parent->left;
-            parentBlockSize /= 2;
-        }
-        parent->isFull = TRUE;
-        if(parentsParent->left == parent)
-            parentsParent->isFull = TRUE;
-        return parent->address;
     }
-    if(!(parent->left->isFull)){
-        void * ans = recursiveBuddyAlloc(size, pid, childBlockSize, parent->left, parentBlockSize/2);
-        if(ans != NULL){
-            if(parent->right != NULL && parent->right->isFull && parent->left->isFull){
-                parent->isFull = TRUE;
+    if(currentLevelSize == blockSize){
+        if((current->left == NULL) && (current->right == NULL)){ // este es su lugar en el arbol
+            current->isFull = TRUE;
+            current->pid = pid;
+            current->size = size;
+            return current->address;
+        }
+        else{ // no tiene que ir por esta rama del arbol
+            return NULL; 
+        }
+    }
+    void * ans;
+    if(current->left == NULL){ // si o si esta en esta rama su lugar
+        createLeftChild(current, size, pid);
+        ans = recursiveBuddyAlloc(size, pid, blockSize, current->left, currentLevelSize/2);
+    }
+    else{
+        ans = recursiveBuddyAlloc(size, pid, blockSize, current->left, currentLevelSize/2); // me fijo si va en el hijo izquierdo 
+        if(ans == NULL){
+            if(current->right == NULL){ // si no existe hijo derecho lo creo
+                createRightChild(current, currentLevelSize, size, pid);
             }
+            ans = recursiveBuddyAlloc(size, pid, blockSize, current->right, currentLevelSize/2); // me fijo si va en el hijo derecho
         }
-        return ans;
     }
-    if(parent->right == NULL){
-        createRightChild(parent, parentBlockSize/2, size, pid);
-        parentBlockSize /= 2;
-        Node * parentsParent = parent;
-        parent = parent->right;
-        while(parentBlockSize > childBlockSize){ // Creo siempre a la izquierda hasta llegar al tamaño
-            createLeftChild(parent, size, pid);
-            parent = parent->left;
-            parentBlockSize /= 2;
-        }
-        parent->isFull = TRUE;
-        if(parentsParent->right == parent)
-            parentsParent->isFull = TRUE;
-        return parent->address;
+    if((current->left->isFull) && (current->right != NULL) && (current->right->isFull)){
+        current->isFull = TRUE;
     }
-    if(!(parent->right->isFull)){
-        void * ans = recursiveBuddyAlloc(size, pid, childBlockSize, parent->right, parentBlockSize/2); //ACASDASDASDASDASDASDASDASDASDASDA
-        if(ans != NULL){
-            if((parent->right->left != NULL) && (parent->right->right != NULL) && (parent->right->left->isFull) && (parent->right->right->isFull)){
-                parent->right->isFull = TRUE;
-                parent->isFull = TRUE; // YA CHEQUE ANTES QUE LEFT ESTABA FULL
-            }
-        }
-        return ans;
-    }
-    return NULL; // no tengo espacio
+    return ans;
 }
 
 void createLeftChild(Node * parent, uint64_t size, uint64_t pid){
@@ -136,8 +123,8 @@ void createLeftChild(Node * parent, uint64_t size, uint64_t pid){
     parent->left = nodeSpace;
 }
 
-void createRightChild(Node * parent, uint64_t childsBlockSize, uint64_t size, uint64_t pid){
-    Node child = createNode(parent->address + childsBlockSize, size, pid); //segunda mitad
+void createRightChild(Node * parent, uint64_t parentBlockSize, uint64_t size, uint64_t pid){
+    Node child = createNode((char *)parent->address + parentBlockSize/2, size, pid); //segunda mitad
     void * nodeSpace = nextFreeSpaceForNode();
     memcpy(nodeSpace, &child, sizeof(child));
     parent->right = nodeSpace;
@@ -158,11 +145,18 @@ Node * nextFreeSpaceForNode(){
     return NULL;
 }
 
+void pBuddyFree(uint64_t pid, void * address){
+    pBuddyFreeRec(pid, address, root);
+}
+
 bool pBuddyFreeRec(uint64_t pid, void * address, Node * current){
     if(current == NULL)
         return FALSE;
-    if((current->left == NULL) && (current->right == NULL)){
+    if((current->left == NULL) && (current->right == NULL)){ // es memoria ocupada
         if((pid == current->pid) && (address == current->address)){
+            uint64_t i;
+            for ( i = 1; i < current->size; i*=2);
+            memUsed -= i; 
             return TRUE; // liberar
         }
         return FALSE; // no liberar
@@ -194,6 +188,14 @@ bool pBuddyFreeRec(uint64_t pid, void * address, Node * current){
     }
     return FALSE;
     
+}
+
+uint64_t freeMemBuddy(){
+    return MEM_SIZE - usedMemBuddy();
+}
+
+uint64_t usedMemBuddy(){
+    return memUsed;
 }
 
 // void printTree(){
@@ -236,6 +238,7 @@ typedef struct List // SI SE CAMBIA, HAY QUE CAMBIAR EL DEFINE DE MAX_LIST_NODES
 {
     ListNode * head;
     ListNode * last;
+    uint64_t listSize;
 }List;
 
 typedef struct
@@ -257,13 +260,16 @@ Table table;
 ListNode * nextFreeSpaceForListNode(void * address);
 void pListFree(void * address);
 void addNode(void * address);
+void removeNode(ListNode * node);
 void freeListInitializer();
-void * lookAndRemoveBlocksRec(ListNode * node, uint64_t blocks);
+void * lookAndRemoveBlocksRec(ListNode * node, uint64_t totalBlocks, uint64_t blocks);
 void * lookAndRemoveBlocks(uint64_t blocks);
 uint64_t freeTableRow();
 void * pListMalloc(uint64_t size);
 int64_t lookInTable(void * address);
 int64_t findMemIndex(ListNode * node);
+uint64_t freeMemList();
+uint64_t usedMemList();
 
 List * list = TREE_ADDRESS;
 struct occupiedRow isOccupiedNodeSpace[MAX_LIST_NODES];
@@ -276,25 +282,46 @@ void freeListInitializer(){ // EL NEXT DEL HEAD ME QUEDA EN NULL POR ALGUNA RAZO
         table[i].startingAddress = NULL;
         table[i].blocks = 0;
         addNode((char *)MEM_STARTING_ADDRESS + i * MIN_PAGE_SIZE);
-    }   
+    }
 }
 
 void addNode(void * address){
     if(((char *)address - (char *)MEM_STARTING_ADDRESS)% MIN_PAGE_SIZE != 0){ // No es un address valido
         return;
     }
-    if(list->head == NULL){
+    if(list->head == NULL){ // list is empty
         list->last = list->head = nextFreeSpaceForListNode(address);
         list->head->next = NULL;
         list->head->prev = NULL;
         list->head->data = address;
     }
-    else{
-        list->last->next = nextFreeSpaceForListNode(address);
-        list->last->next->prev = list->last;
-        list->last = list->last->next;
-        list->last->next = NULL;
-        list->last->data = address;
+    else{ 
+        ListNode * node = nextFreeSpaceForListNode(address);
+        node->data = address;
+        ListNode * current = list->head;
+        while((current!= NULL) && (current->data < address)){ // go to the position where it should be inserted
+            current = current->next;
+        }
+        if(current == NULL){ //insert at the end
+            node->prev = list->last;
+            node->next = NULL;
+            list->last->next = node;
+            list->last = node;
+        }
+        else if(current->prev == NULL) //insert at the beggining
+        {
+            node->prev = NULL;
+            node->next = list->head;
+            list->head->prev = node;
+            list->head = node;
+        }
+        else //insert between two nodes
+        {
+            node->prev = current->prev;
+            node->next = current;
+            current->prev->next = node;
+            current->prev = node;
+        }
     }
 }
 
@@ -305,12 +332,14 @@ ListNode * nextFreeSpaceForListNode(void * address){
         if(isOccupiedNodeSpace[i].isOccupied == FALSE){
             isOccupiedNodeSpace[i].isOccupied = TRUE;
             isOccupiedNodeSpace[i].address = address;
+            (list->listSize)++;
             return ((ListNode *)(list + 1)) + i;
         }
     }
     if(isOccupiedNodeSpace[i].isOccupied == FALSE){ // Por si se libero el ultimo espacio reservado
         isOccupiedNodeSpace[i].isOccupied = TRUE;
         isOccupiedNodeSpace[i].address = address;
+        (list->listSize)++;
         return ((ListNode *)(list + 1)) + i;
     }
     return NULL;
@@ -344,7 +373,9 @@ void * pListMalloc(uint64_t size){
     if(index == MAX_LIST_NODES + 1)
         return NULL;
     table[index].startingAddress = lookAndRemoveBlocks(blocks);
-    table[index].blocks = blocks;
+    if(table[index].startingAddress != NULL){
+        table[index].blocks = blocks;
+    }
     return table[index].startingAddress;
 }
 
@@ -357,51 +388,54 @@ uint64_t freeTableRow(){
 }
 
 void * lookAndRemoveBlocks(uint64_t blocks){
-    ListNode * node = list->head;
-    void * ans;
-    while(node){
-        if((ans = lookAndRemoveBlocksRec(list->head, blocks)) != NULL)
-            return ans;
-        node = node->next;
-    }
-    return NULL;
+    return lookAndRemoveBlocksRec(list->head, blocks, blocks);
 }
 
-void * lookAndRemoveBlocksRec(ListNode * node, uint64_t blocks){
+void * lookAndRemoveBlocksRec(ListNode * node, uint64_t totalBlocks, uint64_t blocks){
     if(node == NULL)
         return NULL;
     if(blocks == 1){
-        if(node->prev == NULL){
-            list->head = node->next;
-            list->head->prev = NULL;
-        }
-        else{
-            node->prev->next = node -> next;
-            node->prev = NULL;
-            node->next = NULL;
-        }
-        isOccupiedNodeSpace[findMemIndex(node)].isOccupied = FALSE;
+        removeNode(node);
         return node->data;
     }
-    ListNode * current = list -> head;
-    while(current != NULL){
-        if(current->data == (char *)node->data + MIN_PAGE_SIZE){
-            void * ans = lookAndRemoveBlocksRec(current, blocks - 1);
-            if(ans != NULL){
-                if(node->prev == NULL){
-                    list->head = node->next;
-                    list->head->prev = NULL;
-                }
-                else{
-                    node->prev->next = node -> next;
-                }
-                isOccupiedNodeSpace[findMemIndex(node)].isOccupied = FALSE;
-                return node->data;
-            }
+    if(node->next == NULL)
+        return NULL;
+    if(node->next->data == (char *)node->data + MIN_PAGE_SIZE){
+        void * ans = lookAndRemoveBlocksRec(node->next, totalBlocks, blocks-1);
+        if(ans == (char *)node->data + MIN_PAGE_SIZE){
+            removeNode(node);
+            return node->data;
         }
-        current = current->next;
+        else{
+            return ans;
+        }
     }
-    return NULL;
+    return lookAndRemoveBlocksRec(node->next, totalBlocks, totalBlocks);
+}
+
+void removeNode(ListNode * node){
+    if(node == NULL)
+        return;
+    if(node == list->head){
+        // cambio de cabeza
+        list->head = list->head->next;
+        if(list->head != NULL)
+            list->head->prev = NULL;
+        else
+            list->last = NULL;
+    }
+    else{
+        node->prev->next = node->next;
+        if(node->next != NULL){
+            node->next->prev = node->prev;
+        }
+        else{
+            // cambio de last
+            list->last = node->prev;
+        }
+    }
+    isOccupiedNodeSpace[findMemIndex(node)].isOccupied = FALSE;
+    (list->listSize)--;
 }
 
 int64_t findMemIndex(ListNode * node){
@@ -413,11 +447,18 @@ int64_t findMemIndex(ListNode * node){
     return -1;
 }
 
+uint64_t freeMemList(){
+    return (list->listSize) * MIN_PAGE_SIZE;
+}
+uint64_t usedMemList(){
+    return (uint64_t)MEM_SIZE - freeMemList();
+}
+
 // void printTable(){
 //     for (int i = 0; i < MAX_LIST_NODES; i++)
 //     {
 //         if((table[i].startingAddress != NULL) && (table[i].blocks != 0))
-//             printf("%d.  %p - %" PRId64 "\n", i, table[i].startingAddress, table[i].blocks);
+//             printf("%d.  %p - %p - %" PRId64 "\n", i, table[i].startingAddress, (void*)((char*)table[i].startingAddress + table[i].blocks*MIN_PAGE_SIZE),table[i].blocks);
 //     }
 // }
 
@@ -427,7 +468,6 @@ int64_t findMemIndex(ListNode * node){
 //         printf("%p->", current->data);
 //     }
 //     printf("\n");
-//     printf("%p\n", MIN_PAGE_SIZE);
 // }
 #endif
 
@@ -453,7 +493,7 @@ void * pmalloc(uint64_t size, uint64_t pid){
 
 void pfree(uint64_t pid, void * address){
     #ifdef MODO_BUDDY
-    pBuddyFreeRec(pid, address, root);
+    pBuddyFree(pid, address);
     #endif
     #ifdef MODO_FREE_LIST
     pListFree(address);
@@ -469,5 +509,22 @@ void * prealloc(void * ptr, uint64_t newSize, uint64_t pid){
     #ifdef MODO_FREE_LIST
     pListFree(ptr);
     return pListMalloc(newSize);
+    #endif
+}
+
+uint64_t freeMemoryLeft(){
+    #ifdef MODO_BUDDY
+    return freeMemBuddy();
+    #endif
+    #ifdef MODO_FREE_LIST
+    return freeMemList();
+    #endif
+}
+uint64_t usedMemory(){
+    #ifdef MODO_BUDDY
+    return usedMemBuddy();
+    #endif
+    #ifdef MODO_FREE_LIST
+    return usedMemList();
     #endif
 }
