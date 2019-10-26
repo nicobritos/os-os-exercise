@@ -1,5 +1,5 @@
 #include "process.h"
-//#include "scheduler.h"
+#include "scheduler.h"
 
 static int nextPid = 0; 
 static t_process processes[MAX_PROC];
@@ -23,7 +23,7 @@ createProcess(char * name, int (*entryPoint)(int, char**),int ppid, int argc, ch
     initializeStack(newProcess->stackPointer,newProcess->entryPoint,newProcess->processMemoryLowerAddress, argc, argv);
     
     processes[nextPid++] = * newProcess;
-    int success = addProcess(newProcess /* , LOW  */ );
+    int success = addProcess(newProcess, LOW);
     if (!success)
     {
         //HACER EL FREE
