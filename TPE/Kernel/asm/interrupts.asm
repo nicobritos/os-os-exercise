@@ -263,10 +263,14 @@ _syscall:
   jmp .cont
 
 .syscallMalloc
+  mov rdi, rsi	; re-ordering the arguments to send to sys_pixel
+  mov rsi, rdx
   call sys_malloc
   jmp .cont
 
 .syscallFree
+  mov rdi, rsi	; re-ordering the arguments to send to sys_pixel
+  mov rsi, rdx
   call sys_free
   jmp .cont
 
