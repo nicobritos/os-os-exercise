@@ -16,4 +16,8 @@ void * malloc(uint64_t size);
 
 void free(void * address);
 
+unsigned int lineCount(char * input);
+
+char * filterVowels(char * dest, char * src);
+
 #endif /* STDLIB_H_ */

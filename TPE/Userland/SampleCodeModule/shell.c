@@ -6,8 +6,8 @@
 
 
 int parse(char* input){
-    if(strncmp(input, "echo ", 5) == 0) {
-      char* phrase = &(input[5]);
+    if(strncmp(input, "cat ", 4) == 0) {
+      char* phrase = &(input[4]);
       printf("\n%s", phrase);
       return 0;
     } else if(strcmp(input,"snake") == 0){
@@ -38,6 +38,19 @@ int parse(char* input){
       printf("\n%l / %l bytes utilizados", usedMem(), freeMem());
       return 0;
     }
+    else if(strcmp(input, "wc") == 0){
+      printf("\n");
+      char buffer[1000];
+      int separator = -1;
+      scanf(buffer, 1000, separator);
+      printf("\n%d", lineCount(buffer));
+      return 0;
+    }
+    else if(strncmp(input, "filter ", 7) == 0){
+      char phrase[1000];
+      printf("\n%s", filterVowels(phrase, &(input[7])));
+      return 0;
+    }
     else{
       printf("\nWrong command");
       return 0;
@@ -54,7 +67,7 @@ void shell(){
 
     while (!flag) {
 		  printf("\nUser $> ");
-		  scanf(buffer, BUFFER_LENGTH);
+		  scanf(buffer, BUFFER_LENGTH, '\n');
 		  flag = parse(buffer);
 	  }
 

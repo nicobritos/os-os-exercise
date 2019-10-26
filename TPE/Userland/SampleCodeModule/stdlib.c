@@ -115,3 +115,29 @@ void * malloc(uint64_t size){
 void free(void * address){
 	os_free(address, 0); //CAMBIAR 0 POR GETPID
 }
+
+unsigned int lineCount(char * input){
+	unsigned int count = 1;
+	int terminator = -1;
+	unsigned int i = 0;
+	while(input[i] != 0){
+		if(input[i] == '\n')
+			count++;
+		i++;
+	}
+	return count;
+}
+
+char * filterVowels(char * buffer, char * input){
+	unsigned int i = 0;
+	unsigned int bufferI = 0;
+	while((input[i] != 0) && (i<200)){
+		if((input[i] != 'a') && (input[i] != 'e') && (input[i] != 'i') && (input[i] != 'o') && (input[i] != 'u') && (input[i] != 'A') && (input[i] != 'E') && (input[i] != 'I') && (input[i] != 'O') && (input[i] != 'U') ){
+			buffer[bufferI] = input[i];
+			bufferI++;
+		}
+		i++;
+	}
+	buffer[bufferI] = 0;
+	return buffer;
+}
