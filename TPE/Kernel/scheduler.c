@@ -46,7 +46,6 @@ static t_process *idleProcess = NULL;
 void loadNextProcess(t_stack *currentProcessStack);
 queueNodeADT fetchNextNode();
 void dispatchProcess(t_process *process, t_stack *currentProcessStack);
-void updateProcessState(t_stack *dst, t_stack *src);
 queueNodeADT getNode(int pid, queueADT queue);
 queueNodeADT getNodeReadyQueue(int pid);
 queueNodeADT getNodeWaitingQueue(int pid);
@@ -57,10 +56,10 @@ void moveNode(queueNodeADT processNode, queueADT fromQueue, queueADT toQueue);
 void initScheduler(t_process *_idleProcess) {
 	idleProcess = _idleProcess;
 
-	waitingQueue = malloc(sizeof(queueCDT));
+	waitingQueue = pmalloc(sizeof(queueCDT), SYSTEM_PID);
 	waitingQueue->firstProcessNode = waitingQueue->lastProcessNode = NULL;
 
-	readyQueue = malloc(sizeof(queueCDT));
+	readyQueue = pmalloc(sizeof(queueCDT), SYSTEM_PID);
 	readyQueue->firstProcessNode = readyQueue->lastProcessNode = NULL;
 
 	initialized = 1;
@@ -86,7 +85,7 @@ void runScheduler(t_stack *currentProcessStack) {
 }
 
 uint8_t addProcess(t_process *process, t_priority priority) {
-	queueNodeADT processNode = malloc(sizeof(queueNodeCDT));
+	queueNodeADT processNode = pmalloc(sizeof(queueNodeCDT), SYSTEM_PID);
 	if (processNode == NULL) {
 		// TODO: Error
 		return 0;
@@ -119,7 +118,7 @@ void killProcess(int pid) {
 	}
 
 	if (processNode == currentProcessNode) {
-		processNode->process->state = KILLED;
+		processNode->process->state = DEAD;
 	} else {
 		removeProcess(processNode, readyQueue);
 	}
@@ -155,7 +154,7 @@ void unlockProcess(int pid) {
 }
 
 processListADT createProcessList() {
-	processListADT processList = malloc(sizeof(processListCDT));
+	processListADT processList = pmalloc(sizeof(processListCDT), SYSTEM_PID);
 	processList->currentProcessNode = NULL;
 	processListNodeADT processListNode = NULL;
 	processList->initialized = 0;
@@ -164,12 +163,12 @@ processListADT createProcessList() {
 	queueNodeADT processNode = readyQueue->firstProcessNode;
 	while (processNode != NULL) {
 		if (processListNode == NULL) {
-			processListNode = processList->firstProcessNode = malloc(sizeof(processListNodeCDT));
+			processListNode = processList->firstProcessNode = pmalloc(sizeof(processListNodeCDT), SYSTEM_PID);
 		} else {
-			processListNode = processListNode->next = malloc(sizeof(processListNodeCDT));
+			processListNode = processListNode->next = pmalloc(sizeof(processListNodeCDT), SYSTEM_PID);
 		}
 
-		processListNode->process = malloc(sizeof(t_process));
+		processListNode->process = pmalloc(sizeof(t_process), SYSTEM_PID);
 		memcpy(processListNode->process, processNode->process, sizeof(t_process));
 		processList->length++;
 
@@ -204,13 +203,13 @@ t_process *getNextProcess(processListADT processList) {
 
 	if (!processList->initialized) {
 		processList->initialized = 1;
-		return processList->currentProcessNode = processList->firstProcessNode;
-	}
-
-	if (processList->currentProcessNode == NULL) {
 		processList->currentProcessNode = processList->firstProcessNode;
 	} else {
-		processList->currentProcessNode = processList->currentProcessNode->next;
+		if (processList->currentProcessNode == NULL) {
+			processList->currentProcessNode = processList->firstProcessNode;
+		} else {
+			processList->currentProcessNode = processList->currentProcessNode->next;
+		}
 	}
 
 	return processList->currentProcessNode->process;
@@ -224,11 +223,11 @@ void freeProcessesList(processListADT processList) {
 		processListNode = processList->firstProcessNode;
 		while (processListNode != NULL) {
 			auxProcessListNode = processListNode->next;
-			free(processListNode->process);
-			free(processListNode);
+			pfree(processListNode->process, SYSTEM_PID);
+			pfree(processListNode, SYSTEM_PID);
 			processListNode = auxProcessListNode;
 		}
-		free(processList);
+		pfree(processList, SYSTEM_PID);
 		processList = NULL;
 	}
 }
@@ -246,7 +245,7 @@ void loadNextProcess(t_stack *currentProcessStack) {
 	} else {
 		if (currentProcessNode != NULL) {
 			currentProcessNode->process->state = READY;
-			updateProcessState(currentProcessNode->process->stack, currentProcessStack);
+			updateStack(currentProcessNode->process->stackPointer, currentProcessStack);
 		}
 
 		currentProcessNode = nextProcessNode;
@@ -267,7 +266,7 @@ queueNodeADT fetchNextNode() {
 		if (currentNode == NULL) {
 			currentNode = readyQueue->firstProcessNode;
 		} else {
-			if (currentNode->process->state == KILLED) {
+			if (currentNode->process->state == DEAD) {
 				removeProcess(currentNode, readyQueue);
 			} else if (currentNode->process->state == READY) {
 				break;
@@ -286,32 +285,7 @@ queueNodeADT fetchNextNode() {
 
 void dispatchProcess(t_process *process, t_stack *currentProcessStack) {
 	process->state = RUNNING;
-	updateProcessState(currentProcessStack, process->stack);
-}
-
-void updateProcessState(t_stack *dst, t_stack *src) {
-	// TODO: Change to order in struct t_stack
-	dst->r15 = src->r15;
-	dst->r14 = src->r14;
-	dst->r13 = src->r13;
-	dst->r12 = src->r12;
-	dst->r11 = src->r11;
-	dst->r10 = src->r10;
-	dst->r9 = src->r9;
-	dst->r8 = src->r8;
-	
-	dst->rsi = src->rsi;
-	dst->rdi = src->rdi;
-	dst->rbp = src->rbp;
-	
-	dst->rdx = src->rdx;
-	dst->rcx = src->rcx;
-	dst->rbx = src->rbx;
-	dst->rax = src->rax;
-	
-	dst->rip = src->rip;
-	dst->rflags = src->rflags;
-	dst->rsp = src->rsp;
+	updateStack(currentProcessStack, process->stackPointer);
 }
 
 queueNodeADT getNode(int pid, queueADT queue) {
@@ -341,7 +315,8 @@ void removeProcess(queueNodeADT processNode, queueADT queue) {
 		queue->lastProcessNode = NULL;
 	}
 
-	free(processNode);
+	freeProcess(processNode->process);
+	pfree(processNode, SYSTEM_PID);
 	queue->count--;
 }
 

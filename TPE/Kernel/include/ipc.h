@@ -1,7 +1,6 @@
 #ifndef _IPC_H
 	#define _IPC_H
 	#include <stdint.h>
-	#define NULL ((void*)0)
 
 	#define _PIPE_NO_ERROR 0
 	#define _SEM_INVALID_SEMAPHORE -1
@@ -20,9 +19,8 @@
 	typedef struct t_pipeCDT *t_pipeADT;
 	typedef struct t_pipe_listCDT *t_pipe_listADT;
 
-	t_pipeADT createPipe(const char *name);
-	t_pipeADT openPipe(const char *name, uint8_t mode);
-	void closePipe(t_pipeADT pipe);
+	t_pipeADT openPipe(const char *name, uint8_t mode, int pid);
+	void closePipe(t_pipeADT pipe, int pid);
 
 	void read(t_pipeADT pipe, char *dst, uint64_t length);
 	void write(t_pipeADT pipe, char *src, uint64_t length);

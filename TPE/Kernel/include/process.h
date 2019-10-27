@@ -2,15 +2,13 @@
 #define PROCESS_H
 
 #include "stdint.h"
-//#include "BuddyAllocationSystem.h"
 #include "lib.h"
-//#include "queueADT.h"
 
 #define PROC_SIZE 4096
 #define MAX_PROC 20
+#define SYSTEM_PID 0
 
-
-typedef enum {RUNNING, READY, WAITING, DEAD} t_state;
+typedef enum {RUNNING, READY, WAITING, DEAD, LOCKED} t_state;
 
 typedef struct
     {
@@ -54,6 +52,6 @@ typedef struct
     void processWrapper(int argc, char * argv[], void * startingPoint);
     void initializeStack(t_stack * stackFrame, int argc, char * argv[], void * startingPoint);
     void freeProcess(t_process * process);
-
+    void updateStack(t_stack *dst, t_stack *src);
 
 #endif

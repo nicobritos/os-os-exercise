@@ -1,3 +1,5 @@
+#include "memManager.h"
+#include "scheduler.h"
 #include "process.h"
 #include "string.h"
 #include "sync.h"
@@ -52,7 +54,7 @@ static t_sem_nodeADT firstSemaphoreNode = NULL;
 
 void processQueue(t_semADT semaphore);
 t_sem_nodeADT getPreviousSemaphoreNodeWithName(const char *name);
-uint8_t removeProcessFromSemaphoreNode(int pid, t_sem_nodeADT semaphoreNode);
+uint8_t removeProcessFromSemaphore(int pid, t_semADT semaphore);
 void freeWaitingProcessList(t_semaphore_list_nodeADT semaphoreListNode);
 void createWaitingProcessList(t_semaphore_list_nodeADT semaphoreListNode, t_semADT semaphore);
 
@@ -63,13 +65,13 @@ t_semADT createSemaphore(const char *name, int64_t initialValue) {
 	t_sem_nodeADT newSemaphoreNode;
 
 	if (existingSemaphoreNode == NULL) {
-		newSemaphoreNode = firstSemaphoreNode = malloc(sizeof(t_sem_nodeCDT));
+		newSemaphoreNode = firstSemaphoreNode = pmalloc(sizeof(t_sem_nodeCDT), SYSTEM_PID);
 		if (newSemaphoreNode == NULL) return NULL; // TODO: Error
 		
 		newSemaphoreNode->next = newSemaphoreNode->previous = NULL;
 	} else {
 		if (strcmp(existingSemaphoreNode->semaphore->name, name) == 0) return NULL; // TODO: Error
-		newSemaphoreNode = malloc(sizeof(t_sem_nodeCDT));
+		newSemaphoreNode = pmalloc(sizeof(t_sem_nodeCDT), SYSTEM_PID);
 		if (newSemaphoreNode == NULL) return NULL; // TODO: Error
 
 		newSemaphoreNode->next = existingSemaphoreNode->next;
@@ -79,7 +81,7 @@ t_semADT createSemaphore(const char *name, int64_t initialValue) {
 		}
 	}
 
-	newSemaphoreNode->semaphore = malloc(sizeof(t_semCDT));
+	newSemaphoreNode->semaphore = pmalloc(sizeof(t_semCDT), SYSTEM_PID);
 	newSemaphoreNode->semaphore->name = name;
 	newSemaphoreNode->semaphore->value = initialValue;
 
@@ -93,9 +95,9 @@ t_semADT openSemaphore(const char *name) {
 	return semaphoreNode->semaphore;
 }
 
-void closeSemaphore(t_semADT semaphore) {
+void closeSemaphore(t_semADT semaphore, int pid) {
 	if (semaphore == NULL) return;
-	removeProcessFromSemaphoreNode(getpid(), semaphore);
+	removeProcessFromSemaphore(pid, semaphore);
 }
 
 int8_t post(t_semADT semaphore) {
@@ -108,14 +110,14 @@ int8_t post(t_semADT semaphore) {
 	return _SEM_NO_ERROR;
 }
 
-int8_t wait(t_semADT semaphore) {
+int8_t wait(t_semADT semaphore, int pid) {
 	if (semaphore == NULL) return _SEM_INVALID_SEMAPHORE;
 	if (semaphore->value == INT64_MIN) return _SEM_SEMAPHORE_MIN_VALUE;
 
-	t_process_nodeADT processNode = malloc(sizeof(t_process_nodeCDT));
-	if (malloc == NULL) return _SEM_MEMORY_ALLOC_ERROR;
+	t_process_nodeADT processNode = pmalloc(sizeof(t_process_nodeCDT), SYSTEM_PID);
+	if (processNode == NULL) return _SEM_MEMORY_ALLOC_ERROR;
 
-	processNode->pid = getpid();
+	processNode->pid = pid;
 	processNode->next = NULL;
 	processNode->previous = semaphore->lastWaitingProcessNode;
 	if (processNode->previous != NULL) {
@@ -131,7 +133,7 @@ int8_t wait(t_semADT semaphore) {
 
 // Iterator
 t_semaphore_listADT createSemaphoreList() {
-	t_semaphore_listADT semaphoreList = malloc(sizeof(t_semaphore_listCDT));
+	t_semaphore_listADT semaphoreList = pmalloc(sizeof(t_semaphore_listCDT), SYSTEM_PID);
 	semaphoreList->currentSemaphoreNode = NULL;
 	t_semaphore_list_nodeADT semaphoreListNode = NULL;
 	semaphoreList->initialized = 0;
@@ -140,9 +142,9 @@ t_semaphore_listADT createSemaphoreList() {
 	t_sem_nodeADT semaphoreNode = firstSemaphoreNode;
 	while (semaphoreNode != NULL) {
 		if (semaphoreListNode == NULL) {
-			semaphoreListNode = semaphoreList->firstSemaphoreNode = malloc(sizeof(t_semaphore_list_nodeCDT));
+			semaphoreListNode = semaphoreList->firstSemaphoreNode = pmalloc(sizeof(t_semaphore_list_nodeCDT), SYSTEM_PID);
 		} else {
-			semaphoreListNode = semaphoreListNode->next = malloc(sizeof(t_semaphore_list_nodeCDT));
+			semaphoreListNode = semaphoreListNode->next = pmalloc(sizeof(t_semaphore_list_nodeCDT), SYSTEM_PID);
 		}
 
 		createWaitingProcessList(semaphoreListNode, semaphoreNode->semaphore);
@@ -234,10 +236,10 @@ void freeSemaphoreList(t_semaphore_listADT semaphoreList) {
 		while (semaphoreListNode != NULL) {
 			freeWaitingProcessList(semaphoreListNode);
 			auxSemaphoreList = semaphoreListNode->next;
-			free(semaphoreListNode);
+			pfree(semaphoreListNode, SYSTEM_PID);
 			semaphoreListNode = auxSemaphoreList;
 		}
-		free(semaphoreList);
+		pfree(semaphoreList, SYSTEM_PID);
 	}
 }
 
@@ -246,7 +248,7 @@ void freeSemaphoreList(t_semaphore_listADT semaphoreList) {
 void removeProcess(int pid) {
 	t_sem_nodeADT currentSemaphoreNode = firstSemaphoreNode;
 
-	while (currentSemaphoreNode != NULL && !removeProcessFromSemaphoreNode(pid, currentSemaphoreNode)) {
+	while (currentSemaphoreNode != NULL && !removeProcessFromSemaphore(pid, currentSemaphoreNode->semaphore)) {
 		currentSemaphoreNode = currentSemaphoreNode->next;
 	}
 }
@@ -261,7 +263,7 @@ void processQueue(t_semADT semaphore) {
 		unlockProcess(processNode->pid);
 		auxProcessNode = processNode;
 		processNode = processNode->next;
-		free(auxProcessNode);
+		pfree(auxProcessNode, SYSTEM_PID);
 		semaphore->value--;
 	}
 
@@ -285,21 +287,21 @@ t_sem_nodeADT getPreviousSemaphoreNodeWithName(const char *name) {
 	return semaphoreNode;
 }
 
-uint8_t removeProcessFromSemaphoreNode(int pid, t_sem_nodeADT semaphoreNode) {
-	t_process_nodeADT currentWaitingProcessNode = semaphoreNode->semaphore->firstWaitingProcessNode;
+uint8_t removeProcessFromSemaphore(int pid, t_semADT semaphore) {
+	t_process_nodeADT currentWaitingProcessNode = semaphore->firstWaitingProcessNode;
 	while (currentWaitingProcessNode != NULL) {
 		if (currentWaitingProcessNode->pid == pid) {
 			if (currentWaitingProcessNode->previous != NULL) {
 				currentWaitingProcessNode->previous->next = currentWaitingProcessNode->next;
 			} else {
-				semaphoreNode->semaphore->firstWaitingProcessNode = semaphoreNode->next;
+				semaphore->firstWaitingProcessNode = currentWaitingProcessNode->next;
 			}
-			if (semaphoreNode->semaphore->lastWaitingProcessNode == currentWaitingProcessNode) {
-				semaphoreNode->semaphore->lastWaitingProcessNode = currentWaitingProcessNode->previous;
+			if (semaphore->lastWaitingProcessNode == currentWaitingProcessNode) {
+				semaphore->lastWaitingProcessNode = currentWaitingProcessNode->previous;
 			}
-			free(currentWaitingProcessNode);
+			pfree(currentWaitingProcessNode, SYSTEM_PID);
 
-			if (semaphoreNode->semaphore->value < 0) semaphoreNode->semaphore->value++;
+			if (semaphore->value < 0) semaphore->value++;
 			return 1;
 		}
 	}
@@ -310,16 +312,16 @@ void createWaitingProcessList(t_semaphore_list_nodeADT semaphoreListNode, t_semA
 	semaphoreListNode->currentWaitingProcessNode = NULL;
 	semaphoreListNode->value = semaphore->value;
 	semaphoreListNode->initialized = 0;
-	semaphoreListNode->name = malloc(sizeof(char) * (strlen(semaphore->name) + 1));
+	semaphoreListNode->name = pmalloc(sizeof(char) * (strlen(semaphore->name) + 1), SYSTEM_PID);
 	strcpy(semaphoreListNode->name, semaphore->name);
 
 	t_process_nodeADT processNode = semaphore->firstWaitingProcessNode;
 	t_process_list_nodeADT processListNode = NULL;
 	while (processNode != NULL) {
 		if (processListNode == NULL) {
-			processListNode = semaphoreListNode->firstWaitingProcessNode = malloc(sizeof(t_process_list_nodeCDT));
+			processListNode = semaphoreListNode->firstWaitingProcessNode = pmalloc(sizeof(t_process_list_nodeCDT), SYSTEM_PID);
 		} else {
-			processListNode = processListNode->next = malloc(sizeof(t_process_list_nodeCDT));
+			processListNode = processListNode->next = pmalloc(sizeof(t_process_list_nodeCDT), SYSTEM_PID);
 		}
 
 		processListNode->pid = processNode->pid;
@@ -338,7 +340,7 @@ void freeWaitingProcessList(t_semaphore_list_nodeADT semaphoreListNode) {
 		processNode = semaphoreListNode->firstWaitingProcessNode;
 		while (processNode != NULL) {
 			auxProcessNode = processNode->next;
-			free(processNode);
+			pfree(processNode, SYSTEM_PID);
 			processNode = auxProcessNode;
 		}
 	}

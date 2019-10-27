@@ -1,7 +1,6 @@
 #include "include/memManager.h"
 #define FALSE 0
 #define TRUE !FALSE
-#define NULL ((void *)0)
 
 #define MEM_SIZE 1048576 // 1 MiB (a parte de la usada para el arbol)
 

@@ -1,5 +1,6 @@
 #ifndef _SCHEDULER_H
 	#define _SCHEDULER_H
+	#include "memManager.h"
 	#include <stdint.h>
 	#include "process.h"
 	#include "lib.h"
