@@ -25,30 +25,20 @@ typedef struct t_sem_nodeCDT {
 	t_sem_nodeADT previous;
 } t_sem_nodeCDT;
 
-typedef struct t_sem_listCDT {
-	t_sem_nodeADT firstSemaphoreNode;
-	t_sem_nodeADT lastSemaphoreNode;
-} t_sem_listCDT;
-
-static t_sem_listADT semaphoreList = NULL;
+static t_sem_nodeADT firstSemaphoreNode = NULL;
 
 void processQueue(t_semADT semaphore);
 void getPreviousSemaphoreWithName(const char *name);
 uint8_t removeProcessFromSemaphore(int pid, t_semADT semaphore);
 
 // PUBLIC
-int8_t initializeSemaphore() {
-	semaphoreList = malloc(sizeof(t_sem_listCDT));
-	if (semaphoreList == NULL) return _SEM_MEMORY_ALLOC_ERROR;
-}
-
 t_semADT createSemaphore(const char *name, int64_t initialValue) {
 	if (name == NULL) return _SEM_INVALID_NAME;
 	t_semADT existingSemaphore = getPreviousSemaphoreWithName(name);
 	t_semADT newSemaphore;
 
 	if (existingSemaphore == NULL) {
-		newSemaphore = semaphoreList->firstSemaphoreNode = semaphoreList->lastSemaphoreNode = malloc(sizeof(t_sem_nodeCDT));
+		newSemaphore = firstSemaphoreNode = malloc(sizeof(t_sem_nodeCDT));
 		if (newSemaphore == NULL) return NULL; // TODO: Error
 		
 		newSemaphore->next = newSemaphore->previous = NULL;
@@ -59,9 +49,7 @@ t_semADT createSemaphore(const char *name, int64_t initialValue) {
 
 		newSemaphore->next = existingSemaphore->next;
 		newSemaphore->previous = existingSemaphore;
-		if (existingSemaphore->next == NULL) {
-			semaphoreList->lastSemaphoreNode = newSemaphore;
-		} else {
+		if (existingSemaphore->next != NULL) {
 			existingSemaphore->next->previous = newSemaphore;
 		}
 	}
@@ -117,7 +105,7 @@ int8_t wait(t_semADT semaphore) {
 
 // Should only visibile to Kernel?
 void removeProcess(int pid) {
-	t_sem_nodeADT currentSemaphoreNode = semaphoreList->firstSemaphoreNode;
+	t_sem_nodeADT currentSemaphoreNode = firstSemaphoreNode;
 
 	while (currentSemaphoreNode != NULL && !removeProcessFromSemaphore(pid, currentSemaphoreNode)) {
 		currentSemaphoreNode = currentSemaphoreNode->next;
@@ -167,8 +155,8 @@ void processQueue(t_semADT semaphore) {
 }
 
 void getPreviousSemaphoreWithName(const char *name) {
-	if (semaphoreList->firstSemaphoreNode == NULL) return NULL;
-	t_sem_nodeADT semaphoreNode = semaphoreList->firstSemaphoreNode;
+	if (firstSemaphoreNode == NULL) return NULL;
+	t_sem_nodeADT semaphoreNode = firstSemaphoreNode;
 
 	int16_t difference = -1;
 	while (semaphoreNode->next != NULL && difference < 0) {
