@@ -9,3 +9,28 @@ int8_t strcmp(const char *s1, const char *s2) {
 	}
 	return difference;
 }
+
+uint64_t strcpy(char *dst, const char *src) {
+	uint64_t length = 0;
+	
+	while (*src != '\0') {
+		*dst = *src;
+		src++;
+		dst++;
+		length++;
+	}
+	*dst = '\0';
+
+	return length;
+}
+
+uint64_t strlen(const char *s) {
+	uint64_t length = 0;
+	
+	while (*s != '\0') {
+		s++;
+		length++;
+	}
+
+	return length;
+}
