@@ -31,10 +31,12 @@ typedef struct Node{ // SI SE CAMBIA, HAY QUE CAMBIAR EL DEFINE DE MAX_NODES
 Node createNode(void * address, uint64_t size, uint64_t pid);
 void * buddyAlloc(uint64_t size, uint64_t pid);
 void * recursiveBuddyAlloc(uint64_t size, uint64_t pid, uint64_t blockSizeWanted, Node * current, uint64_t currentLevelSize);
+
 void createLeftChild(Node * parent, uint64_t size, uint64_t pid);
 void createRightChild(Node * parent, uint64_t childsBlockSize, uint64_t size, uint64_t pid);
 // void recPrint(Node * node, int depth);
 Node * nextFreeSpaceForNode();
+
 void pBuddyFree(uint64_t pid, void * address);
 bool pBuddyFreeRec(uint64_t pid, void * address, Node * current);
 void buddyInitializer();
@@ -45,6 +47,7 @@ Node * root = TREE_ADDRESS;
 bool isOccupiedNodeSpace[MAX_NODES];
 uint64_t lastUsedIndex; // Of the isOccupiedNodeSpace array
 uint64_t memUsed;
+
 
 
 void buddyInitializer(){
