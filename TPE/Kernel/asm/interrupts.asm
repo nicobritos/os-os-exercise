@@ -228,8 +228,7 @@ _syscall:
 
   cmp rdi, 101    ; ptrace
   je .syscallPtrace
-
-
+  
   cmp rdi, 0x08
   je .syscallUsedMem
 
