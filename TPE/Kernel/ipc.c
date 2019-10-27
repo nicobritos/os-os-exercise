@@ -6,14 +6,22 @@ typedef struct t_pipeCDT {
 	char buffer[_PIPE_BUFFER];
 	char *readingPointer;
 	char *writingPointer;
+	char *name;
 
 	t_pipeADT next;
 	t_pipeADT previous;
 } t_pipeCDT;
 
-static t_pipeADT fistPipe = NULL;
+typedef struct t_pipe_listCDT {
+	t_pipeADT firstPipe;
+	t_pipeADT currentPipe;
+	uint64_t length;
+	uint8_t initialized;
+} t_pipe_listCDT;
 
-void getPreviousPipeWithName(const char *name);
+static t_pipeADT firstPipe = NULL;
+
+t_pipeADT getPreviousPipeWithName(const char *name);
 
 // PUBLIC
 t_pipeADT openPipe(const char *name, uint8_t mode) {
@@ -23,9 +31,10 @@ t_pipeADT openPipe(const char *name, uint8_t mode) {
 
 	if (existingPipe == NULL) {
 		if (mode & _PIPE_CREATE) {
-			newPipe = fistPipe = malloc(sizeof(t_pipeCDT));
+			newPipe = firstPipe = malloc(sizeof(t_pipeCDT));
 			if (newPipe == NULL) return NULL; // TODO: Error
 			
+			newPipe->name = name;
 			newPipe->next = newPipe->previous = NULL;
 		} else {
 			return NULL;
@@ -49,6 +58,7 @@ t_pipeADT openPipe(const char *name, uint8_t mode) {
 			newPipe = malloc(sizeof(t_pipeCDT));
 			if (newPipe == NULL) return NULL; // TODO: Error
 
+			newPipe->name = name;
 			newPipe->next = existingPipe->next;
 			newPipe->previous = existingPipe;
 			if (existingPipe->next != NULL) {
@@ -85,9 +95,9 @@ void read(t_pipeADT pipe, char *dst, uint64_t length);
 void write(t_pipeADT pipe, char *src, uint64_t length);
 
 // PRIVATE
-void getPreviousPipeWithName(const char *name) {
+t_pipeADT getPreviousPipeWithName(const char *name) {
 	int16_t difference = -1;
-	t_pipeADT auxPipe = fistPipe;
+	t_pipeADT auxPipe = firstPipe;
 	if (auxPipe == NULL) return NULL;
 
 	while (auxPipe->next != NULL && difference < 0) {
@@ -96,4 +106,82 @@ void getPreviousPipeWithName(const char *name) {
 
 	if (difference > 0) return auxPipe->previous;
 	return auxPipe;
+}
+
+
+t_pipe_listADT createPipeList() {
+	t_pipe_listADT pipeList = malloc(sizeof(t_pipe_listCDT));
+	pipeList->currentPipe = NULL;
+	pipeList->initialized = 0;
+	pipeList->length = 0;
+
+	t_pipeADT pipeListNode;
+	t_pipeADT previousPipeListNode = NULL;
+	t_pipeADT pipe = firstPipe;
+	while (pipe != NULL) {
+		if (pipeListNode == NULL) {
+			pipeListNode = pipeList->firstPipe = malloc(sizeof(t_pipeCDT));
+		} else {
+			pipeListNode = pipeListNode->next = malloc(sizeof(t_pipeCDT));
+		}
+
+		memcpy(pipeListNode, pipe, sizeof(t_pipeCDT));
+		pipeListNode->previous = previousPipeListNode;
+		pipeList->length++;
+		pipe = pipe->next;
+		previousPipeListNode = pipeListNode;
+	}
+	if (pipeListNode != NULL) {
+		pipeListNode->next = NULL;
+	}
+
+	return pipeList;
+}
+
+uint64_t getPipeListLength(t_pipe_listADT pipeList) {
+	if (pipeList != NULL) return pipeList->length;
+	return 0;
+}
+
+uint8_t hasNextPipe(t_pipe_listADT pipeList) {
+	if (pipeList != NULL) {
+		if (!pipeList->initialized) {
+			return pipeList->firstPipe != NULL;
+		} else {
+			return pipeList->currentPipe->next != NULL;
+		}
+	}
+	return 0;
+}
+
+t_pipeADT getNextPipe(t_pipe_listADT pipeList) {
+	if (!hasNextPipe(pipeList)) return NULL;
+
+	if (!pipeList->initialized) {
+		pipeList->initialized = 1;
+		return pipeList->currentPipe = pipeList->firstPipe;
+	}
+
+	if (pipeList->currentPipe == NULL) {
+		pipeList->currentPipe = pipeList->firstPipe;
+	} else {
+		pipeList->currentPipe = pipeList->currentPipe->next;
+	}
+
+	return pipeList->currentPipe;
+}
+
+void freePipeList(t_pipe_listADT pipeList) {
+	t_pipeADT pipeNode;
+	t_pipeADT auxPipeNode;
+
+	if (pipeList != NULL) {
+		pipeNode = pipeList->firstPipe;
+		while (pipeNode != NULL) {
+			auxPipeNode = pipeNode->next;
+			free(pipeNode);
+			pipeNode = auxPipeNode;
+		}
+		free(pipeList);
+	}
 }
