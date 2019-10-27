@@ -33,6 +33,10 @@ EXTERN sys_kill
 EXTERN sys_getpriority
 EXTERN sys_setpriority
 EXTERN sys_ptrace
+EXTERN sys_used_mem
+EXTERN sys_free_mem
+EXTERN sys_malloc
+EXTERN sys_free
 
 
 SECTION .text
@@ -225,7 +229,17 @@ _syscall:
   cmp rdi, 101    ; ptrace
   je .syscallPtrace
 
+  cmp rdi, 0x08
+  je .syscallUsedMem
 
+  cmp rdi, 0x09
+  je .syscallFreeMem
+
+  cmp rdi, 0x10
+  je .syscallMalloc
+
+  cmp rdi, 0x11
+  je .syscallFree
 .cont:
 	mov rsp, rbp
   pop rbp
@@ -316,6 +330,25 @@ _syscall:
   call sys_ptrace
   jmp .cont
 
+.syscallUsedMem
+  call sys_used_mem
+  jmp .cont
+
+.syscallFreeMem
+  call sys_free_mem
+  jmp .cont
+
+.syscallMalloc
+  mov rdi, rsi	; re-ordering the arguments to send to sys_pixel
+  mov rsi, rdx
+  call sys_malloc
+  jmp .cont
+
+.syscallFree
+  mov rdi, rsi	; re-ordering the arguments to send to sys_pixel
+  mov rsi, rdx
+  call sys_free
+  jmp .cont
 
 ;Zero Division Exception
 _exception0Handler:

@@ -5,10 +5,20 @@
 int printf(const char* format, ...);
 
 void putchar(char letter){
-	write(1,&letter, 1);     		/* write -- recibe char * y la longitud (siempre 1) */
+	if(letter == -1){
+		char * ctrld = "^D";
+		write(1, ctrld, 2);
+	}
+	else if(letter == 0x03){
+		char * ctrlc = "^C";
+		write(1, ctrlc, 2);
+	}
+	else{
+		write(1,&letter, 1);     		/* write -- recibe char * y la longitud (siempre 1) */
+	}
 }
 
-char getchar(){
+int getchar(){
 	char letter = 0;
 	while(1){
 		read(0,&letter, 1); 	/* read -- recibe char * y la longitud (siempre 1) */
@@ -37,6 +47,7 @@ int printf(const char* format, ...){
 	char buffer[200];
 	char *str;
 	int length, num;
+	long long unsigned llunum;
 
 	while(*(index) != 0){
 								/* No hay mas argumentos */
@@ -63,8 +74,17 @@ int printf(const char* format, ...){
 				case 'x':
 					num = (int) va_arg(args, int);
 					length = itoa(num, buffer, 16);
+					write(1,buffer, length);
 					index ++;
 					break;
+				case 'l':
+					llunum = (long long unsigned) va_arg(args, long long unsigned);
+					length = itoa(llunum, buffer, 10);
+					write(1, buffer, length);
+					index++;
+					break;
+					
+
 			}
 		}else{
 			putchar(*(index));
@@ -94,12 +114,14 @@ int printf(const char* format, ...){
 // }
 
 
-int scanf(char* string, int bytes){
-	char c;
+int scanf(char* string, int bytes, int separator){
+	int c;
 	int i = 0;
-	while ((c = getchar()) != '\n' && i < bytes - 1) {
+	while (((c = getchar()) != separator) && (i < bytes - 1)) {
 		if (c == '\b') {
 			if (i > 0) {
+				if(string[i-1]== -1 || string[i-1]== 0x03)
+				putchar(c);
 				putchar(c);
 				i--;
 			}
@@ -110,6 +132,7 @@ int scanf(char* string, int bytes){
 	}
 
 	string[i] = 0; //To mark the end of the string
+	return i;
 }
 
 

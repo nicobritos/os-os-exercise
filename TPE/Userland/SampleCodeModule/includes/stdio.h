@@ -3,11 +3,11 @@
 
 void putchar(char letter);
 
-char getchar();
+int getchar();
 
 int printf(const char* format, ...);
 
-int scanf(char * str , int bytes);
+int scanf(char * str , int bytes, int separator);
 
 #endif  /* stdio__h___ */
 
