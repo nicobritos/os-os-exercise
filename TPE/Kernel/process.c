@@ -1,26 +1,21 @@
-#include "process.h"
 #include "scheduler.h"
+#include "process.h"
 
-#define NULL ((void *)0)
+#define STARTING_PID 1
 
-static int nextPid = 0; 
+static int nextPid = STARTING_PID; 
 static t_process processes[MAX_PROC];
 
 t_process *
-createProcess(char * name, void* startingPoint,int ppid, int argc, char * argv[])
-{
-    t_process *  newProcess = malloc(sizeof(t_process));
-    if(newProcess == NULL)
-    {
-        return NULL;
-    }
+createProcess(char * name, void* startingPoint,int ppid, int argc, char * argv[]) {
+    t_process *newProcess = processes + (nextPid - STARTING_PID);
+
     newProcess->pid = nextPid;
     newProcess->pPid = ppid;
     newProcess->name = name;
-    newProcess->processMemoryLowerAddress = malloc(PROC_SIZE);
+    newProcess->processMemoryLowerAddress = pmalloc(PROC_SIZE, nextPid);
     if (newProcess->processMemoryLowerAddress == NULL)
     {
-        free(newProcess);
         return NULL;
     }
     void * processMemoryUpperAddress = newProcess->processMemoryLowerAddress + PROC_SIZE - 1;
@@ -28,21 +23,19 @@ createProcess(char * name, void* startingPoint,int ppid, int argc, char * argv[]
     newProcess->stackPointer = processMemoryUpperAddress - sizeof(t_stack) + 1;
     initializeStack(newProcess->stackPointer,argc, argv, startingPoint);
     
-    processes[nextPid++] = * newProcess;
-    int success = addProcess(newProcess,LOW);
-    if (!success)
-    {
-        freeProcess(newProcess);
+    if (!addProcess(newProcess, LOW)) {
+        freeProcess(newProcess->processMemoryLowerAddress);
         return NULL;
     }
 
+    nextPid++;
     return newProcess;
 }
 
 void 
 processWrapper(int argc, char * argv[], void * startingPoint)
 {
-    ((int (*)(int, void**))(startingPoint))(argc, argv);
+    ((int (*)(int, char**))(startingPoint))(argc, argv);
     int currentPid = getpid();
     killProcess(currentPid);
 }
@@ -61,12 +54,12 @@ initializeStack(t_stack * stackFrame, int argc, char * argv[], void * startingPo
     stackFrame->r8 = 0x000;
     stackFrame->rsi = (uint64_t)argv;
     stackFrame->rdi = (uint64_t)argc;
-    stackFrame->rdx = startingPoint;;
-    stackFrame->rbp = 0x000
+    stackFrame->rdx = (uint64_t)startingPoint;
+    stackFrame->rbp = 0x000;
     stackFrame->rcx = 0x000;
     stackFrame->rbx = 0x000;
     stackFrame->rax = 0x000;
-    stackFrame->rip = (void *)&processWrapper;
+    stackFrame->rip = (uint64_t)&processWrapper;
     stackFrame->cs = 0x008;
     stackFrame->eflags = 0x202;
     stackFrame->rsp = (uint64_t)&(stackFrame->base);
@@ -78,6 +71,34 @@ initializeStack(t_stack * stackFrame, int argc, char * argv[], void * startingPo
 void 
 freeProcess(t_process * process)
 {
-    free(process->stackPointer);
-    free(process);
+    pfree(process->stackPointer, process->pid);
+}
+
+void updateStack(t_stack *dst, t_stack *src) {
+    dst->gs = src->gs;
+    dst->fs = src->fs;
+
+    dst->r15 = src->r15;
+    dst->r14 = src->r14;
+    dst->r13 = src->r13;
+    dst->r12 = src->r12;
+    dst->r10 = src->r11;
+    dst->r11 = src->r10;
+    dst->r9 =  src->r9;
+    dst->r8 = src->r8;
+    dst->rsi = src->rsi;
+    dst->rdi = src->rdi;
+    dst->rdx = src->rdx;
+    dst->rbp = src->rbp;
+    dst->rcx = src->rcx;
+    dst->rbx = src->rbx;
+    dst->rax = src->rax;
+    dst->rip = src->rip;
+    dst->cs = src->cs;
+
+    dst->eflags = src->eflags;
+    dst->rsp = src->rsp;
+
+    dst->ss = src->ss;
+    dst->base = src->base;
 }

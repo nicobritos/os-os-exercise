@@ -1,7 +1,6 @@
 #ifndef _SYNC_H
 	#define _SYNC_H
 	#include <stdint.h>
-	#define NULL ((void*)0)
 
 	#define _SEM_NO_ERROR 0
 	#define _SEM_INVALID_SEMAPHORE -1
@@ -19,10 +18,10 @@
 
 	t_semADT createSemaphore(const char *name, int64_t initialValue);
 	t_semADT openSemaphore(const char *name);
-	void closeSemaphore(t_semADT semaphore);
+	void closeSemaphore(t_semADT semaphore, int pid);
 
 	int8_t post(t_semADT semaphore);
-	int8_t wait(t_semADT semaphore);
+	int8_t wait(t_semADT semaphore, int pid);
 	int64_t getValue(t_semADT semaphore);
 
 	void removeProcess(int pid);

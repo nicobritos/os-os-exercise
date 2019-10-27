@@ -1,3 +1,6 @@
+#include "memManager.h"
+#include "process.h"
+#include "string.h"
 #include "ipc.h"
 
 typedef struct t_pipeCDT {
@@ -24,14 +27,14 @@ static t_pipeADT firstPipe = NULL;
 t_pipeADT getPreviousPipeWithName(const char *name);
 
 // PUBLIC
-t_pipeADT openPipe(const char *name, uint8_t mode) {
-	if (name == NULL) return _PIPE_INVALID_NAME;
+t_pipeADT openPipe(const char *name, uint8_t mode, int pid) {
+	if (name == NULL) return NULL;
 	t_pipeADT existingPipe = getPreviousPipeWithName(name);
 	t_pipeADT newPipe;
 
 	if (existingPipe == NULL) {
 		if (mode & _PIPE_CREATE) {
-			newPipe = firstPipe = malloc(sizeof(t_pipeCDT));
+			newPipe = firstPipe = pmalloc(sizeof(t_pipeCDT), SYSTEM_PID);
 			if (newPipe == NULL) return NULL; // TODO: Error
 			
 			newPipe->name = name;
@@ -47,15 +50,15 @@ t_pipeADT openPipe(const char *name, uint8_t mode) {
 
 			if (mode & _PIPE_READ) {
 				existingPipe->readingPointer = existingPipe->buffer;
-				existingPipe->readingPid = getpid();
+				existingPipe->readingPid = pid;
 			} else if (mode & _PIPE_WRITE) {
 				existingPipe->writingPointer = existingPipe->buffer;
-				existingPipe->writingPid = getpid();
+				existingPipe->writingPid = pid;
 			}
 
 			return existingPipe;
 		} else if (mode & _PIPE_CREATE) {
-			newPipe = malloc(sizeof(t_pipeCDT));
+			newPipe = pmalloc(sizeof(t_pipeCDT), SYSTEM_PID);
 			if (newPipe == NULL) return NULL; // TODO: Error
 
 			newPipe->name = name;
@@ -72,22 +75,21 @@ t_pipeADT openPipe(const char *name, uint8_t mode) {
 	newPipe->name = name;
 	newPipe->readingPointer = newPipe->writingPointer = newPipe->buffer;
 	if (mode & _PIPE_READ) {
-		newPipe->readingPid = getpid();
+		newPipe->readingPid = pid;
 	} else if (mode & _PIPE_WRITE) {
-		newPipe->writingPid = getpid();
+		newPipe->writingPid = pid;
 	}
 
 	return newPipe;
 }
 
-void closePipe(t_pipeADT pipe) {
+void closePipe(t_pipeADT pipe, int pid) {
 	if (pipe == NULL) return;
-	int pid = getpid();
 	if (pid == pipe->readingPid) pipe->readingPid = -1;
 	if (pid == pipe->writingPid) pipe->writingPid = -1;
 
 	if (pipe->readingPid == -1 && pipe->writingPid == -1) {
-		free(pipe);
+		pfree(pipe, SYSTEM_PID);
 	}
 }
 
@@ -110,7 +112,7 @@ t_pipeADT getPreviousPipeWithName(const char *name) {
 
 
 t_pipe_listADT createPipeList() {
-	t_pipe_listADT pipeList = malloc(sizeof(t_pipe_listCDT));
+	t_pipe_listADT pipeList = pmalloc(sizeof(t_pipe_listCDT), SYSTEM_PID);
 	pipeList->currentPipe = NULL;
 	pipeList->initialized = 0;
 	pipeList->length = 0;
@@ -120,9 +122,9 @@ t_pipe_listADT createPipeList() {
 	t_pipeADT pipe = firstPipe;
 	while (pipe != NULL) {
 		if (pipeListNode == NULL) {
-			pipeListNode = pipeList->firstPipe = malloc(sizeof(t_pipeCDT));
+			pipeListNode = pipeList->firstPipe = pmalloc(sizeof(t_pipeCDT), SYSTEM_PID);
 		} else {
-			pipeListNode = pipeListNode->next = malloc(sizeof(t_pipeCDT));
+			pipeListNode = pipeListNode->next = pmalloc(sizeof(t_pipeCDT), SYSTEM_PID);
 		}
 
 		memcpy(pipeListNode, pipe, sizeof(t_pipeCDT));
@@ -179,9 +181,9 @@ void freePipeList(t_pipe_listADT pipeList) {
 		pipeNode = pipeList->firstPipe;
 		while (pipeNode != NULL) {
 			auxPipeNode = pipeNode->next;
-			free(pipeNode);
+			pfree(pipeNode, SYSTEM_PID);
 			pipeNode = auxPipeNode;
 		}
-		free(pipeList);
+		pfree(pipeList, SYSTEM_PID);
 	}
 }
