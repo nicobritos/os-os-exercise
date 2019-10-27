@@ -7,14 +7,14 @@
  /* PROTOTIPOS */
 unsigned int get_key();   // esta en keyboard_Driver.asm
 void keyboard_controller();
-void add_to_buffer(char input_key);
+void add_to_buffer(int input_key);
 char get_key_input();
 
 #define FALSE 0
 #define TRUE 1
 #define SIZE 1000
 
-static char buffer[SIZE] = {0};
+static int buffer[SIZE] = {0};
 
 static int writeIndex = 0;
 static int readIndex = 0;
@@ -43,6 +43,9 @@ void keyboard_controller(){
         case CAPS:
             CAPS_ACTIVE= !CAPS_ACTIVE;  // si esta mayus activada se desactiva y si esta desactivada, se activa.
             break;
+        case CTRL:
+            CNTRL_ACTIVE = TRUE;
+            break;
       }
 
       if (SHIFT_ACTIVE) {
@@ -54,6 +57,13 @@ void keyboard_controller(){
           input_key -= 32;
         }
         add_to_buffer(input_key);
+      }
+      else if(CNTRL_ACTIVE){
+        input_key = getAsciiKey(scan_code);
+        if( input_key == 'D' || input_key == 'd')
+          add_to_buffer(EOF);
+        else if( input_key == 'C' || input_key == 'c')
+          add_to_buffer(CTRLC);
       }
       else{
         input_key = getAsciiKey(scan_code);
@@ -77,7 +87,7 @@ void keyboard_controller(){
 }
 
 
-void add_to_buffer(char c) {
+void add_to_buffer(int c) {
 	buffer[writeIndex] = c;
 	writeIndex = (writeIndex + 1)%SIZE;
 	size++;

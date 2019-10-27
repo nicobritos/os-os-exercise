@@ -60,7 +60,8 @@
 
 
 // Le saque los (char) por que fallaba en algunos casteos que daba negativo
-
+#define EOF                 -1
+#define CTRLC               0x03
 #define RSHIFT        		0x36
 #define RSHIFT_R      		0xB6
 #define LSHIFT        		0x2A

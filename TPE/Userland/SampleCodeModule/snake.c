@@ -385,7 +385,7 @@ int increaseSize( int num ){
 
 void play(){
   int dead = 0;
-  char c = getchar();
+  int c = getchar();
   delete((int)(RIGHT - 2 * SIZE)/2 - 200,(int)(BOTTOM - 2 * SIZE) / 2 - 200,SIZE * strlen(start_message),SIZE); // Borra el mensaje cuando aprieta la primer letra
   delete(SIZE,(int)(BOTTOM - 2 * SIZE) / 2 - 100,RIGHT-2*SIZE,SIZE);
   
@@ -419,7 +419,7 @@ void play(){
 
 void showScore(){
     drawString(200,BOTTOM / 2 + 200,"Press enter to continue",255,0,0,3);
-    char c;
+    int c;
     while((c=getchar() != '\n')){
 
     }

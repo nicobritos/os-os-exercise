@@ -9,7 +9,10 @@
 void initializeMemoryManager();
 void * pmalloc(uint64_t size, uint64_t pid);
 void * prealloc(void * ptr, uint64_t newSize, uint64_t pid);
-void pfree(uint64_t pid, void * address);
+
+void pfree(void * address, uint64_t pid);
+uint64_t freeMemoryLeft();
+uint64_t usedMemory();
 
 // void printTree();
 // void printTable();
