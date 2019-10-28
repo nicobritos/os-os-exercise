@@ -60,16 +60,9 @@ int main(){
 	initializeProcesses();
 	initializeScheduler(getIdleProcess());
 	char *argv[1] = {NULL};
-	printf("ASD");
 	t_process *process = createProcess("userSpace", sampleCodeModuleAddress, SYSTEM_PID, 0, argv);
-	printf("Created");
 	_sti();
-	while(1) {
-		printf("Idle");
-		idleKernel();
-		printf("Idle-exit");
-	}
-	//while(1);
+	idleKernel();
 	return 0;
 }
 

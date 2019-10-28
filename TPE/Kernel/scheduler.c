@@ -70,7 +70,6 @@ void runScheduler(t_stack *currentProcessStack) {
 	if (!initialized) {
 		return;
 	}
-	printf("SCH ");
 
 	if (currentProcessNode == NULL) {
 		if (readyQueue->count >= 1) {
@@ -84,7 +83,6 @@ void runScheduler(t_stack *currentProcessStack) {
 	if (currentProcessNode->process->state == RUNNING && ticks_elapsed() - currentProcessNode->executedOnTicks < quantumSlice[currentProcessNode->priority]) return;
 
 	loadNextProcess(currentProcessStack);
-	//while(1);
 }
 
 uint8_t addProcess(t_process *process, t_priority priority) {
@@ -138,7 +136,6 @@ pid_t getCurrentProcessPid() {
 }
 
 void lockProcess(pid_t pid) {
-	// TODO: Race condition
 	queueNodeADT processNode = getNodeReadyQueue(pid);
 	if (processNode == NULL) return;
 	processNode->process->state = LOCKED;
@@ -261,7 +258,7 @@ void loadNextProcess(t_stack *currentProcessStack) {
 
 		currentProcessNode = nextProcessNode;
 		currentProcessNode->executedOnTicks = ticks_elapsed();
-		printf("Dispatched current ");
+		printf("Dispatched next ");
 		dispatchProcess(currentProcessNode->process, currentProcessStack);
 	}
 }
@@ -289,6 +286,9 @@ queueNodeADT fetchNextNode() {
 			currentNode = currentProcessNode->next;
 		}
 	}
+	if (currentNode == currentProcessNode)
+		return currentNode;
+
 	if (readyQueue->count == 0 || currentNode == NULL || currentNode->process->state != READY) {
 		return NULL;
 	}

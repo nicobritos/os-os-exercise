@@ -95,6 +95,7 @@ initializeStack(t_stack * stackFrame, int argc, char * argv[], void * startingPo
     stackFrame->rflags = 0x202;
     stackFrame->rsp = (uint64_t)&(stackFrame);
     // stackFrame->ss = 0x000;
+    updateStack(stackFrame, stackFrame);
 }
 
 void 
@@ -104,25 +105,49 @@ freeProcess(t_process * process)
 }
 
 void updateStack(t_stack *dst, t_stack *src) {
-    printf("r15: %l\n", src->r15);
-    printf("r14: %l\n", src->r14);
-    printf("r13: %l\n", src->r13);
-    printf("r12: %l\n", src->r12);
-    printf("r11: %l\n", src->r11);
-    printf("r10: %l\n", src->r10);
-    printf("r9: %l\n", src->r9);
-    printf("r8: %l\n", src->r8);
+    // printf("ORIG\n");
+    // printf("r15: %l\n", src->r15);
+    // printf("r14: %l\n", src->r14);
+    // printf("r13: %l\n", src->r13);
+    // printf("r12: %l\n", src->r12);
+    // printf("r11: %l\n", src->r11);
+    // printf("r10: %l\n", src->r10);
+    // printf("r9: %l\n", src->r9);
+    // printf("r8: %l\n", src->r8);
 
-    printf("rsi: %l\n", src->rsi);
-    printf("rdi: %l\n", src->rdi);
-    printf("rbp: %l\n", src->rbp);
-    printf("rdx: %l\n", src->rdx);
-    printf("rcx: %l\n", src->rcx);
-    printf("rbx: %l\n", src->rbx);
-    printf("rax: %l\n", src->rax);
-    printf("rip: %l\n", src->rip);
-    printf("rfl: %l\n", src->rflags);
-    printf("rsp: %l\n", src->rsp);
+    // printf("rsi: %l\n", src->rsi);
+    // printf("rdi: %l\n", src->rdi);
+    // printf("rbp: %l\n", src->rbp);
+    // printf("rdx: %l\n", src->rdx);
+    // printf("rcx: %l\n", src->rcx);
+    // printf("rbx: %l\n", src->rbx);
+    // printf("rax: %l\n", src->rax);
+    // printf("rip: %l\n", src->rip);
+    // printf("rfl: %l\n", src->rflags);
+    // printf("rsp: %l\n", src->rsp);
+    // printf(" --------------------- ");
+
+    // printf("DST\n");
+    // printf("r15: %l\n", dst->r15);
+    // printf("r14: %l\n", dst->r14);
+    // printf("r13: %l\n", dst->r13);
+    // printf("r12: %l\n", dst->r12);
+    // printf("r11: %l\n", dst->r11);
+    // printf("r10: %l\n", dst->r10);
+    // printf("r9: %l\n", dst->r9);
+    // printf("r8: %l\n", dst->r8);
+
+    // printf("rsi: %l\n", dst->rsi);
+    // printf("rdi: %l\n", dst->rdi);
+    // printf("rbp: %l\n", dst->rbp);
+    // printf("rdx: %l\n", dst->rdx);
+    // printf("rcx: %l\n", dst->rcx);
+    // printf("rbx: %l\n", dst->rbx);
+    // printf("rax: %l\n", dst->rax);
+    // printf("rip: %l\n", dst->rip);
+    // printf("rfl: %l\n", dst->rflags);
+    // printf("rsp: %l\n", dst->rsp);
+    // printf("                                                      ");
 
     // dst->gs = src->gs;
     // dst->fs = src->fs;
@@ -148,7 +173,6 @@ void updateStack(t_stack *dst, t_stack *src) {
 
     dst->rflags = src->rflags;
     dst->rsp = src->rsp;
-
     // dst->ss = src->ss;
     // dst->base = src->base;
 }
