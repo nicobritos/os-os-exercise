@@ -22,8 +22,8 @@
 	t_pipeADT openPipe(const char *name, uint8_t mode, int pid);
 	void closePipe(t_pipeADT pipe, int pid);
 
-	void read(t_pipeADT pipe, char *dst, uint64_t length);
-	void write(t_pipeADT pipe, char *src, uint64_t length);
+	uint64_t read(t_pipeADT pipe, char *dst, uint64_t length);
+	uint64_t write(t_pipeADT pipe, char *src, uint64_t length);
 	
 	// TODO: Listar
 	t_pipe_listADT createPipeList();

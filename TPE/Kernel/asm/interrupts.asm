@@ -1,4 +1,3 @@
-
 GLOBAL _cli
 GLOBAL _sti
 GLOBAL picMasterMask
@@ -19,13 +18,18 @@ GLOBAL _exceptionInvalidOpcodeHandler
 GLOBAL _syscall
 EXTERN irqDispatcher
 EXTERN exceptionDispatcher
+
 EXTERN sys_total_ticks
 EXTERN sys_ticks_per_second
+
 EXTERN sys_read
 EXTERN sys_write
+
 EXTERN sys_clear
 EXTERN sys_pixel
+
 EXTERN sys_time
+
 EXTERN sys_getpid
 EXTERN sys_fork
 EXTERN sys_execve
@@ -33,10 +37,14 @@ EXTERN sys_kill
 EXTERN sys_getpriority
 EXTERN sys_setpriority
 EXTERN sys_ptrace
+
 EXTERN sys_used_mem
 EXTERN sys_free_mem
 EXTERN sys_malloc
 EXTERN sys_free
+
+EXTERN sys_read_pipe
+EXTERN sys_write_pipe
 
 
 SECTION .text
@@ -207,6 +215,24 @@ _syscall:
 
   cmp rdi, 0x07		; syscall de pixel
   je .syscallPixel
+  
+  cmp rdi, 0x08
+  je .syscallUsedMem
+
+  cmp rdi, 0x09
+  je .syscallFreeMem
+
+  cmp rdi, 0x0a
+  je .syscallMalloc
+
+  cmp rdi, 0x0b
+  je .syscallFree
+  
+  cmp rdi, 0x0c 		; syscall del read pipe
+  je .syscallReadPipe
+
+  cmp rdi, 0x0d		; syscall de write pipe
+  je .syscallWritePipe
 
   cmp rdi, 39     ; getpid
   je .syscallGetpid
@@ -229,17 +255,6 @@ _syscall:
   cmp rdi, 101    ; ptrace
   je .syscallPtrace
   
-  cmp rdi, 0x08
-  je .syscallUsedMem
-
-  cmp rdi, 0x09
-  je .syscallFreeMem
-
-  cmp rdi, 0x10
-  je .syscallMalloc
-
-  cmp rdi, 0x11
-  je .syscallFree
   
 .cont:
 	mov rsp, rbp
@@ -349,6 +364,20 @@ _syscall:
   mov rdi, rsi	; re-ordering the arguments to send to sys_pixel
   mov rsi, rdx
   call sys_free
+  jmp .cont
+
+.syscallReadPipe:
+  mov rdi, rsi 	; re-ordering the arguments to send to sys_read
+  mov rsi, rdx
+  mov rdx, rcx
+  call sys_read_pipe
+  jmp .cont
+
+.syscallWritePipe:
+  mov rdi, rsi 	; re-ordering the arguments to send to sys_write
+  mov rsi, rdx
+  mov rdx, rcx
+  call sys_write_pipe
   jmp .cont
 
 ;Zero Division Exception

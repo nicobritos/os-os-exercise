@@ -14,6 +14,8 @@ uint64_t sys_used_mem();
 uint64_t sys_free_mem();
 void * sys_malloc(uint64_t size, uint64_t pid);
 void sys_free(void * address, uint64_t pid);
+uint64_t sys_read_pipe(t_pipeADT pipe, char *buffer, uint64_t size);
+uint64_t sys_write_pipe(t_pipeADT pipe, char *buffer, uint64_t size);
 
 
 #endif /* SYSTEMCALLS_H */
