@@ -58,7 +58,7 @@ int parse(char* input){
 }
 
 
-void shell(){
+int shell(){
     char buffer[BUFFER_LENGTH] ;
     int flag = 0;
 
@@ -72,5 +72,5 @@ void shell(){
 	  }
 
     printf("\nGoodbye");
-    return;
+    return 0;
 }

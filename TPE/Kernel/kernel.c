@@ -40,7 +40,7 @@ void * getStackBase()
 }
 
 void * initializeKernelBinary(){
-	// char buffer[10];	
+	//char buffer[10];	
 	
 	void * moduleAddresses[] = {
 		sampleCodeModuleAddress,
@@ -59,8 +59,7 @@ int main(){
 	initializeMemoryManager();
 	initializeProcesses();
 	initializeScheduler(getIdleProcess());
-	char *argv[1] = {NULL};
-	t_process *process = createProcess("userSpace", sampleCodeModuleAddress, SYSTEM_PID, 0, argv);
+	t_process *process = createProcess("userSpace", sampleCodeModuleAddress, SYSTEM_PID, 0, NULL);
 	_sti();
 	idleKernel();
 	return 0;
