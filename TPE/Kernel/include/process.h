@@ -7,6 +7,7 @@
 #define PROC_SIZE 4096
 #define MAX_PROC 20
 #define SYSTEM_PID 0
+#define IDLE_PROCESS_NAME "Idle process"
 
 typedef enum {RUNNING, READY, WAITING, DEAD, LOCKED} t_state;
 
@@ -49,6 +50,7 @@ typedef struct
     } t_stack;
 
     t_process * createProcess(char * name, void* startingPoint,int ppid, int argc, char * argv[]);
+    t_process *getIdleProcess();
     void processWrapper(int argc, char * argv[], void * startingPoint);
     void initializeStack(t_stack * stackFrame, int argc, char * argv[], void * startingPoint);
     void freeProcess(t_process * process);

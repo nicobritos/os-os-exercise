@@ -6,6 +6,8 @@
 #include "idtLoader.h"
 #include "videoDriver.h"
 #include "memManager.h"
+#include "scheduler.h"
+#include "process.h"
 
 
 extern uint8_t text;
@@ -38,7 +40,7 @@ void * getStackBase()
 }
 
 void * initializeKernelBinary(){
-	char buffer[10];	
+	// char buffer[10];	
 	
 	void * moduleAddresses[] = {
 		sampleCodeModuleAddress,
@@ -54,6 +56,8 @@ void * initializeKernelBinary(){
 int main(){	
 	load_idt();
 	initializeMemoryManager();
+	t_process *idleProcess = getIdleProcess();
+	initializeScheduler(idleProcess);
 	((EntryPoint)sampleCodeModuleAddress)();
 	return 0;
 }

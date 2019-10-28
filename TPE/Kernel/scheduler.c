@@ -53,7 +53,7 @@ void removeProcess(queueNodeADT processNode, queueADT queue);
 void moveNode(queueNodeADT processNode, queueADT fromQueue, queueADT toQueue);
 
 // Public
-void initScheduler(t_process *_idleProcess) {
+void initializeScheduler(t_process *_idleProcess) {
 	idleProcess = _idleProcess;
 
 	waitingQueue = pmalloc(sizeof(queueCDT), SYSTEM_PID);

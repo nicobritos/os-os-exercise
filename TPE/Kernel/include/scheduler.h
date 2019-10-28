@@ -9,7 +9,7 @@
 	typedef struct processListNodeCDT *processListNodeADT;
 	typedef struct processListCDT *processListADT;
 
-	void initScheduler(t_process *idleProcess);
+	void initializeScheduler(t_process *idleProcess);
 	void runScheduler(t_stack *currentProcessStack);
 	uint8_t addProcess(t_process *process, t_priority priority);
 

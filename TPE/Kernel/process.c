@@ -3,8 +3,11 @@
 
 #define STARTING_PID 1
 
+void idleFunction();
+
 static int nextPid = STARTING_PID; 
 static t_process processes[MAX_PROC];
+static t_process *idleProcess = NULL;
 
 t_process *
 createProcess(char * name, void* startingPoint,int ppid, int argc, char * argv[]) {
@@ -30,6 +33,27 @@ createProcess(char * name, void* startingPoint,int ppid, int argc, char * argv[]
 
     nextPid++;
     return newProcess;
+}
+
+t_process *getIdleProcess() {
+    if (idleProcess == NULL) {
+        idleProcess = processes + SYSTEM_PID;
+
+        idleProcess->pid = SYSTEM_PID;
+        idleProcess->pPid = SYSTEM_PID;
+        idleProcess->name = IDLE_PROCESS_NAME;
+        idleProcess->processMemoryLowerAddress = pmalloc(PROC_SIZE, SYSTEM_PID);
+        if (idleProcess->processMemoryLowerAddress == NULL)
+        {
+            return NULL;
+        }
+        void * processMemoryUpperAddress = idleProcess->processMemoryLowerAddress + PROC_SIZE - 1;
+        idleProcess->state = READY;
+        idleProcess->stackPointer = processMemoryUpperAddress - sizeof(t_stack) + 1;
+        initializeStack(idleProcess->stackPointer, 0, NULL, &idleFunction);
+    }
+
+    return idleProcess;
 }
 
 void 

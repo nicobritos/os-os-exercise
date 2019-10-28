@@ -359,13 +359,6 @@ _exception0Handler:
 _exceptionInvalidOpcodeHandler:
 	exceptionHandler 1
 
-idle:
-  _start_idle:
-  sti
-  hlt
-  jmp _start_idle
-  ret
-
 haltcpu:
 	cli
 	hlt
