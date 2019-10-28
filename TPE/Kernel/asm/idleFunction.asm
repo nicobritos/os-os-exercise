@@ -1,10 +1,16 @@
 GLOBAL idleFunction
+GLOBAL idleKernel
 
 section .text
-	
+
 idleFunction:
-  	_start_idle:
+	sti
+	_idleFunction
+	hlt
+	jmp _idleFunction
+	ret
+
+idleKernel:
 	sti
 	hlt
-	jmp _start_idle
 	ret

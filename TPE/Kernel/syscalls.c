@@ -19,6 +19,10 @@ void * sys_malloc(uint64_t size, uint64_t pid);
 void sys_free(void * address, uint64_t pid);
 uint64_t sys_read_pipe(t_pipeADT pipe, char *buffer, uint64_t size);
 uint64_t sys_write_pipe(t_pipeADT pipe, char *buffer, uint64_t size);
+pid_t sys_getpid();
+pid_t sys_fork();
+int8_t sys_execve(const char *pathname, char *const argv[]);
+int8_t sys_kill(pid_t pid);
 
 int sys_total_ticks(int * ticks) {
 	*ticks = ticks_elapsed();
@@ -123,4 +127,20 @@ uint64_t sys_read_pipe(t_pipeADT pipe, char *buffer, uint64_t size){
 
 uint64_t sys_write_pipe(t_pipeADT pipe, char *buffer, uint64_t size){
 	return write(pipe, buffer, size);
+}
+
+pid_t sys_getpid() {
+	return getCurrentProcessPid();
+}
+
+pid_t sys_fork() {
+	return forkProcess(getCurrentProcess());
+}
+
+int8_t sys_execve(const char *pathname, char *const argv[]) {
+	//return execveProcess(getCurrentProcess(), pathname, argv);
+}
+
+int8_t sys_kill(pid_t pid) {
+	//return killProcess(pid);
 }

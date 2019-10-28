@@ -49,6 +49,7 @@ EXTERN sys_write_pipe
 
 SECTION .text
 %macro pushState 0
+  ; Ya de por si tengo RIP y RFLAGS en ese orden
   push r15
   push r14
   push r13
@@ -61,25 +62,27 @@ SECTION .text
 	push rsi
 	push rdi
 	push rbp
+  push rsp
 
 	push rdx
 	push rcx
 	push rbx
 	push rax
 
-  pushf
-  push rsp
+  mov rax, [rsp + (16 * 8) + 8] ; 16 * 8 de los registros de recien, 8 del RFLAGS, (ahora apunta al RIP viejo)
+  push rax ; RIP
 %endmacro
 
 %macro popState 0
-  pop rsp
-  popf
+  pop rax ; RIP
+  mov [rsp + (16 * 8) + 8], rax ; 16 * 8 de los registros de recien, 8 del RFLAGS, (ahora apunta al RIP viejo)
 
   pop rax
   pop rbx
   pop rcx
   pop rdx
 
+  pop rsp
   pop rbp
   pop rdi
   pop rsi
@@ -92,13 +95,14 @@ SECTION .text
   pop r13
   pop r14
   pop r15
+  ; Luego tengo RFLAGS y RIP en ese orden
 %endmacro
 
 %macro irqHandlerMaster 1
 	pushState
 
   mov rdi, %1 ; pasaje de parametro
-  lea rsi, [rsp + ((18 * 8) + (4 * 2))]; pasaje de parametro del puntero a los registros ((18 * 8) + (4 * 2)) 
+  lea rsi, [rsp + (17 * 8)]; pasaje de parametro del puntero a los registros (16 + RIP)
 	call irqDispatcher
 
 	; signal pic EOI (End of Interrupt)
@@ -192,6 +196,7 @@ _irq05Handler:
 
 
 _syscall:
+  cli
   push rbp
   mov rbp, rsp
 
@@ -259,6 +264,7 @@ _syscall:
 .cont:
 	mov rsp, rbp
   pop rbp
+  sti
   iretq	;Dont use ret when returning from int call
 
 
@@ -305,24 +311,23 @@ _syscall:
   jmp .cont
 
 .syscallGetpid:
-  ;call sys_getpid
+  call sys_getpid
   jmp .cont
 
 .syscallFork:
-  ;call sys_fork
+  call sys_fork
   jmp .cont
 
 .syscallExecve:
   mov rdi, rsi
   mov rsi, rdx
   mov rdx, rcx
-  ;call sys_execve
+  call sys_execve
   jmp .cont
 
 .syscallKill:
   mov rdi, rsi
-  mov rsi, rdx
-  ;call sys_kill
+  call sys_kill
   jmp .cont
 
 .syscallGetpriority:

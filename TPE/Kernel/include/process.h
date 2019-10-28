@@ -9,12 +9,14 @@
 #define SYSTEM_PID 0
 #define IDLE_PROCESS_NAME "Idle process"
 
+typedef int64_t pid_t;
+
 typedef enum {RUNNING, READY, WAITING, DEAD, LOCKED, INVALID} t_state;
 
 typedef struct
     {
-    int pid;
-    int pPid;
+    pid_t pid;
+    pid_t pPid;
     char * name;
     t_state state; 
     void * stackPointer;
@@ -23,8 +25,8 @@ typedef struct
 
 typedef struct 
     {
-        uint64_t gs;
-        uint64_t fs;
+        //uint64_t gs;
+        //uint64_t fs;
         uint64_t r15;
         uint64_t r14;
         uint64_t r13;
@@ -33,28 +35,34 @@ typedef struct
         uint64_t r10;
         uint64_t r9;
         uint64_t r8;
+
         uint64_t rsi;
         uint64_t rdi;
         uint64_t rbp;
+        uint64_t rsp;
+
         uint64_t rdx;
         uint64_t rcx;
         uint64_t rbx;
         uint64_t rax;
-        uint64_t rip;
-        uint64_t cs;
-        uint64_t eflags;
-        uint64_t rsp;
-        uint64_t ss;
-        uint64_t base;
 
+        uint64_t rip;
+        //uint64_t cs;
+        uint64_t rflags;
+        //uint64_t ss;
+        // uint64_t base;
     } t_stack;
 
-    t_process * createProcess(char * name, void* startingPoint,int ppid, int argc, char * argv[]);
-    t_process *getIdleProcess();
-    t_state getProcessState(int pid);
-    void processWrapper(int argc, char * argv[], void * startingPoint);
-    void initializeStack(t_stack * stackFrame, int argc, char * argv[], void * startingPoint);
-    void freeProcess(t_process * process);
-    void updateStack(t_stack *dst, t_stack *src);
+void initializeProcesses();
+t_process *createProcess(char * name, void* startingPoint,int ppid, int argc, char * argv[]);
+t_process *getIdleProcess();
+t_state getProcessState(int pid);
+pid_t getProcessPid(t_process *process);
+void processWrapper(int argc, char * argv[], void * startingPoint);
+void initializeStack(t_stack * stackFrame, int argc, char * argv[], void * startingPoint);
+void freeProcess(t_process * process);
+void updateStack(t_stack *dst, t_stack *src);
+t_process *forkProcess(t_process *process);
+int8_t processExecve(t_process *process, const char *pathname);
 
 #endif

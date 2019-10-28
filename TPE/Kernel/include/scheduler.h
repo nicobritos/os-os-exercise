@@ -13,11 +13,11 @@
 	void runScheduler(t_stack *currentProcessStack);
 	uint8_t addProcess(t_process *process, t_priority priority);
 
-	void killProcess(int pid);
+	void killProcess(pid_t pid);
 	t_process *getCurrentProcess();
-	int getpid();
-	void lockProcess(int pid);
-	void unlockProcess(int pid);
+	pid_t getCurrentProcessPid();
+	void lockProcess(pid_t pid);
+	void unlockProcess(pid_t pid);
 	t_state getCurrentProcessState();
 
 	// Process iterator

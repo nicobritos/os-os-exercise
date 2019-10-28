@@ -1,6 +1,7 @@
 #include "scheduler.h"
 #include "process.h"
 #include "time.h"
+#include "stdio.h"
 
 #define QUANTUM 4
 
@@ -46,9 +47,9 @@ static t_process *idleProcess = NULL;
 void loadNextProcess(t_stack *currentProcessStack);
 queueNodeADT fetchNextNode();
 void dispatchProcess(t_process *process, t_stack *currentProcessStack);
-queueNodeADT getNode(int pid, queueADT queue);
-queueNodeADT getNodeReadyQueue(int pid);
-queueNodeADT getNodeWaitingQueue(int pid);
+queueNodeADT getNode(pid_t pid, queueADT queue);
+queueNodeADT getNodeReadyQueue(pid_t pid);
+queueNodeADT getNodeWaitingQueue(pid_t pid);
 void removeProcess(queueNodeADT processNode, queueADT queue);
 void moveNode(queueNodeADT processNode, queueADT fromQueue, queueADT toQueue);
 
@@ -69,6 +70,7 @@ void runScheduler(t_stack *currentProcessStack) {
 	if (!initialized) {
 		return;
 	}
+	printf("SCH ");
 
 	if (currentProcessNode == NULL) {
 		if (readyQueue->count >= 1) {
@@ -82,6 +84,7 @@ void runScheduler(t_stack *currentProcessStack) {
 	if (currentProcessNode->process->state == RUNNING && ticks_elapsed() - currentProcessNode->executedOnTicks < quantumSlice[currentProcessNode->priority]) return;
 
 	loadNextProcess(currentProcessStack);
+	//while(1);
 }
 
 uint8_t addProcess(t_process *process, t_priority priority) {
@@ -107,7 +110,7 @@ uint8_t addProcess(t_process *process, t_priority priority) {
 	return 1;
 }
 
-void killProcess(int pid) {
+void killProcess(pid_t pid) {
 	queueNodeADT processNode = getNodeReadyQueue(pid);
 	if (processNode == NULL) {
 		processNode = getNodeWaitingQueue(pid);
@@ -129,12 +132,12 @@ t_process *getCurrentProcess() {
 	return idleProcess;
 }
 
-int getpid() {
+pid_t getCurrentProcessPid() {
 	if (currentProcessNode != NULL) return currentProcessNode->process->pid;
 	return 0;
 }
 
-void lockProcess(int pid) {
+void lockProcess(pid_t pid) {
 	// TODO: Race condition
 	queueNodeADT processNode = getNodeReadyQueue(pid);
 	if (processNode == NULL) return;
@@ -145,7 +148,7 @@ void lockProcess(int pid) {
 	}
 }
 
-void unlockProcess(int pid) {
+void unlockProcess(pid_t pid) {
 	queueNodeADT processNode = getNodeWaitingQueue(pid);
 	if (processNode == NULL) return;
 	processNode->process->state = READY;
@@ -241,8 +244,10 @@ void freeProcessesList(processListADT processList) {
 // Private
 void loadNextProcess(t_stack *currentProcessStack) {
 	queueNodeADT nextProcessNode = fetchNextNode();
-	if (nextProcessNode == NULL) {
+	if (nextProcessNode == NULL) {		
+		printf("Dispatched idle ");
 		dispatchProcess(idleProcess, currentProcessStack);
+
 		return;
 	}
 
@@ -256,6 +261,7 @@ void loadNextProcess(t_stack *currentProcessStack) {
 
 		currentProcessNode = nextProcessNode;
 		currentProcessNode->executedOnTicks = ticks_elapsed();
+		printf("Dispatched current ");
 		dispatchProcess(currentProcessNode->process, currentProcessStack);
 	}
 }
@@ -294,7 +300,7 @@ void dispatchProcess(t_process *process, t_stack *currentProcessStack) {
 	updateStack(currentProcessStack, process->stackPointer);
 }
 
-queueNodeADT getNode(int pid, queueADT queue) {
+queueNodeADT getNode(pid_t pid, queueADT queue) {
 	queueNodeADT processNode = queue->firstProcessNode;
 
 	while (processNode == NULL || processNode->process->pid != pid) {
@@ -303,11 +309,11 @@ queueNodeADT getNode(int pid, queueADT queue) {
 	return processNode;
 }
 
-queueNodeADT getNodeReadyQueue(int pid) {
+queueNodeADT getNodeReadyQueue(pid_t pid) {
 	return getNode(pid, readyQueue);
 }
 
-queueNodeADT getNodeWaitingQueue(int pid) {
+queueNodeADT getNodeWaitingQueue(pid_t pid) {
 	return getNode(pid, waitingQueue);
 }
 

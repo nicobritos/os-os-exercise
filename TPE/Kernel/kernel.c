@@ -8,7 +8,7 @@
 #include "memManager.h"
 #include "scheduler.h"
 #include "process.h"
-
+#include "stdio.h"
 
 extern uint8_t text;
 extern uint8_t rodata;
@@ -53,12 +53,23 @@ void * initializeKernelBinary(){
 	return getStackBase();
 }
 
-int main(){	
+int main(){
+	_cli();
 	load_idt();
 	initializeMemoryManager();
-	t_process *idleProcess = getIdleProcess();
-	initializeScheduler(idleProcess);
-	((EntryPoint)sampleCodeModuleAddress)();
+	initializeProcesses();
+	initializeScheduler(getIdleProcess());
+	char *argv[1] = {NULL};
+	printf("ASD");
+	t_process *process = createProcess("userSpace", sampleCodeModuleAddress, SYSTEM_PID, 0, argv);
+	printf("Created");
+	_sti();
+	while(1) {
+		printf("Idle");
+		idleKernel();
+		printf("Idle-exit");
+	}
+	//while(1);
 	return 0;
 }
 
