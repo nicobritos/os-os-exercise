@@ -56,6 +56,11 @@ t_process *getIdleProcess() {
     return idleProcess;
 }
 
+t_state getProcessState(int pid) {
+    if (pid >= nextPid) return INVALID;
+    return processes[pid].state;
+}
+
 void 
 processWrapper(int argc, char * argv[], void * startingPoint)
 {

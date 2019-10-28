@@ -153,6 +153,12 @@ void unlockProcess(int pid) {
 	moveNode(processNode, waitingQueue, readyQueue);
 }
 
+t_state getCurrentProcessState() {
+	if (currentProcessNode == NULL) return INVALID;
+	return currentProcessNode->process->state;
+}
+
+
 processListADT createProcessList() {
 	processListADT processList = pmalloc(sizeof(processListCDT), SYSTEM_PID);
 	processList->currentProcessNode = NULL;

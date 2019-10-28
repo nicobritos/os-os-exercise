@@ -18,7 +18,8 @@
 	int getpid();
 	void lockProcess(int pid);
 	void unlockProcess(int pid);
-	
+	t_state getCurrentProcessState();
+
 	// Process iterator
 	processListADT createProcessList();
 	uint64_t getProcessListLength(processListADT processList);

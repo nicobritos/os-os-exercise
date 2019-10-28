@@ -2,6 +2,7 @@
 #define SYSCALLS_H
 
 #include <stdint.h>
+#include "ipc.h"
 
 int os_ticks(void);
 int os_sec(void);

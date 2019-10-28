@@ -9,7 +9,7 @@
 #define SYSTEM_PID 0
 #define IDLE_PROCESS_NAME "Idle process"
 
-typedef enum {RUNNING, READY, WAITING, DEAD, LOCKED} t_state;
+typedef enum {RUNNING, READY, WAITING, DEAD, LOCKED, INVALID} t_state;
 
 typedef struct
     {
@@ -51,6 +51,7 @@ typedef struct
 
     t_process * createProcess(char * name, void* startingPoint,int ppid, int argc, char * argv[]);
     t_process *getIdleProcess();
+    t_state getProcessState(int pid);
     void processWrapper(int argc, char * argv[], void * startingPoint);
     void initializeStack(t_stack * stackFrame, int argc, char * argv[], void * startingPoint);
     void freeProcess(t_process * process);

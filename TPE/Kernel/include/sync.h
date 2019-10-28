@@ -24,7 +24,7 @@
 	int8_t wait(t_semADT semaphore, int pid);
 	int64_t getValue(t_semADT semaphore);
 
-	void removeProcess(int pid);
+	void removeProcessSemaphore(int pid);
 
 	// TODO: Listar
 	t_semaphore_listADT createSemaphoreList();

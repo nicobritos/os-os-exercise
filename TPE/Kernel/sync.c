@@ -245,7 +245,7 @@ void freeSemaphoreList(t_semaphore_listADT semaphoreList) {
 
 
 // Should only visibile to Kernel?
-void removeProcess(int pid) {
+void removeProcessSemaphore(int pid) {
 	t_sem_nodeADT currentSemaphoreNode = firstSemaphoreNode;
 
 	while (currentSemaphoreNode != NULL && !removeProcessFromSemaphore(pid, currentSemaphoreNode->semaphore)) {

@@ -305,37 +305,37 @@ _syscall:
   jmp .cont
 
 .syscallGetpid:
-  call sys_getpid
+  ;call sys_getpid
   jmp .cont
 
 .syscallFork:
-  call sys_fork
+  ;call sys_fork
   jmp .cont
 
 .syscallExecve:
   mov rdi, rsi
   mov rsi, rdx
   mov rdx, rcx
-  call sys_execve
+  ;call sys_execve
   jmp .cont
 
 .syscallKill:
   mov rdi, rsi
   mov rsi, rdx
-  call sys_kill
+  ;call sys_kill
   jmp .cont
 
 .syscallGetpriority:
   mov rdi, rsi
   mov rsi, rdx
-  call sys_getpriority
+  ;call sys_getpriority
   jmp .cont
 
 .syscallSetpriority:
   mov rdi, rsi
   mov rsi, rdx
   mov rdx, rcx
-  call sys_setpriority
+  ;call sys_setpriority
   jmp .cont
 
 .syscallPtrace:
@@ -343,7 +343,7 @@ _syscall:
   mov rsi, rdx
   mov rdx, rcx
   mov rcx, r8
-  call sys_ptrace
+  ;call sys_ptrace
   jmp .cont
 
 .syscallUsedMem
