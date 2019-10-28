@@ -25,8 +25,8 @@ typedef struct
 
 typedef struct __attribute__((__packed__))
     {
-        //uint64_t gs;
-        //uint64_t fs;
+        uint64_t gs;
+        uint64_t fs;
         // uint64_t rflags;
         // uint64_t rip;
 
@@ -51,9 +51,9 @@ typedef struct __attribute__((__packed__))
         uint64_t rip;
         uint64_t cs;
         uint64_t rflags;
-        uint64_t rsp;
         uint64_t ss;
-        //uint64_t base;
+        // uint64_t base;
+        uint64_t rsp;
 
         //uint64_t cs;
         //uint64_t ss;

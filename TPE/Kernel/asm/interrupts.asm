@@ -70,6 +70,9 @@ SECTION .text
 %endmacro
 
 %macro popState 0
+  pop gs
+  pop fs
+
   pop rax
   pop rbx
   pop rcx
@@ -127,8 +130,8 @@ _hlt:
 	ret
 
 _halt:
-    hlt
-    ret
+  hlt
+  ret
 
 _cli:
 	cli
@@ -140,20 +143,28 @@ _sti:
 	ret
 
 picMasterMask:
-	push rbp
-    mov rbp, rsp
-    mov ax, di
-    out	21h,al
-    pop rbp
-    retn
+  push rbp
+  mov rbp, rsp
+
+  mov ax, di
+  out	21h,al
+  
+  mov rsp,rbp
+  pop rbp
+  
+  ret
 
 picSlaveMask:
-	push    rbp
-    mov     rbp, rsp
-    mov     ax, di  ; ax = mascara de 16 bits
-    out	0A1h,al
-    pop     rbp
-    retn
+  push rbp
+  mov rbp, rsp
+
+  mov     ax, di  ; ax = mascara de 16 bits
+  out	0A1h,al
+  
+  mov rsp,rbp
+  pop rbp
+  
+  ret
 
 ;EOI
   mov al, 20h
