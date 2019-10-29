@@ -20,8 +20,6 @@ typedef struct
     t_state state; 
     void * stackPointer;
     void * processMemoryLowerAddress;
-    void * processMemoryUpperAddress;
-    int (*entryPoint)(int,char **); //a chequear
     }t_process;
 
 typedef struct 
@@ -50,9 +48,7 @@ typedef struct
 	    //uint16_t ss;
     } t_stack;
 
-void initializeStack(t_stack * stackFrame, int argc, char * argv[], void * startingPoint);
-t_process * createProcess(char * name, void* startingPoint,int ppid, int argc, char * argv[]);
-void deleteProcess(t_process * process);
+t_process * createProcess(char * name, void* startingPoint, int pid,int ppid, int argc, char * argv[], void * rip);
 void freeProcess(t_process * process);
 
 #endif
