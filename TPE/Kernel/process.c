@@ -3,13 +3,14 @@
 //#include "scheduler.h"
 
 #define NULL ((void *)0)
+#define SYSTEM_PID 0
 
 static int nextPid = 0; 
 static t_process processes[MAX_PROC];
 
 t_process * createProcess(char * name, void* startingPoint,int ppid, int argc, char * argv[])
 {
-    t_process *  newProcess = pmalloc(sizeof(t_process), 0);
+    t_process *  newProcess = pmalloc(sizeof(t_process), ppid);
     if(newProcess == NULL)
     {
         return NULL;
@@ -17,10 +18,10 @@ t_process * createProcess(char * name, void* startingPoint,int ppid, int argc, c
     newProcess->pid = nextPid;
     newProcess->pPid = ppid;
     newProcess->name = name;
-    newProcess->processMemoryLowerAddress = pmalloc(PROC_SIZE, 0);
+    newProcess->processMemoryLowerAddress = pmalloc(PROC_SIZE, ppid);
     if (newProcess->processMemoryLowerAddress == NULL)
     {
-        pfree(newProcess, 0);
+        pfree(newProcess, ppid);
         return NULL;
     }
     void * processMemoryUpperAddress = newProcess->processMemoryLowerAddress + PROC_SIZE - 1;
@@ -76,6 +77,6 @@ void initializeStack(t_stack * stackFrame, int argc, char * argv[], void * start
 
 void freeProcess(t_process * process)
 {
-    pfree(process->stackPointer, 0);
-    pfree(process, 0);
+    pfree(process->stackPointer, SYSTEM_PID);
+    pfree(process, SYSTEM_PID);
 }
