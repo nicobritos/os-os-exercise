@@ -226,3 +226,44 @@ void freePipeList(t_pipe_listADT pipeList) {
 		pfree(pipeList, SYSTEM_PID);
 	}
 }
+
+uint64_t read(t_pipeADT pipe, char *dst, uint64_t length){
+	if(pipe->readingPointer == pipe->writingPointer){ // no hay nada mas que leer
+		blockProcess(pipe->readingPid);
+	}
+	uint64_t i;
+	for (i = 0; i < length; i++)
+	{
+		dst[i] = *(pipe->readingPointer);
+		if(pipe->readingPointer == pipe->buffer + _PIPE_BUFFER - 1)
+			pipe->readingPointer = pipe->buffer;
+		else{
+			(pipe->readingPointer)++;
+		}
+	}
+	dst[i] = 0;
+	if( (getState(pipe->writingPid) == BLOCKED) && (length != 0)){ // genere espacio
+		unlockProcess(pipe->writingPid);
+	}
+	return i;
+}
+
+uint64_t write(t_pipeADT pipe, char *src, uint64_t length){
+	if((pipe->readingPointer + 1 == pipe->writingPointer) || ((pipe->writingPointer == pipe->buffer + _PIPE_BUFFER - 1) && (pipe->readingPointer == pipe->buffer))){ // no hay espacio para escribir
+		blockProcess(pipe->writingPid);
+	}
+	uint64_t i;
+	for (i = 0; i < length; i++)
+	{
+		*(pipe->writingPointer) = src[i];
+		if(pipe->writingPointer == pipe->buffer + _PIPE_BUFFER - 1)
+			pipe->writingPointer = pipe->buffer;
+		else{
+			(pipe->writingPointer)++;
+		}
+	}
+	if((getState(pipe->readingPid) == BLOCKED) && (length != 0)){ // hay algo para leer
+		unlockProcess(pipe->readingPid);
+	}
+	return i;
+} 

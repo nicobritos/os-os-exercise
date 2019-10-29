@@ -11,6 +11,8 @@ GLOBAL os_used_mem
 GLOBAL os_free_mem
 GLOBAL os_malloc
 GLOBAL os_free
+GLOBAL read_pipe
+GLOBAL write_pipe
 
 section .text
 
@@ -186,7 +188,7 @@ os_malloc:
 
 	mov rdx, rsi
 	mov rsi, rdi
-	mov rdi, 0x10
+	mov rdi, 0x0a
 	
 	; rdi --> codigo de la syscall 
 	; rsi --> size 
@@ -203,7 +205,7 @@ os_free:
 
 	mov rdx, rsi
 	mov rsi, rdi
-	mov rdi, 0x11
+	mov rdi, 0x0b
 	
 	; rdi --> codigo de la syscall 
 	; rsi --> address 
@@ -212,6 +214,52 @@ os_free:
 	int 80h
 	finish
 
+read_pipe:
+	start			;armo stack frame y pusheo los registros
+
+	
+	; rdi --> pipe 
+	; rsi --> buffer 
+	; rdx --> bytes que tiene que leer
+	
+	mov rcx, rdx
+	mov rdx, rsi
+	mov rsi, rdi
+	mov rdi, 0x0c
+
+	; rdi --> codigo de la syscall 
+	; rsi --> pipe
+	; rdx --> buffer
+	; rcx --> bytes que tiene que leer
+
+	int 80h
+
+	; devuelve en rax la cantitad de bytes que leyo y en buffer estan los caracteres leidos
+
+	finish			;desarmo stack frame y popeo los registros
+
+write_pipe:
+	start
+
+	; rdi --> pipe
+	; rsi --> buffer 
+	; rdx --> bytes que va a escribir
+
+	mov rcx, rdx
+	mov rdx, rsi
+	mov rsi, rdi
+	mov rdi, 0x0d
+
+	; rdi --> codigo de la syscall 
+	; rsi --> pipe 
+	; rdx --> buffer 
+	; rcx --> bytes que va a escribir
+
+	int 80h
+
+	; retorna en rax la cantidad de bytes que escribio
+
+	finish			; desarmo stack frame y popeo los registros
 
 section .data
 	time times 6 DW 0

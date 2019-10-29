@@ -30,6 +30,8 @@ EXTERN sys_used_mem
 EXTERN sys_free_mem
 EXTERN sys_malloc
 EXTERN sys_free
+EXTERN sys_read_pipe
+EXTERN sys_write_pipe
 
 
 SECTION .text
@@ -201,11 +203,19 @@ _syscall:
   cmp rdi, 0x09
   je .syscallFreeMem
 
-  cmp rdi, 0x10
+  cmp rdi, 0x0a
   je .syscallMalloc
 
-  cmp rdi, 0x11
+  cmp rdi, 0x0b
   je .syscallFree
+
+  cmp rdi, 0x0c 		; syscall del read pipe
+  je .syscallReadPipe
+
+  cmp rdi, 0x0d		; syscall de write pipe
+  je .syscallWritePipe
+
+
 .cont:
 	mov rsp, rbp
   pop rbp
@@ -272,6 +282,20 @@ _syscall:
   mov rdi, rsi	; re-ordering the arguments to send to sys_pixel
   mov rsi, rdx
   call sys_free
+  jmp .cont
+
+.syscallReadPipe:
+  mov rdi, rsi 	; re-ordering the arguments to send to sys_read
+  mov rsi, rdx
+  mov rdx, rcx
+  call sys_read_pipe
+  jmp .cont
+
+.syscallWritePipe:
+  mov rdi, rsi 	; re-ordering the arguments to send to sys_write
+  mov rsi, rdx
+  mov rdx, rcx
+  call sys_write_pipe
   jmp .cont
 
 ;Zero Division Exception
