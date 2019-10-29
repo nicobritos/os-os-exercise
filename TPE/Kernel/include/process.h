@@ -50,8 +50,9 @@ typedef struct
 	    //uint16_t ss;
     } t_stack;
 
-    t_process * createProcess(char * name, int (*entry)(int, char**), int pPid, int argc, char * argv[]);
-    void initializeStack(t_stack * stackFrame, int (*entryPoint)(int, char**), void * startingPoint, int argc, char * argv[]);
-    void deleteProcess(t_process * process);
-    void freeProcess(t_process process);
+void initializeStack(t_stack * stackFrame, int argc, char * argv[], void * startingPoint);
+t_process * createProcess(char * name, void* startingPoint,int ppid, int argc, char * argv[]);
+void deleteProcess(t_process * process);
+void freeProcess(t_process * process);
+
 #endif
