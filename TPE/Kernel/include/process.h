@@ -48,5 +48,6 @@ typedef struct
 
 t_process * createProcess(char * name, void* startingPoint, int pid,int ppid, int argc, char * argv[], void * rip);
 void freeProcess(t_process * process);
+int getPid(t_process * process);
 
 #endif

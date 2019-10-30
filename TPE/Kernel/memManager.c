@@ -154,7 +154,7 @@ bool pBuddyFreeRec(uint64_t pid, void * address, Node * current){
     if((current->left == NULL) && (current->right == NULL)){ // es memoria ocupada
         if((pid == current->pid) && (address == current->address)){
             uint64_t i;
-            for ( i = 1; i < current->size; i*=2);
+            for ( i = MIN_BLOCK_SIZE; i < current->size; i*=2);
             memUsed -= i; 
             return TRUE; // liberar
         }

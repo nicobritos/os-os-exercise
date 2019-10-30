@@ -12,6 +12,8 @@ GLOBAL os_free_mem
 GLOBAL os_malloc
 GLOBAL os_free
 GLOBAL os_new_process
+GLOBAL os_free_process
+GLOBAL os_get_pid
 
 section .text
 
@@ -241,6 +243,23 @@ os_new_process:
 
 	int 80h
 	finish
+
+os_free_process:
+	start
+	mov rsi, rdi
+	mov rdi, 0x0d
+
+	int 80h
+	finish
+
+os_get_pid:
+	start
+	mov rsi, rdi
+	mov rdi, 0x0e
+
+	int 80h
+	finish
+
 
 section .data
 	time times 6 DW 0

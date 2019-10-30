@@ -53,9 +53,23 @@ int parse(char* input){
       return 0;
     }
     else if(strcmp(input, "new") == 0){
-      //printf("\n%x", malloc(3048));
       void * proceso = newProcess("Hola", 0, 0, 0, 0, 0);
       printf("\n%x", proceso);
+      return 0;
+    }
+    else if(strncmp(input, "free ", 5) == 0){
+      char* phrase = &(input[5]);
+      int i = atox(phrase);
+      freeProcess((void *) atox(phrase));
+      return 0;
+    }
+    else if(strncmp(input, "get ", 4) == 0){
+      char* phrase = &(input[4]);
+      int i = atox(phrase);
+      printf("\n%d", getPid(i));
+      return 0;
+    }
+    else if(strcmp(input, "") == 0){
       return 0;
     }
     else{
@@ -68,7 +82,6 @@ int parse(char* input){
 void shell(){
     char buffer[BUFFER_LENGTH] ;
     int flag = 0;
-    printf("%x", buffer);
     printHelp();
 
 

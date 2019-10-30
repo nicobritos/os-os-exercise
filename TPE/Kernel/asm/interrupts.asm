@@ -31,6 +31,8 @@ EXTERN sys_free_mem
 EXTERN sys_malloc
 EXTERN sys_free
 EXTERN sys_new_process
+EXTERN sys_free_process
+EXTERN sys_get_pid
 
 
 SECTION .text
@@ -211,6 +213,12 @@ _syscall:
   cmp rdi, 0x0c
   je .syscallNewProcess
 
+  cmp rdi, 0x0d
+  je .syscallFreeProcess
+
+  cmp rdi, 0x0e
+  je .syscallGetPid
+
 .cont:
 	mov rsp, rbp
   pop rbp
@@ -287,6 +295,16 @@ _syscall:
   mov r8, r9
   mov r9, r10
   call sys_new_process
+  jmp .cont
+
+.syscallFreeProcess
+  mov rdi, rsi
+  call sys_free_process
+  jmp .cont
+
+.syscallGetPid
+  mov rdi, rsi
+  call sys_get_pid
   jmp .cont
 
 ;Zero Division Exception

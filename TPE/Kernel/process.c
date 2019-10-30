@@ -8,7 +8,7 @@
 
 t_process * createProcess(char * name, void* startingPoint, int pid, int pPid, int argc, char * argv[], void * rip)
 {
-    t_process *  newProcess = pmalloc(sizeof(*newProcess), pPid);
+    t_process *  newProcess = pmalloc(sizeof(*newProcess), pid);
     if(newProcess == NULL)
     {
         return NULL;
@@ -16,7 +16,7 @@ t_process * createProcess(char * name, void* startingPoint, int pid, int pPid, i
     newProcess->pid = pid;
     newProcess->pPid = pPid;
     newProcess->name = name;
-    newProcess->processMemoryLowerAddress = pmalloc(PROC_SIZE, pPid);
+    newProcess->processMemoryLowerAddress = pmalloc(PROC_SIZE, pid);
     if (newProcess->processMemoryLowerAddress == NULL)
     {
         pfree(newProcess, pid);
@@ -77,6 +77,10 @@ void initializeStack(t_stack * stackFrame, int argc, char * argv[], void * start
 
 void freeProcess(t_process * process)
 {
-    pfree(process->stackPointer, process->pid);
+    pfree(process->processMemoryLowerAddress, process->pid);
     pfree(process, process->pid);
+}
+
+int getPid(t_process * process){
+    return process->pid;
 }

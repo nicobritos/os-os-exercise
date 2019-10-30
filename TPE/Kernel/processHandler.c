@@ -12,6 +12,7 @@ t_process * newProcess(char * name, int(* foo)(int argc, char** argv), int ppid,
     for (i = 0; i < MAX_PROC && !finished; i++)
     {
         if(pids[i] == 0){
+            pids[i] = 1;
             finished = 1;
         }
     }
@@ -34,8 +35,9 @@ int exec(t_process * process){
 
 int free(t_process * process){
     if(process != NULL){
-        freeProcess(newProcess);
-        pfree(process->pid, process);
+        if(process->pid != 0)
+            pids[(process->pid) - 1] = 0;
+        freeProcess(process);
         return 0;
     }
     return 1;
