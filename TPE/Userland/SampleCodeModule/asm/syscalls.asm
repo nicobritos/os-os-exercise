@@ -11,6 +11,10 @@ GLOBAL os_used_mem
 GLOBAL os_free_mem
 GLOBAL os_malloc
 GLOBAL os_free
+GLOBAL os_new_process
+GLOBAL os_free_process
+GLOBAL os_get_pid
+GLOBAL os_exec
 
 section .text
 
@@ -186,7 +190,7 @@ os_malloc:
 
 	mov rdx, rsi
 	mov rsi, rdi
-	mov rdi, 0x10
+	mov rdi, 0x0a
 	
 	; rdi --> codigo de la syscall 
 	; rsi --> size 
@@ -203,7 +207,7 @@ os_free:
 
 	mov rdx, rsi
 	mov rsi, rdi
-	mov rdi, 0x11
+	mov rdi, 0x0b
 	
 	; rdi --> codigo de la syscall 
 	; rsi --> address 
@@ -212,6 +216,58 @@ os_free:
 	int 80h
 	finish
 
+os_new_process:
+	start
+
+	; rdi --> name
+	; rsi --> foo
+	; rdx --> ppid
+	; rcx -->argc 
+	; r8  --> argv 
+	; r9  --> returnPosition
+	
+	mov r10, r9
+	mov r9, r8
+	mov r8, rcx
+	mov rcx, rdx
+	mov rdx, rsi
+	mov rsi, rdi
+	mov rdi, 0x0c
+
+	; rdi --> codigo de la syscall 
+	; rsi --> name
+	; rdx --> foo  
+	; rcx --> ppid 
+	; r8  --> argc 
+	; r9  --> argv
+	; r10 -> returnPosition
+
+	int 80h
+	finish
+
+os_free_process:
+	start
+	mov rsi, rdi
+	mov rdi, 0x0d
+
+	int 80h
+	finish
+
+os_get_pid:
+	start
+	mov rsi, rdi
+	mov rdi, 0x0e
+
+	int 80h
+	finish
+
+os_exec:
+	start
+	mov rsi, rdi
+	mov rdi, 0x0f
+
+	int 80h
+	finish
 
 section .data
 	time times 6 DW 0

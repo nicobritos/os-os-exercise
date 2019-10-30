@@ -99,13 +99,41 @@ int itoa(int value, char* buffer, int base){
 /*
  * Convierte  string a int 
  */
-int atoi(char c){ 		
-	int a = 0;
-	if(c >= '0' && c >= '9'){
-		a =(int) (c - '0');
-		return a;
+int atoi(char * s){ 		
+	int i = 0;
+	int num = 0;
+	while(s[i]){
+		if(s[i] >= '0' && s[i] <= '9'){
+			num *= 10;
+			num += s[i] - '0';
+			i++;
+		}
+		else{
+			return -1;
+		}
 	}
-	return -1;		//si retorno -1 es que el argumento pasado no era un numero.
+	return num;
+}
+
+int atox(char * s){
+	int i = 0;
+	int num = 0;
+	while(s[i]){
+		if(s[i] >= '0' && s[i] <= '9'){
+			num *= 16;
+			num += s[i] - '0';
+			i++;
+		}
+		else if(s[i] >= 'a' && s[i] <= 'f'){
+			num *= 16;
+			num += s[i] - 'a' + 10;
+			i++;
+		}
+		else{
+			return -1;
+		}
+	}
+	return num;
 }
 
 void * malloc(uint64_t size){
@@ -118,7 +146,6 @@ void free(void * address){
 
 unsigned int lineCount(char * input){
 	unsigned int count = 1;
-	int terminator = -1;
 	unsigned int i = 0;
 	while(input[i] != 0){
 		if(input[i] == '\n')

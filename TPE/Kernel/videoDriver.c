@@ -213,7 +213,7 @@ int strlen(const char * str) {
  * https://wiki.osdev.org/Drawing_In_Protected_Mode
  */
 void putPixel(uint64_t x,uint64_t y, unsigned char r, unsigned char g, unsigned char b) {
-  char* screen =  infoBlock->physbase + x*infoBlock->bpp / 8 + y*infoBlock->pitch ;
+  char* screen =  (char *)(infoBlock->physbase + x*infoBlock->bpp / 8 + y*infoBlock->pitch) ;
   screen[0] = b;              // BLUE
   screen[1] = g;              // GREEN
   screen[2] = r;              // RED
@@ -226,7 +226,7 @@ void putPixel(uint64_t x,uint64_t y, unsigned char r, unsigned char g, unsigned 
 void fillRect(unsigned char x, unsigned char y, uint16_t width, uint16_t height, unsigned char r, unsigned char g, unsigned char b) {
   unsigned char pixelWidth = infoBlock->bpp / 8;
 
-  char *pos = infoBlock->physbase + x*pixelWidth + y*infoBlock->pitch;
+  char *pos = (char *)(uint64_t)(infoBlock->physbase + x*pixelWidth + y*infoBlock->pitch);
   int i, j;
 
   for (i = 0; i < height; i++) {
@@ -249,7 +249,7 @@ void fillRect(unsigned char x, unsigned char y, uint16_t width, uint16_t height,
 void drawCharForString(char* pos, char myChar, unsigned char pixelWidth, int pitch, unsigned char r, unsigned char g, unsigned char b) {
   for (int i = 0; i < 8; i++){                /* i = fila */
     for (int j = 0; j < 8; j++){              /* j es la columna */
-      if (fonts[myChar][i] & (1 << j)){
+      if (fonts[(int)myChar][i] & (1 << j)){
           pos[j*pixelWidth]  = b;
           pos[j*pixelWidth+1]  = g;
           pos[j*pixelWidth+2] = r;
@@ -269,7 +269,7 @@ void drawChar(int  x, int  y, unsigned char myChar, unsigned char r, unsigned ch
 
   unsigned char pixelWidth = infoBlock->bpp / 8;
   int pitch = infoBlock->pitch;
-  char *pos = infoBlock->physbase + x*pixelWidth + y * pitch;
+  char *pos = (char *)(uint64_t)(infoBlock->physbase + x*pixelWidth + y * pitch);
 
   for (int i = 0; i < 8; i++){               /* i = fila */
     for (int j = 0; j < 8; j++){             /* j = columna */
@@ -318,7 +318,7 @@ void printChar(unsigned char myChar, unsigned char r, unsigned char g, unsigned 
 void printString(char *str, unsigned char r, unsigned char g, unsigned char b) {
   unsigned char pixelWidth = infoBlock->bpp / 8;
   int pitch = infoBlock->pitch;
-  char *pos = infoBlock->physbase + cursorX*pixelWidth + cursorY*pitch;
+  char *pos = (char *)(uint64_t)(infoBlock->physbase + cursorX*pixelWidth + cursorY*pitch);
   int len = strlen(str);
 
   for (int i = 0; i < len; i++){
@@ -328,7 +328,7 @@ void printString(char *str, unsigned char r, unsigned char g, unsigned char b) {
     if (cursorX >= (infoBlock->Xres - 5 - cursorXStart)){
 
       newLine();
-      pos = infoBlock->physbase + cursorX*pixelWidth + cursorY*pitch;
+      pos = (char *)(uint64_t)(infoBlock->physbase + cursorX*pixelWidth + cursorY*pitch);
 
     } else {
             pos += fontWidth * pixelWidth;
@@ -340,9 +340,9 @@ void shiftUp() {
 
    int pitch = infoBlock->pitch;
    int destY = cursorYStart;
-   char *dest = infoBlock->physbase + destY*pitch;
+   char *dest = (char *)(uint64_t)(infoBlock->physbase + destY*pitch);
    int srcY = cursorYStart + 20;
-   char *src = infoBlock->physbase + srcY * pitch;
+   char *src = (char *)(uint64_t)(infoBlock->physbase + srcY * pitch);
    int size = infoBlock->Xres * pitch;
    memcpy(dest, src, size);
    cursorY -= 20;

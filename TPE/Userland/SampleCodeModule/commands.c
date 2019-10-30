@@ -1,6 +1,7 @@
 #include "stdio.h"
 #include "includes/syscalls.h"
-
+#include "includes/exceptions.h"
+void invalidOpCode();
 
 void printHelp() {
     printf("\nhelp - display available commands \n");
