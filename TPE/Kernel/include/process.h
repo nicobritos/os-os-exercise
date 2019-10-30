@@ -2,9 +2,7 @@
 #define PROCESS_H
 
 #include "stdint.h"
-//#include "BuddyAllocationSystem.h"
 #include "lib.h"
-//#include "queueADT.h"
 
 #define PROC_SIZE 4096
 #define MAX_PROC 20

@@ -30,6 +30,7 @@ EXTERN sys_used_mem
 EXTERN sys_free_mem
 EXTERN sys_malloc
 EXTERN sys_free
+EXTERN sys_new_process
 
 
 SECTION .text
@@ -201,11 +202,15 @@ _syscall:
   cmp rdi, 0x09
   je .syscallFreeMem
 
-  cmp rdi, 0x10
+  cmp rdi, 0x0a
   je .syscallMalloc
 
-  cmp rdi, 0x11
+  cmp rdi, 0x0b
   je .syscallFree
+
+  cmp rdi, 0x0c
+  je .syscallNewProcess
+
 .cont:
 	mov rsp, rbp
   pop rbp
@@ -272,6 +277,16 @@ _syscall:
   mov rdi, rsi	; re-ordering the arguments to send to sys_pixel
   mov rsi, rdx
   call sys_free
+  jmp .cont
+
+.syscallNewProcess
+  mov rdi, rsi
+  mov rsi, rdx
+  mov rdx, rcx
+  mov rcx, r8
+  mov r8, r9
+  mov r9, r10
+  call sys_new_process
   jmp .cont
 
 ;Zero Division Exception

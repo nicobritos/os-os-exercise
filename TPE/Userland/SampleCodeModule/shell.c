@@ -1,6 +1,7 @@
 #include "includes/defines.h"
 #include "includes/stdlib.h"
 #include "includes/stdio.h"
+#include "includes/unistd.h"
 #include "includes/commands.h"
 #include "includes/snake.h"
 
@@ -51,6 +52,12 @@ int parse(char* input){
       printf("\n%s", filterVowels(phrase, &(input[7])));
       return 0;
     }
+    else if(strcmp(input, "new") == 0){
+      //printf("\n%x", malloc(3048));
+      void * proceso = newProcess("Hola", 0, 0, 0, 0, 0);
+      printf("\n%x", proceso);
+      return 0;
+    }
     else{
       printf("\nWrong command");
       return 0;
@@ -61,7 +68,7 @@ int parse(char* input){
 void shell(){
     char buffer[BUFFER_LENGTH] ;
     int flag = 0;
-
+    printf("%x", buffer);
     printHelp();
 
 

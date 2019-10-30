@@ -6,10 +6,9 @@
 #define SYSTEM_PID 0
 
 
-t_process *
-createProcess(char * name, void* startingPoint, int pid, int pPid, int argc, char * argv[], void * rip)
+t_process * createProcess(char * name, void* startingPoint, int pid, int pPid, int argc, char * argv[], void * rip)
 {
-    t_process *  newProcess = pmalloc(sizeof(t_process), pPid);
+    t_process *  newProcess = pmalloc(sizeof(*newProcess), pPid);
     if(newProcess == NULL)
     {
         return NULL;
@@ -20,7 +19,7 @@ createProcess(char * name, void* startingPoint, int pid, int pPid, int argc, cha
     newProcess->processMemoryLowerAddress = pmalloc(PROC_SIZE, pPid);
     if (newProcess->processMemoryLowerAddress == NULL)
     {
-        pfree(newProcess, pPid);
+        pfree(newProcess, pid);
         return NULL;
     }
     void * processMemoryUpperAddress = newProcess->processMemoryLowerAddress + PROC_SIZE - 1;
@@ -49,8 +48,7 @@ processWrapper(int argc, char * argv[], void * startingPoint)
 
 */
 
-void 
-initializeStack(t_stack * stackFrame, int argc, char * argv[], void * startingPoint,void * rip) {
+void initializeStack(t_stack * stackFrame, int argc, char * argv[], void * startingPoint,void * rip) {
     //stackFrame->gs = 0x000;
     //stackFrame->fs = 0x000;
     stackFrame->r15 = 0x000;
@@ -79,6 +77,6 @@ initializeStack(t_stack * stackFrame, int argc, char * argv[], void * startingPo
 
 void freeProcess(t_process * process)
 {
-    pfree(process->stackPointer, SYSTEM_PID);
-    pfree(process, SYSTEM_PID);
+    pfree(process->stackPointer, process->pid);
+    pfree(process, process->pid);
 }

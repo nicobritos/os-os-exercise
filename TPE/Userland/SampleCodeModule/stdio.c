@@ -130,7 +130,6 @@ int scanf(char* string, int bytes, int separator){
 			string[i++] = c;
 		}
 	}
-
 	string[i] = 0; //To mark the end of the string
 	return i;
 }
