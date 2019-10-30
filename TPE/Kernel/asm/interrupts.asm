@@ -33,7 +33,7 @@ EXTERN sys_free
 EXTERN sys_new_process
 EXTERN sys_free_process
 EXTERN sys_get_pid
-
+EXTERN sys_exec
 
 SECTION .text
 
@@ -219,6 +219,9 @@ _syscall:
   cmp rdi, 0x0e
   je .syscallGetPid
 
+  cmp rdi, 0x0f
+  je .syscallExec
+
 .cont:
 	mov rsp, rbp
   pop rbp
@@ -305,6 +308,11 @@ _syscall:
 .syscallGetPid
   mov rdi, rsi
   call sys_get_pid
+  jmp .cont
+
+.syscallExec
+  mov rdi, rsi
+  call sys_exec
   jmp .cont
 
 ;Zero Division Exception

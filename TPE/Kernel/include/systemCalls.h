@@ -17,6 +17,7 @@ void sys_free(void * address, uint64_t pid);
 void * sys_new_process(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], void * returnPosition);
 void sys_free_process(void * process);
 int sys_get_pid(void * process);
+int sys_exec(void * process);
 
 
 

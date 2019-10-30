@@ -17,7 +17,7 @@ typedef struct
     char * name;
     t_state state; 
     void * stackPointer;
-    void * processMemoryLowerAddress;
+    int(* processMemoryLowerAddress)(int argc, char** argv);
     }t_process;
 
 typedef struct 
@@ -46,7 +46,7 @@ typedef struct
 	    //uint16_t ss;
     } t_stack;
 
-t_process * createProcess(char * name, void* startingPoint, int pid,int ppid, int argc, char * argv[], void * rip);
+t_process * createProcess(char * name, int(* startingPoint)(int argc, char** argv), int pid,int ppid, int argc, char * argv[], void * rip);
 void freeProcess(t_process * process);
 int getPid(t_process * process);
 

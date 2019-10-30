@@ -4,6 +4,8 @@
 #include "includes/unistd.h"
 #include "includes/commands.h"
 #include "includes/snake.h"
+#include "includes/exceptions.h"
+#define NULL ((void *) 0)
 
 
 int parse(char* input){
@@ -12,7 +14,10 @@ int parse(char* input){
       printf("\n%s", phrase);
       return 0;
     } else if(strcmp(input,"snake") == 0){
-         snake_game();
+        // void * snakeProcess = newProcess("Snake", snake_game, 0, 0, NULL, NULL);
+        // execute(snakeProcess);
+        // freeProcess(snakeProcess);
+        snake_game(0, NULL);
         return 0;
     } else if(strcmp(input, "getTime") == 0) {
       printf("\n");
@@ -52,23 +57,23 @@ int parse(char* input){
       printf("\n%s", filterVowels(phrase, &(input[7])));
       return 0;
     }
-    else if(strcmp(input, "new") == 0){
-      void * proceso = newProcess("Hola", 0, 0, 0, 0, 0);
-      printf("\n%x", proceso);
-      return 0;
-    }
-    else if(strncmp(input, "free ", 5) == 0){
-      char* phrase = &(input[5]);
-      int i = atox(phrase);
-      freeProcess((void *) atox(phrase));
-      return 0;
-    }
-    else if(strncmp(input, "get ", 4) == 0){
-      char* phrase = &(input[4]);
-      int i = atox(phrase);
-      printf("\n%d", getPid(i));
-      return 0;
-    }
+    // else if(strcmp(input, "new") == 0){
+    //   void * proceso = newProcess("Hola", 0, 0, 0, 0, 0);
+    //   printf("\n%x", proceso);
+    //   return 0;
+    // }
+    // else if(strncmp(input, "free ", 5) == 0){
+    //   char* phrase = &(input[5]);
+    //   int i = atox(phrase);
+    //   freeProcess((void *) atox(phrase));
+    //   return 0;
+    // }
+    // else if(strncmp(input, "get ", 4) == 0){
+    //   char* phrase = &(input[4]);
+    //   int i = atox(phrase);
+    //   printf("\n%d", getPid(i));
+    //   return 0;
+    // }
     else if(strcmp(input, "") == 0){
       return 0;
     }

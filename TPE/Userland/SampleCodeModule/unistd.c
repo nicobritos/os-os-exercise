@@ -6,9 +6,13 @@ void * newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int 
 }
 
 void freeProcess(void * process){
-    return os_free_process(process);
+    os_free_process(process);
 }
 
 int getPid(void * process){
     return os_get_pid(process);
+}
+
+int execute(void * process){
+    return os_exec(process);
 }

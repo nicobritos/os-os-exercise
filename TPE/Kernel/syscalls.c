@@ -113,3 +113,7 @@ void sys_free_process(void * process){
 int sys_get_pid(void * process){
 	return getPid(process);
 }
+
+int sys_exec(void * process){
+	return exec(process);
+}

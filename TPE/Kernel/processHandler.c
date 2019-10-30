@@ -27,9 +27,9 @@ t_process * newProcess(char * name, int(* foo)(int argc, char** argv), int ppid,
 }
 
 int exec(t_process * process){
-    // if(process != NULL)
-    //     return sys_execv(process->processMemoryLowerAddress);
-    // else
+     if(process != NULL)
+         return process->processMemoryLowerAddress(0, NULL); //CAMBIAR, DEBERIA HACERLO EL SCHEDULER PORQUE LOS PARAMS ESTAN EN EL STACK
+     else
         return 1;
 }
 

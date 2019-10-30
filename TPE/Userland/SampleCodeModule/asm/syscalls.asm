@@ -14,6 +14,7 @@ GLOBAL os_free
 GLOBAL os_new_process
 GLOBAL os_free_process
 GLOBAL os_get_pid
+GLOBAL os_exec
 
 section .text
 
@@ -260,6 +261,13 @@ os_get_pid:
 	int 80h
 	finish
 
+os_exec:
+	start
+	mov rsi, rdi
+	mov rdi, 0x0f
+
+	int 80h
+	finish
 
 section .data
 	time times 6 DW 0

@@ -1,4 +1,5 @@
 #include "include/memManager.h"
+#include "include/lib.h"
 #define FALSE 0
 #define TRUE !FALSE
 #define NULL ((void *)0)

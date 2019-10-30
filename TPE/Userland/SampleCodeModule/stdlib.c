@@ -100,7 +100,6 @@ int itoa(int value, char* buffer, int base){
  * Convierte  string a int 
  */
 int atoi(char * s){ 		
-	char finished = 0;
 	int i = 0;
 	int num = 0;
 	while(s[i]){
@@ -117,7 +116,6 @@ int atoi(char * s){
 }
 
 int atox(char * s){
-	char finished = 0;
 	int i = 0;
 	int num = 0;
 	while(s[i]){
@@ -148,7 +146,6 @@ void free(void * address){
 
 unsigned int lineCount(char * input){
 	unsigned int count = 1;
-	int terminator = -1;
 	unsigned int i = 0;
 	while(input[i] != 0){
 		if(input[i] == '\n')

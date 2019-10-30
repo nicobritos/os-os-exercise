@@ -2,6 +2,9 @@
 #include "includes/snake.h"
 #include "includes/stdio.h"
 #include "includes/stdlib.h"
+#include "includes/syscalls.h"
+
+void drawString(int x, int y, char * str , unsigned char r, unsigned char g, unsigned char b, unsigned char size);
 
 char fonts[130][8] = {
 
@@ -269,7 +272,7 @@ void incrementSize(){
 
 int move(){
   char c;
-  while( c = getCharWithZero() ){
+  while( (c = getCharWithZero()) ){
       if(c!=0){
         count++;
       }
@@ -385,7 +388,7 @@ int increaseSize( int num ){
 
 void play(){
   int dead = 0;
-  int c = getchar();
+  getchar();
   delete((int)(RIGHT - 2 * SIZE)/2 - 200,(int)(BOTTOM - 2 * SIZE) / 2 - 200,SIZE * strlen(start_message),SIZE); // Borra el mensaje cuando aprieta la primer letra
   delete(SIZE,(int)(BOTTOM - 2 * SIZE) / 2 - 100,RIGHT-2*SIZE,SIZE);
   
@@ -436,8 +439,7 @@ int getseconds(){
 }
 
 
-void snake_game(){
-
+int snake_game(int argc, char * argv[]){
   start();
   printSnake();
 
@@ -446,9 +448,8 @@ void snake_game(){
   showScore();
 
   os_clear();
- 
+  return 0;
 }
-
 
 /* Sacado de internet, no recuerdo que pagina */
 void drawChar(int  x, int  y, unsigned char myChar, unsigned char r, unsigned char g, unsigned char b, unsigned char size) {
