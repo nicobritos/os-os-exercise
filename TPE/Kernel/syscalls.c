@@ -103,7 +103,7 @@ void sys_free(void * address, uint64_t pid){
 }
 
 void * sys_new_process(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], void * returnPosition){
-	return newProcess(name, foo, ppid, argc, argv, returnPosition);
+	return newProcess(name, foo, ppid, argc, argv);
 }
 
 void sys_free_process(void * process){

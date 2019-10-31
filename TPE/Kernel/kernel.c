@@ -6,6 +6,7 @@
 #include "idtLoader.h"
 #include "videoDriver.h"
 #include "memManager.h"
+#include "processHandler.h"
 
 
 extern uint8_t text;
@@ -32,7 +33,7 @@ void * getStackBase()
 {
 	return (void*)(
 		(uint64_t)&endOfKernel
-		+ PageSize * 8				//The size of the stack itself, 32KiB
+		+ PageSize * 16				//The size of the stack itself, 32KiB
 		- sizeof(uint64_t)			//Begin at the top of the stack
 	);
 }
@@ -46,13 +47,45 @@ void * initializeKernelBinary(){
 	loadModules(&endOfKernelBinary, moduleAddresses);
 
 	clearBSS(&bss, &endOfKernel - &bss);
+
 	return getStackBase();
 }
 
-int main(){	
-	load_idt();
-	initializeMemoryManager();
+void hola(char *s) {
+	while(1) {
+		printf("A");
+	}
+}
+
+
+void chau(char *s) {
+	while(1) {
+		printf("B");
+	}
+}
+
+void *enterUserSpace(int argc, void **argv) {
+	printf("asdas\n");
 	((EntryPoint)sampleCodeModuleAddress)();
+}
+
+int main(){	
+	_cli();
+	initializeMemoryManager();
+	initializeScheduler();
+	load_idt();
+
+	char *argsA = {"A"};
+	char *argsB = {"B"};
+	// newProcess("hola", &enterUserSpace, SYSTEM_PID, 0, NULL);
+	// newProcess("hola", &enterUserSpace, SYSTEM_PID, 0, NULL);
+	// newProcess("chau", sampleCodeModuleAddress, SYSTEM_PID, 0, NULL);
+	// newProcess("hola", hola, SYSTEM_PID, 1, argsA);
+	// newProcess("chau", chau, SYSTEM_PID, 1, argsB);
+	newProcess("hola", hola, SYSTEM_PID, 0, NULL);
+	newProcess("chau", chau, SYSTEM_PID, 0, NULL);
+	_sti();
+	idleKernel();
 	return 0;
 }
 

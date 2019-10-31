@@ -306,7 +306,11 @@ int maxX() {
 }
 
 void printChar(unsigned char myChar, unsigned char r, unsigned char g, unsigned char b) {
-
+  if (myChar == '\n' || myChar == '\r') {
+    newLine();
+    return;
+  }
+  
   drawChar(cursorX, cursorY, myChar,r,g,b);
   cursorX += 8;
   if (cursorX >= maxX()){
