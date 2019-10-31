@@ -270,27 +270,27 @@ _syscall:
   call sys_ticks_per_second
   jmp .cont
 
-.syscallUsedMem
+.syscallUsedMem:
   call sys_used_mem
   jmp .cont
 
-.syscallFreeMem
+.syscallFreeMem:
   call sys_free_mem
   jmp .cont
 
-.syscallMalloc
+.syscallMalloc:
   mov rdi, rsi	; re-ordering the arguments to send to sys_pixel
   mov rsi, rdx
   call sys_malloc
   jmp .cont
 
-.syscallFree
+.syscallFree:
   mov rdi, rsi	; re-ordering the arguments to send to sys_pixel
   mov rsi, rdx
   call sys_free
   jmp .cont
 
-.syscallNewProcess
+.syscallNewProcess:
   mov rdi, rsi
   mov rsi, rdx
   mov rdx, rcx
@@ -300,17 +300,17 @@ _syscall:
   call sys_new_process
   jmp .cont
 
-.syscallFreeProcess
+.syscallFreeProcess:
   mov rdi, rsi
   call sys_free_process
   jmp .cont
 
-.syscallGetPid
+.syscallGetPid:
   mov rdi, rsi
   call sys_get_pid
   jmp .cont
 
-.syscallExec
+.syscallExec:
   mov rdi, rsi
   call sys_exec
   jmp .cont
