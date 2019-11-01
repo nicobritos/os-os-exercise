@@ -1,6 +1,6 @@
-#include "scheduler.h"
 #include "processHandler.h"
 #include "memManager.h"
+#include "scheduler.h"
 #include "stdio.h"
 #include "time.h"
 
@@ -25,6 +25,7 @@ static uint64_t backgroundProcesses = 0;
 static uint64_t foregroundProcesses = 0;
 
 static t_process idleProcess = NULL;
+static void (*onProcessKill) (t_process process) = NULL;
 
 void idleFunction();
 
@@ -45,7 +46,7 @@ void freeProcessNodeReadOnly(void *_processNode);
 
 // Public
 void initializeScheduler() {
-	idleProcess = createProcess("Idle Process", idleFunction, SYSTEM_PID, SYSTEM_PID, 0, NULL, NULL);
+	idleProcess = createProcess("Idle Process", processWrapper, SYSTEM_PID, SYSTEM_PID, 0, NULL, (int (*)(int, char**))idleFunction);
 
 	waitingQueue = createList();
 	readyQueue = createList();
@@ -153,6 +154,10 @@ void setCurrentProcessMode(t_mode mode) {
 t_mode getCurrentProcessMode() {
 	if (currentProcessNode == NULL) return S_M_INVALID;
 	return getProcessNodeFromNode(currentProcessNode)->mode;
+}
+
+void setOnProcessKillScheduler(void(_onProcessKill) (t_process process)) {
+	onProcessKill = _onProcessKill;
 }
 
 // Iterator
@@ -267,8 +272,8 @@ void removeProcess(nodeListADT processNode, listADT queue) {
 	} else {
 		backgroundProcesses--;
 	}
-	free(myProcessNode);
-	// freeProcessNodeReadOnly((void*) myProcessNode);
+	if (onProcessKill != NULL) onProcessKill(myProcessNode->process);
+	pfree(myProcessNode, SYSTEM_PID);
 }
 
 void moveNode(nodeListADT processNode, listADT fromQueue, listADT toQueue) {

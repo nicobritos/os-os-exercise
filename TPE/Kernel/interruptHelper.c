@@ -3,6 +3,9 @@
 
 static uint64_t cliQueue = 0; // If 0 then interrupts should be enabled.
 
+void _cli();
+void _sti();
+
 void pushcli() {
 	if (cliQueue == 0)
 		_cli();

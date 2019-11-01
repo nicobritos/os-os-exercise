@@ -1,8 +1,6 @@
 #include "memManager.h"
 #include "process.h"
 
-#define NULL ((void *)0)
-
 typedef struct t_processCDT {
     pid_t pid;
     pid_t pPid;
@@ -40,11 +38,11 @@ typedef struct t_stackCDT {
     uint64_t rflags;
     uint64_t rsp;
     uint64_t ss;
-} __attribute__((packed)) t_stackCDT;
+} t_stackCDT;
 
-void initializeStack(t_stack stackFrame, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), int argc, char * argv[], int(* startingPoint)(int argc, char** argv));
+void initializeStack(t_stack stackFrame, pid_t pid, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv), pid_t pid), int argc, char * argv[], int(* startingPoint)(int argc, char** argv));
 
-t_process createProcess(char * name, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), pid_t pid, pid_t pPid, int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
+t_process createProcess(char * name, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv), pid_t pid), pid_t pid, pid_t pPid, int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
     t_process newProcess = pmalloc(sizeof(t_processCDT), pid);
     if(newProcess == NULL) {
         return NULL;
@@ -60,12 +58,12 @@ t_process createProcess(char * name, int(* wrapper)(int argc, char** argv, int(*
     void * processMemoryUpperAddress = newProcess->processMemoryLowerAddress + PROC_SIZE - 1;
     newProcess->state = P_READY;
     newProcess->stackPointer = processMemoryUpperAddress - sizeof(t_stackCDT);
-    initializeStack((t_stack )(newProcess->stackPointer), wrapper, argc, argv, startingPoint);
+    initializeStack((t_stack )(newProcess->stackPointer), pid, wrapper, argc, argv, startingPoint);
     return newProcess;
 }
 
 
-void initializeStack(t_stack stackFrame, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
+void initializeStack(t_stack stackFrame, pid_t pid, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv), pid_t pid), int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
     stackFrame->r15 = 15;
     stackFrame->r14 = 14;
     stackFrame->r13 = 13;
@@ -81,7 +79,7 @@ void initializeStack(t_stack stackFrame, int(* wrapper)(int argc, char** argv, i
     stackFrame->rsp = (uint64_t)(stackFrame);
 
     stackFrame->rdx = (uint64_t)startingPoint;
-    stackFrame->rcx = 7;
+    stackFrame->rcx = (uint64_t)pid;
     stackFrame->rbx = 6;
     stackFrame->rax = 5;
 
@@ -93,7 +91,6 @@ void initializeStack(t_stack stackFrame, int(* wrapper)(int argc, char** argv, i
     stackFrame->cs = 0x008;
     stackFrame->ss = 0x000;
 }
-
 
 void freeProcess(t_process process) {
     pfree(process->processMemoryLowerAddress, process->pid);

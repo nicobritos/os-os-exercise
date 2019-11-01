@@ -20,6 +20,8 @@
 	void setCurrentProcessMode(t_mode mode);
 	t_mode getCurrentProcessMode();
 
+	void setOnProcessKillScheduler(void(_onProcessKill) (t_process process));
+
 
 	// Process iterator
 	listADT createProcessList();

@@ -48,7 +48,7 @@ typedef struct ModeInfoBlock {
   uint32_t reserved1;
   uint16_t reserved2;
 
-} ModeInfoBlock __attribute__((packed));
+} __attribute__((packed)) ModeInfoBlock;
 
 
 

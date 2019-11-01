@@ -2,6 +2,7 @@
 #include <idtLoader.h>
 #include <defs.h>
 #include <interrupts.h>
+#include "interruptHelper.h"
 
 #pragma pack(push)		/* Push de la alineación actual */
 #pragma pack (1) 		/* Alinear las siguiente estructuras a 1 byte */

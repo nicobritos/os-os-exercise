@@ -15,7 +15,7 @@ typedef enum {P_RUNNING, P_READY, P_WAITING, P_DEAD, P_LOCKED, P_INVALID} t_stat
 typedef struct t_processCDT *t_process;
 typedef struct t_stackCDT *t_stack;
 
-t_process createProcess(char * name, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), pid_t pid, pid_t pPid, int argc, char * argv[], int(* startingPoint)(int argc, char** argv));
+t_process createProcess(char * name, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv), pid_t pid), pid_t pid, pid_t pPid, int argc, char * argv[], int(* startingPoint)(int argc, char** argv));
 void freeProcess(t_process process);
 void setProcessState(t_process process, t_state state);
 void updateProcessStack(t_stack dst, t_stack src);

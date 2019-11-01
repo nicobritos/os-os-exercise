@@ -109,7 +109,7 @@ void * sys_new_process(char * name, int(* foo)(int argc, char** argv), int ppid,
 }
 
 void sys_free_process(void * process){
-	free(process);
+	// free(process);
 }
 
 int sys_get_pid(void * process){
@@ -117,5 +117,5 @@ int sys_get_pid(void * process){
 }
 
 int sys_exec(void * process){
-	return exec(process);
+	// return exec(process);
 }
