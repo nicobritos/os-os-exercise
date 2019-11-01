@@ -58,7 +58,8 @@ t_process createProcess(char * name, int(* wrapper)(int argc, char** argv, int(*
     void * processMemoryUpperAddress = newProcess->processMemoryLowerAddress + PROC_SIZE - 1;
     newProcess->state = P_READY;
     newProcess->stackPointer = processMemoryUpperAddress - sizeof(t_stackCDT);
-    initializeStack((t_stack )(newProcess->stackPointer), pid, wrapper, argc, argv, startingPoint);
+    initializeStack((t_stack)(newProcess->stackPointer), pid, wrapper, argc, argv, startingPoint);
+
     return newProcess;
 }
 
@@ -141,6 +142,10 @@ t_stack getProcessStackFrame(t_process process) {
 pid_t getProcessPid(t_process process) {
     return process->pid;
 }
+
+// t_process duplicateProcess(t_process source, pid_t pid, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv), pid_t pid)) {
+    // t_process process = createProcess(source->name, wrapper, pid, source->pid, source->argc, source->argv, source->stackPointer->rip);
+// }
 
 t_process duplicateProcessReadOnly(t_process source) {
     t_process process = pmalloc(sizeof(t_processCDT), SYSTEM_PID);

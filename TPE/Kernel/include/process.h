@@ -23,6 +23,7 @@ t_state getProcessState(t_process process);
 t_stack getProcessStackFrame(t_process process);
 pid_t getProcessPid(t_process process);
 
+// t_process duplicateProcess(t_process source);
 t_process duplicateProcessReadOnly(t_process source);
 void freeProcessReadOnly(t_process process);
 
