@@ -6,25 +6,25 @@
 #define MAX(x, y) (x > y ? x : y)
 #define MIN(x, y) (x < y ? x : y)
 
-typedef struct nodeCDT {
+typedef struct nodeListCDT {
 	void *element;
-	nodeADT next;
-	nodeADT previous;
-} nodeCDT;
+	nodeListADT next;
+	nodeListADT previous;
+} nodeListCDT;
 
 typedef struct listCDT {
-	nodeADT firstNode;
-	nodeADT lastNode;
+	nodeListADT firstNode;
+	nodeListADT lastNode;
 	uint64_t size;
-	nodeADT currentNodeIterator;
+	nodeListADT currentNodeIterator;
 	uint64_t initializedIterator;
 } listCDT;
 
 // Declarations
-nodeADT fetchNodeAtIndex(listADT list, uint64_t index);
-void addNodeToIndexList(listADT list, nodeADT node, uint64_t index);
-void removeNodeListNoFree(listADT list, nodeADT node);
-void freeNode(nodeADT node);
+nodeListADT fetchNodeAtIndex(listADT list, uint64_t index);
+void addNodeToIndexList(listADT list, nodeListADT node, uint64_t index);
+void removeNodeListNoFree(listADT list, nodeListADT node);
+void freeNode(nodeListADT node);
 
 // Public
 listADT createList() {
@@ -34,30 +34,41 @@ listADT createList() {
 	return list;
 }
 
-nodeADT addElementToIndexList(listADT list, void *element, uint64_t index) {
-	nodeADT node = pmalloc(sizeof(nodeCDT), SYSTEM_PID);
+nodeListADT addElementToIndexList(listADT list, void *element, uint64_t index) {
+	nodeListADT node = pmalloc(sizeof(nodeListCDT), SYSTEM_PID);
 	node->element = element;
 	addNodeToIndexList(list, node, index);
 	return node;
 }
 
-nodeADT getNodeAtIndexList(listADT list, uint64_t index) {
+nodeListADT getNodeAtIndexList(listADT list, uint64_t index) {
 	if (index >= list->size) return NULL;
 	return fetchNodeAtIndex(list, index);
 }
 
+nodeListADT getNextNodeList(nodeListADT node) {
+	if (node != NULL) return node->next;
+	return NULL;
+}
+
+void *getElementList(nodeListADT node) {
+	if (node != NULL) return node->element;
+	return NULL;
+}
+
+
 void removeNodeAtIndexList(listADT list, uint64_t index) {
-	nodeADT node = getNodeAtIndexList(list, index);
-	if (node == NULL) return NULL;
+	nodeListADT node = getNodeAtIndexList(list, index);
+	if (node == NULL) return;
 	removeNodeList(list, node);
 }
 
-void removeNodeList(listADT list, nodeADT node) {
+void removeNodeList(listADT list, nodeListADT node) {
 	removeNodeListNoFree(list, node);
 	freeNode(node);
 }
 
-uint8_t moveNodeToIndexList(listADT destination, listADT source, nodeADT node, uint64_t index) {
+void moveNodeToIndexList(listADT destination, listADT source, nodeListADT node, uint64_t index) {
 	removeNodeListNoFree(source, node);
 	addNodeToIndexList(destination, node, index);
 }
@@ -70,35 +81,43 @@ uint64_t getSizeList(listADT list) {
 	return list->size;
 }
 
-nodeADT searchNodeList(listADT list, uint8_t(searchFunction) (void * element)) {
-	nodeADT node = list->firstNode;
-	while (node != NULL && !searchFunction(node->element)) {
+nodeListADT searchNodeList(listADT list, void *comparing, uint8_t(searchFunction) (void * element, void * comparing)) {
+	nodeListADT node = list->firstNode;
+	while (node != NULL && !searchFunction(node->element, comparing)) {
 		node = node->next;
 	}
 	return node;
 }
 
 listADT duplicateList(listADT list, void *(duplicateElement) (void * element)) {
-	listADT newList = createList();
-	if (list->size == 0) {
-		return newList;
-	}
-
-	nodeADT node = list->firstNode;
-	nodeADT newNode;
-	while (node != NULL) {
-		newNode = pmalloc(sizeof(nodeCDT), SYSTEM_PID);
-		newNode->element = duplicateElement(node->element);
-		addNodeToIndexList(newList, newNode, newList->size);
-		newList->size++;
-	}
-
-	return newList;
+	return duplicateAndConcatList(NULL, list, duplicateElement);
 }
 
+listADT duplicateAndConcatList(listADT destination, listADT source, void *(duplicateElement) (void * element)) {
+	if (destination == NULL) {
+		destination = createList();
+	}
+	
+	if (source->size == 0) {
+		return destination;
+	}
+
+	nodeListADT node = source->firstNode;
+	nodeListADT newNode;
+	while (node != NULL) {
+		newNode = pmalloc(sizeof(nodeListCDT), SYSTEM_PID);
+		newNode->element = duplicateElement(node->element);
+		addNodeToIndexList(destination, newNode, destination->size);
+		destination->size++;
+	}
+
+	return destination;
+}
+
+
 void freeList(listADT list, void(freeElement) (void * element)) {
-	nodeADT node = list->firstNode;
-	nodeADT auxNode;
+	nodeListADT node = list->firstNode;
+	nodeListADT auxNode;
 	while (node != NULL) {
 		auxNode = node->next;
 		freeElement(node->element);
@@ -118,7 +137,7 @@ uint8_t hasNextListIterator(listADT list) {
 	return list->initializedIterator == 0 || list->currentNodeIterator->next != NULL;
 }
 
-nodeADT getNextNodeListIterator(listADT list) {
+nodeListADT getNextNodeListIterator(listADT list) {
 	if (!hasNextListIterator(list)) return NULL;
 	if (list->initializedIterator == 0) {
 		list->initializedIterator = 1;
@@ -128,8 +147,8 @@ nodeADT getNextNodeListIterator(listADT list) {
 }
 
 // Private
-nodeADT fetchNodeAtIndex(listADT list, uint64_t index) {
-	nodeADT auxNode;
+nodeListADT fetchNodeAtIndex(listADT list, uint64_t index) {
+	nodeListADT auxNode;
 
 	if (index == 0 || list->size == 0) {
 		return list->firstNode;
@@ -157,7 +176,7 @@ nodeADT fetchNodeAtIndex(listADT list, uint64_t index) {
 	return auxNode;
 }
 
-void addNodeToIndexList(listADT list, nodeADT node, uint64_t index) {
+void addNodeToIndexList(listADT list, nodeListADT node, uint64_t index) {
 	if (list->size == 0) {
 		node->previous = NULL;
 		node->next = NULL;
@@ -170,7 +189,7 @@ void addNodeToIndexList(listADT list, nodeADT node, uint64_t index) {
 			list->lastNode = node;
 			node->previous->next = node;
 		} else {
-			nodeADT auxNode = fetchNodeAtIndex(list, index);
+			nodeListADT auxNode = fetchNodeAtIndex(list, index);
 
 			node->next = auxNode;
 			node->previous = auxNode->previous;
@@ -187,7 +206,7 @@ void addNodeToIndexList(listADT list, nodeADT node, uint64_t index) {
 	list->size++;
 }
 
-void removeNodeListNoFree(listADT list, nodeADT node) {
+void removeNodeListNoFree(listADT list, nodeListADT node) {
 	if (node->previous != NULL) {
 		node->previous->next = node->next;
 	} else {
@@ -203,6 +222,6 @@ void removeNodeListNoFree(listADT list, nodeADT node) {
 	list->size--;
 }
 
-void freeNode(nodeADT node) {
+void freeNode(nodeListADT node) {
 	pfree(node, SYSTEM_PID);
 }

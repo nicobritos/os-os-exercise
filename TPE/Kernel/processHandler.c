@@ -6,7 +6,7 @@ void processWrapper(int argc, char * argv[], void * startingPoint);
 
 static char pids[MAX_PROC] = {0};
 
-t_process * newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[]){
+t_process newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[]){
     char finished = 0;
     unsigned int i;
     for (i = 0; i < MAX_PROC && !finished; i++)
@@ -18,7 +18,7 @@ t_process * newProcess(char * name, int(* foo)(int argc, char** argv), int ppid,
     }
     if(!finished)
         return NULL;
-    t_process * newProcess = createProcess(name, processWrapper, i, ppid, argc, argv, (void *) foo);
+    t_process newProcess = createProcess(name, processWrapper, i, ppid, argc, argv, (void *) foo);
     if(newProcess == NULL){
         return NULL;
     }
@@ -34,20 +34,16 @@ processWrapper(int argc, char * argv[], void * startingPoint)
     //killProcess(currentPid);
 }
 
+int exec(t_process process) {
 
-int exec(t_process * process){
-     if(process != NULL)
-         return process->processMemoryLowerAddress(0, NULL); //CAMBIAR, DEBERIA HACERLO EL SCHEDULER PORQUE LOS PARAMS ESTAN EN EL STACK
-     else
-        return 1;
 }
 
-int free(t_process * process){
-    if(process != NULL){
-        if(process->pid != 0)
-            pids[(process->pid) - 1] = 0;
-        freeProcess(process);
-        return 0;
-    }
-    return 1;
+int free(t_process process){
+//     if(process != NULL){
+//         if(process->pid != 0)
+//             pids[(process->pid) - 1] = 0;
+//         freeProcess(process);
+//         return 0;
+//     }
+//     return 1;
 }
