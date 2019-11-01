@@ -17,7 +17,7 @@ void putchar(char letter){
 }
 
 void printf(const char* format, ...) {
-	_cli();
+	pushcli();
 	va_list args; 					/* Lista de argumentos los cuales no se la cantidad */
 	va_start(args, format); 		/* La lista de argumentos comienza luego del formato */
 
@@ -70,6 +70,5 @@ void printf(const char* format, ...) {
 		
 		index++;
 	}
-	_sti();
-
+	pushsti();
 }

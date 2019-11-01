@@ -1,16 +1,19 @@
 GLOBAL idleFunction
 GLOBAL idleKernel
+	
+EXTERN pushcli
+EXTERN pushsti
 
 section .text
 
 idleFunction:
-	sti
+	call pushsti
 	_idleFunction
 	hlt
 	jmp _idleFunction
 	ret
 
 idleKernel:
-	sti
+	call pushsti
 	hlt
 	ret

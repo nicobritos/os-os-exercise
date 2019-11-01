@@ -7,7 +7,7 @@
 #include "videoDriver.h"
 #include "memManager.h"
 #include "processHandler.h"
-
+#include "interruptHelper.h"
 
 extern uint8_t text;
 extern uint8_t rodata;
@@ -51,40 +51,16 @@ void * initializeKernelBinary(){
 	return getStackBase();
 }
 
-void hola(char *s) {
-	while(1) {
-		printf("A");
-	}
-}
-
-
-void chau(char *s) {
-	while(1) {
-		printf("B");
-	}
-}
-
-void *enterUserSpace(int argc, void **argv) {
-	printf("asdas\n");
-	((EntryPoint)sampleCodeModuleAddress)();
-}
-
 int main(){	
-	_cli();
+	pushcli();
+
 	initializeMemoryManager();
 	initializeScheduler();
 	load_idt();
 
-	char *argsA = {"A"};
-	char *argsB = {"B"};
-	// newProcess("hola", &enterUserSpace, SYSTEM_PID, 0, NULL);
-	// newProcess("hola", &enterUserSpace, SYSTEM_PID, 0, NULL);
-	// newProcess("chau", sampleCodeModuleAddress, SYSTEM_PID, 0, NULL);
-	// newProcess("hola", hola, SYSTEM_PID, 1, argsA);
-	// newProcess("chau", chau, SYSTEM_PID, 1, argsB);
-	newProcess("hola", hola, SYSTEM_PID, 0, NULL);
-	newProcess("chau", chau, SYSTEM_PID, 0, NULL);
-	_sti();
+	newProcess("shell", sampleCodeModuleAddress, SYSTEM_PID, 0, NULL);
+
+	pushsti();
 	idleKernel();
 	return 0;
 }

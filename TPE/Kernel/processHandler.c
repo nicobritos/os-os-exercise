@@ -29,13 +29,8 @@ t_process * newProcess(char * name, int(* foo)(int argc, char** argv), int ppid,
 void 
 processWrapper(int argc, char * argv[], void * startingPoint)
 {
-    printf("asdlajsd;lkjas\n");
-    printf("%l\n", (uint64_t)argc);
-    printf("%l\n", (uint64_t)argv);
-    printf("%l\n", (uint64_t)startingPoint);
     ((int (*)(int, void**))(startingPoint))(argc, argv);
-    // ((int (*)())(startingPoint))();
-    //int currentPid = getpid();
+    // int currentPid = getpid();
     //killProcess(currentPid);
 }
 

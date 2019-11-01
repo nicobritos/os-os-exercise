@@ -1,4 +1,3 @@
-
 GLOBAL _cli
 GLOBAL _sti
 GLOBAL picMasterMask
@@ -6,6 +5,8 @@ GLOBAL picSlaveMask
 GLOBAL haltcpu
 GLOBAL _hlt
 
+EXTERN pushcli
+EXTERN pushsti
 
 GLOBAL _irq00Handler
 GLOBAL _irq01Handler
@@ -86,8 +87,9 @@ SECTION .text
 %endmacro
 
 %macro irqHandlerMaster 1
-  cli
   pushState
+
+  call pushcli
 
   mov rdi, %1 ; pasaje de parametro
   mov rsi, rsp; pasaje de parametro del puntero a los registros
@@ -104,12 +106,14 @@ SECTION .text
   mov al, 20h
   out 20h, al
 
+  call pushsti
   popState
-  sti
+
   iretq
 %endmacro
 
 %macro exceptionHandler 1
+cli
 pushState
 
 	mov rdi, %1 ; first parameter
@@ -118,8 +122,8 @@ pushState
 	call exceptionDispatcher
 
 	popState
-
 	mov qword [rsp],0x400000
+  sti
 	iretq
 %endmacro
 
@@ -190,6 +194,8 @@ _irq05Handler:
 
 
 _syscall:
+  call pushcli
+
   push rbp
   mov rbp, rsp
 
@@ -241,6 +247,8 @@ _syscall:
 .cont:
 	mov rsp, rbp
   pop rbp
+
+  call pushsti
   iretq	;Dont use ret when returning from int call
 
 

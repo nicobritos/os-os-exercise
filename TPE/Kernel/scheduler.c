@@ -245,11 +245,9 @@ void loadNextProcess(t_stack *currentProcessStack) {
 	if (nextProcessNode == NULL) {		
 		if (currentProcessNode != NULL) {
 			currentProcessNode->process->state = READY;
-			printf("s: ");
 			updateStack(currentProcessNode->process->stackPointer, currentProcessStack);
 		}
 
-		printf("i\n");
 		dispatchProcess(idleProcess, currentProcessStack);
 		return;
 	}
@@ -259,13 +257,11 @@ void loadNextProcess(t_stack *currentProcessStack) {
 	} else {
 		if (currentProcessNode != NULL) {
 			currentProcessNode->process->state = READY;
-			printf("s: ");
 			updateStack(currentProcessNode->process->stackPointer, currentProcessStack);
 		}
 
 		currentProcessNode = nextProcessNode;
 		currentProcessNode->executedOnTicks = ticks_elapsed();
-		printf("d %s: ", currentProcessNode->process->name);
 		dispatchProcess(currentProcessNode->process, currentProcessStack);
 	}
 }
@@ -277,10 +273,8 @@ queueNodeADT fetchNextNode() {
 	} else {
 		currentNode = currentProcessNode->next;
 	}
-	printf("Fetching next\n");
 
 	while (currentNode != currentProcessNode && readyQueue->count >= 1) {
-	printf("while\n");
 		if (currentNode == NULL) {
 			currentNode = readyQueue->firstProcessNode;
 		} else {
@@ -296,18 +290,13 @@ queueNodeADT fetchNextNode() {
 		}
 	}
 	if (currentNode == currentProcessNode) {
-	printf("Fetching same\n");
-
 		return currentNode;
 	}
 
 	if (readyQueue->count == 0 || currentNode == NULL || currentNode->process->state != READY) {
-	printf("Fetching nulll\n");
 		return NULL;
 	}
 
-	printf("Fetching next\n");
-	printf(currentNode->process->name);
 	return currentNode;
 }
 
