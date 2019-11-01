@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "systemcalls.h": "c",
+        "stdint.h": "c",
+        "chrono": "c"
+    }
+}

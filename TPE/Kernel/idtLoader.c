@@ -35,7 +35,7 @@ void load_idt() {
   setup_IDT_entry (0x06, (uint64_t)&_exceptionInvalidOpcodeHandler);        /* 0x06 Por que en la tabla es Invalid Opcode Exception */
   setup_IDT_entry (0x20, (uint64_t)&_irq00Handler);             /* 0x20 Puerto de salida  */
   setup_IDT_entry (0x21, (uint64_t)&_irq01Handler);
-  setup_IDT_entry (0x80, (uint64_t)&_syscall);             /* int 80 */
+  setup_IDT_entry (0x80, (uint64_t)&_syscallHandler);             /* int 80 */
 
 
   //Solo interrupcion timer tick habilitadas
