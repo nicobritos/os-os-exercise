@@ -51,12 +51,13 @@ void * initializeKernelBinary(){
 	return getStackBase();
 }
 
-// void hola() {
-// 	while(1) printf("A");
-// }
-// void chau() {
-// 	while(1) printf("B");
-// }
+void hola() {
+	while(1) printf("A");
+}
+
+void chau() {
+	while(1) printf("B");
+}
 
 int main(){	
 	pushcli();
@@ -65,9 +66,9 @@ int main(){
 	initializeScheduler();
 	load_idt();
 
-	newProcess("shell", sampleCodeModuleAddress, SYSTEM_PID, 0, NULL);
-	// newProcess("hola", hola, SYSTEM_PID, 0, NULL);
-	// newProcess("chau", chau, SYSTEM_PID, 0, NULL);
+	newProcess("shell", sampleCodeModuleAddress, SYSTEM_PID, 0, NULL, S_P_LOW, S_M_FOREGROUND);
+	// newProcess("hola", hola, SYSTEM_PID, 0, NULL, S_P_LOW, S_M_FOREGROUND);
+	// newProcess("chau", chau, SYSTEM_PID, 0, NULL, S_P_LOW, S_M_FOREGROUND);
 
 	pushsti();
 	idleKernel();

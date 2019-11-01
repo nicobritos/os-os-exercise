@@ -5,18 +5,21 @@
 	#include "list.h"
 	#include "lib.h"
 
-	typedef enum {HIGH = 0, LOW} t_priority;
+	typedef enum {S_P_HIGH = 0, S_P_LOW, S_P_INVALID} t_priority;
+	typedef enum {S_M_FOREGROUND = 0, S_M_BACKGROUND, S_M_INVALID} t_mode;
 
 	void initializeScheduler();
 	void runScheduler(t_stack currentProcessStack);
-	uint8_t addProcess(t_process process, t_priority priority);
+	uint8_t addProcess(t_process process, t_priority priority, t_mode mode);
 
 	void killProcess(pid_t pid);
 	t_process getCurrentProcess();
-	pid_t getCurrentProcessPid();
 	void lockProcess(pid_t pid);
 	void unlockProcess(pid_t pid);
 	t_state getCurrentProcessState();
+	void setCurrentProcessMode(t_mode mode);
+	t_mode getCurrentProcessMode();
+
 
 	// Process iterator
 	listADT createProcessList();

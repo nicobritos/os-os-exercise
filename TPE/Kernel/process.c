@@ -2,64 +2,58 @@
 #include "process.h"
 
 #define NULL ((void *)0)
-#define SYSTEM_PID 0
 
-typedef struct t_processCDT
-    {
+typedef struct t_processCDT {
     pid_t pid;
     pid_t pPid;
     char * name;
     t_state state; 
     void * stackPointer;
     int(* processMemoryLowerAddress)(int argc, char** argv);
-    } t_processCDT;
+} t_processCDT;
 
-typedef struct t_stackCDT
-    {
-        uint64_t r15;
-        uint64_t r14;
-        uint64_t r13;
-        uint64_t r12;
-        uint64_t r11;
-        uint64_t r10;
-        uint64_t r9;
-        uint64_t r8;
+typedef struct t_stackCDT {
+    uint64_t r15;
+    uint64_t r14;
+    uint64_t r13;
+    uint64_t r12;
+    uint64_t r11;
+    uint64_t r10;
+    uint64_t r9;
+    uint64_t r8;
 
-        uint64_t rsi;
-        uint64_t rdi;
-        uint64_t rbp;
+    uint64_t rsi;
+    uint64_t rdi;
+    uint64_t rbp;
 
-        uint64_t rdx;
-        uint64_t rcx;
-        uint64_t rbx;
-        uint64_t rax;
+    uint64_t rdx;
+    uint64_t rcx;
+    uint64_t rbx;
+    uint64_t rax;
 
-        uint64_t gs;
-        uint64_t fs;
+    uint64_t gs;
+    uint64_t fs;
 
-    // iret 
-        uint64_t rip;
-        uint64_t cs;
-        uint64_t rflags;
-        uint64_t rsp;
-        uint64_t ss;
-    } __attribute__((packed)) t_stackCDT;
+// iret 
+    uint64_t rip;
+    uint64_t cs;
+    uint64_t rflags;
+    uint64_t rsp;
+    uint64_t ss;
+} __attribute__((packed)) t_stackCDT;
 
 void initializeStack(t_stack stackFrame, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), int argc, char * argv[], int(* startingPoint)(int argc, char** argv));
 
-t_process createProcess(char * name, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), int pid, int pPid, int argc, char * argv[], int(* startingPoint)(int argc, char** argv))
-{
+t_process createProcess(char * name, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), pid_t pid, pid_t pPid, int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
     t_process newProcess = pmalloc(sizeof(t_processCDT), pid);
-    if(newProcess == NULL)
-    {
+    if(newProcess == NULL) {
         return NULL;
     }
     newProcess->pid = pid;
     newProcess->pPid = pPid;
     newProcess->name = name;
     newProcess->processMemoryLowerAddress = pmalloc(PROC_SIZE, pid);
-    if (newProcess->processMemoryLowerAddress == NULL)
-    {
+    if (newProcess->processMemoryLowerAddress == NULL) {
         pfree(newProcess, pid);
         return NULL;
     }
@@ -101,17 +95,12 @@ void initializeStack(t_stack stackFrame, int(* wrapper)(int argc, char** argv, i
 }
 
 
-void freeProcess(t_process process)
-{
+void freeProcess(t_process process) {
     pfree(process->processMemoryLowerAddress, process->pid);
     pfree(process, process->pid);
 }
 
-int getPid(t_process process){
-    return process->pid;
-}
-
-void updateStack(t_stack dst, t_stack src) {
+void updateProcessStack(t_stack dst, t_stack src) {
     dst->r15 = src->r15;
     dst->r14 = src->r14;
     dst->r13 = src->r13;

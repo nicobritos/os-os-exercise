@@ -1,12 +1,11 @@
 #include "processHandler.h"
 #include "memManager.h"
-#include "scheduler.h"
 
 void processWrapper(int argc, char * argv[], void * startingPoint);
 
 static char pids[MAX_PROC] = {0};
 
-t_process newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[]){
+t_process newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], t_priority priority, t_mode mode){
     char finished = 0;
     unsigned int i;
     for (i = 0; i < MAX_PROC && !finished; i++)
@@ -22,7 +21,7 @@ t_process newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, i
     if(newProcess == NULL){
         return NULL;
     }
-    addProcess(newProcess, LOW);
+    addProcess(newProcess, priority, mode);
     return newProcess;
 }
 

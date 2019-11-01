@@ -10,6 +10,7 @@ typedef struct processNodeCDT *processNodeADT;
 
 typedef struct processNodeCDT {
     uint64_t executedOnTicks;
+    t_mode mode;
 	t_process process;
 	t_priority priority;
 } processNodeCDT;
@@ -19,8 +20,9 @@ static const uint64_t quantumSlice[2] = {QUANTUM * 2, QUANTUM};
 static nodeListADT currentProcessNode = NULL;
 static listADT waitingQueue = NULL;
 static listADT readyQueue = NULL;
-
 static uint8_t initialized = 0;
+static uint64_t backgroundProcesses = 0;
+static uint64_t foregroundProcesses = 0;
 
 static t_process idleProcess = NULL;
 
@@ -68,13 +70,22 @@ void runScheduler(t_stack currentProcessStack) {
 	loadNextProcess(currentProcessStack);
 }
 
-uint8_t addProcess(t_process process, t_priority priority) {
+uint8_t addProcess(t_process process, t_priority priority, t_mode mode) {
+	if (priority == S_P_INVALID || mode == S_M_INVALID) return 0;
+
 	processNodeADT processNode = pmalloc(sizeof(processNodeCDT), SYSTEM_PID);
 	addElementToIndexList(readyQueue, processNode, getSizeList(readyQueue));
 
 	processNode->executedOnTicks = 0;
 	processNode->process = process;
 	processNode->priority = priority;
+	processNode->mode = mode;
+
+	if (mode == S_M_FOREGROUND) {
+		foregroundProcesses++;
+	} else {
+		backgroundProcesses++;
+	}
 
 	return 1;
 }
@@ -101,11 +112,6 @@ t_process getCurrentProcess() {
 	return idleProcess;
 }
 
-pid_t getCurrentProcessPid() {
-	if (currentProcessNode != NULL) return getProcessPid(getProcessFromNode(currentProcessNode));
-	return getProcessPid(idleProcess);
-}
-
 void lockProcess(pid_t pid) {
 	nodeListADT processNode = getNodeReadyQueue(pid);
 	if (processNode == NULL) return;
@@ -127,6 +133,26 @@ void unlockProcess(pid_t pid) {
 t_state getCurrentProcessState() {
 	if (currentProcessNode == NULL) return P_INVALID;
 	return getProcessState(getProcessFromNode(currentProcessNode));
+}
+
+void setCurrentProcessMode(t_mode mode) {
+	if (currentProcessNode == NULL) return;
+	processNodeADT processNode = getProcessNodeFromNode(currentProcessNode);
+	if (processNode->mode == mode) return;
+	processNode->mode = mode;
+
+	if (mode == S_M_FOREGROUND) {
+		foregroundProcesses++;
+		backgroundProcesses--;
+	} else {
+		foregroundProcesses--;
+		backgroundProcesses++;
+	}
+}
+
+t_mode getCurrentProcessMode() {
+	if (currentProcessNode == NULL) return S_M_INVALID;
+	return getProcessNodeFromNode(currentProcessNode)->mode;
 }
 
 // Iterator
@@ -162,7 +188,7 @@ void loadNextProcess(t_stack currentProcessStack) {
 	if (nextProcessNode == NULL) {		
 		if (currentProcessNode != NULL) {
 			setProcessState(getProcessFromNode(currentProcessNode), P_READY);
-			updateStack(getProcessStackFrame(getProcessFromNode(currentProcessNode)), currentProcessStack);
+			updateProcessStack(getProcessStackFrame(getProcessFromNode(currentProcessNode)), currentProcessStack);
 		}
 
 		dispatchProcess(idleProcess, currentProcessStack);
@@ -174,7 +200,7 @@ void loadNextProcess(t_stack currentProcessStack) {
 	} else {
 		if (currentProcessNode != NULL) {
 			setProcessState(getProcessFromNode(currentProcessNode), P_READY);
-			updateStack(getProcessStackFrame(getProcessFromNode(currentProcessNode)), currentProcessStack);
+			updateProcessStack(getProcessStackFrame(getProcessFromNode(currentProcessNode)), currentProcessStack);
 		}
 
 		currentProcessNode = nextProcessNode;
@@ -218,7 +244,7 @@ nodeListADT fetchNextNode() {
 
 void dispatchProcess(t_process process, t_stack currentProcessStack) {
 	setProcessState(process, P_RUNNING);
-	updateStack(currentProcessStack, getProcessStackFrame(process));
+	updateProcessStack(currentProcessStack, getProcessStackFrame(process));
 }
 
 nodeListADT getNode(pid_t pid, listADT list) {
@@ -236,7 +262,13 @@ nodeListADT getNodeWaitingQueue(pid_t pid) {
 void removeProcess(nodeListADT processNode, listADT queue) {
 	processNodeADT myProcessNode = getProcessNodeFromNode(processNode);
 	removeNodeList(queue, processNode);
-	freeProcessNodeReadOnly((void*) myProcessNode);
+	if (myProcessNode->mode == S_M_FOREGROUND) {
+		foregroundProcesses--;
+	} else {
+		backgroundProcesses--;
+	}
+	free(myProcessNode);
+	// freeProcessNodeReadOnly((void*) myProcessNode);
 }
 
 void moveNode(nodeListADT processNode, listADT fromQueue, listADT toQueue) {
@@ -245,10 +277,13 @@ void moveNode(nodeListADT processNode, listADT fromQueue, listADT toQueue) {
 
 void *duplicateProcessNode(void *_processNode) {
 	processNodeADT processNode = (processNodeADT) _processNode;
+
 	processNodeADT newProcessNode = pmalloc(sizeof(processNodeCDT), SYSTEM_PID);
+
 	newProcessNode->process = duplicateProcessReadOnly(processNode->process);
 	newProcessNode->executedOnTicks = processNode->executedOnTicks;
 	newProcessNode->priority = processNode->priority;
+	newProcessNode->mode = processNode->mode;
 
 	return (void*)newProcessNode;
 }
