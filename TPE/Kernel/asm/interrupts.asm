@@ -14,16 +14,27 @@ GLOBAL _irq02Handler
 GLOBAL _irq03Handler
 GLOBAL _irq04Handler
 GLOBAL _irq05Handler
-GLOBAL _syscallHandler
-
-EXTERN syscallHandler
 
 GLOBAL _exception0Handler
 GLOBAL _exceptionInvalidOpcodeHandler
 GLOBAL _syscall
 EXTERN irqDispatcher
 EXTERN exceptionDispatcher
-
+EXTERN sys_total_ticks
+EXTERN sys_ticks_per_second
+EXTERN sys_read
+EXTERN sys_write
+EXTERN sys_clear
+EXTERN sys_pixel
+EXTERN sys_time
+EXTERN sys_used_mem
+EXTERN sys_free_mem
+EXTERN sys_malloc
+EXTERN sys_free
+EXTERN sys_new_process
+EXTERN sys_free_process
+EXTERN sys_get_pid
+EXTERN sys_exec
 
 SECTION .text
 
@@ -192,14 +203,52 @@ _syscall:
 	pop rax
 
   push rbp
-	mov rbp, rsp
+  mov rbp, rsp
 
-	call syscallHandler
+  cmp rdi, 0x01     ; syscall de total ticks
+  je .syscallTotalTicks
 
-	mov rsp, rbp
-	pop rbp
+  cmp rdi, 0x02     ; syscall de ticks per sec
+  je .syscallTicksPerSecond
 
-	iretq
+  cmp rdi, 0x03 		; syscall del read
+  je .syscallRead
+
+  cmp rdi, 0x04		; syscall de write
+  je .syscallWrite
+
+  cmp rdi, 0x05		; syscall de time
+  je .syscallTime
+
+  cmp rdi, 0x06		; syscall de clear
+  je .syscallClear
+
+  cmp rdi, 0x07		; syscall de pixel
+  je .syscallPixel
+
+  cmp rdi, 0x08
+  je .syscallUsedMem
+
+  cmp rdi, 0x09
+  je .syscallFreeMem
+
+  cmp rdi, 0x0a
+  je .syscallMalloc
+
+  cmp rdi, 0x0b
+  je .syscallFree
+
+  cmp rdi, 0x0c
+  je .syscallNewProcess
+
+  cmp rdi, 0x0d
+  je .syscallFreeProcess
+
+  cmp rdi, 0x0e
+  je .syscallGetPid
+
+  cmp rdi, 0x0f
+  je .syscallExec
 
 .cont:
 	mov rsp, rbp

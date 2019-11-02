@@ -1,6 +1,5 @@
 #include "stdio.h"
-//#include "includes/syscalls.h"
-#include "includes/newSyscalls.h"
+#include "includes/syscalls.h"
 #include "includes/exceptions.h"
 void invalidOpCode();
 
@@ -20,15 +19,13 @@ void printHelp() {
 
 
 void clearScreen(){
-	sys_clear();
-    /*os_clear();          os_clear() definida en syscalls.asm --> entra en interrupts.asm (kernel -> asm -> interrupts.asm) -->
+    os_clear();         /* os_clear() definida en syscalls.asm --> entra en interrupts.asm (kernel -> asm -> interrupts.asm) -->
                                 sys_clear() (syscalls.c) --> clear()  */
 }
 
 
 void time(){
-	uint64_t * currTime = sys_time();
-	// uint64_t * currTime = os_time();		returns an array with the current hour, minutes, and seconds
+	uint64_t * currTime = os_time();		//returns an array with the current hour, minutes, and seconds
 
 	char time[9];					//pass the array to a string to print
 	time[0] = currTime[0] + '0';
@@ -55,9 +52,9 @@ void invalidOpCodeException() {
 }
 
 uint64_t usedMem(){
-	return sys_usedMem();
+	return os_used_mem();
 }
 
 uint64_t freeMem(){
-	return sys_freeMem();
+	return os_free_mem();
 }
