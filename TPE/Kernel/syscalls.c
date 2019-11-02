@@ -1,10 +1,11 @@
 #include <stdint.h>
 #include "include/keyboard-Driver.h"
-#include "include/videoDriver.h"
-#include "time.h"
-#include "include/memManager.h"
 #include "include/processHandler.h"
 #include "include/systemCalls.h"
+#include "include/videoDriver.h"
+#include "include/memManager.h"
+#include "scheduler.h"
+#include "time.h"
 
 int sys_total_ticks(int * ticks) {
 	*ticks = ticks_elapsed();
@@ -102,18 +103,19 @@ void sys_free(void * address, uint64_t pid){
 	pfree(address, pid);
 }
 
-void * sys_new_process(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], void * returnPosition){
-	return newProcess(name, foo, ppid, argc, argv, returnPosition);
+void * sys_new_process(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], void *trash){
+	// return newProcess(name, foo, ppid, argc, argv, priority, mode);
+	return newProcess(name, foo, ppid, argc, argv, S_P_LOW, S_M_FOREGROUND);
 }
 
 void sys_free_process(void * process){
-	free(process);
+	// free(process);
 }
 
 int sys_get_pid(void * process){
-	return getPid(process);
+	return getProcessPid(process);
 }
 
 int sys_exec(void * process){
-	return exec(process);
+	// return exec(process);
 }

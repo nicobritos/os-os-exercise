@@ -272,5 +272,5 @@ os_exec:
 section .data
 	time times 6 DW 0
 
-section .bb
+section .bss
 	aux resb 4	; para enteros

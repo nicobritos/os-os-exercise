@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "modoMemManager.h"
 
+#define NULL ((void *) 0)
 #define MEM_STARTING_ADDRESS ((void *)0x0000000000700000) // Tiene que haber 1MB continuo libre desde aca
 
 void initializeMemoryManager();

@@ -2,6 +2,7 @@
 #include <idtLoader.h>
 #include <defs.h>
 #include <interrupts.h>
+#include "interruptHelper.h"
 
 #pragma pack(push)		/* Push de la alineación actual */
 #pragma pack (1) 		/* Alinear las siguiente estructuras a 1 byte */
@@ -28,7 +29,7 @@ DESCR_INT * idt = (DESCR_INT *) 0;	// IDT de 255 entradas
 static void setup_IDT_entry (int index, uint64_t offset);
 
 void load_idt() {
-  _cli();                            /* para configurar tabla de interrupciones sin que rompa  */
+  pushcli();                            /* para configurar tabla de interrupciones sin que rompa  */
 
   // Comentado hasta que hagamos las excepciones
   setup_IDT_entry (0x00, (uint64_t)&_exception0Handler);        /* 0x00 Por que en la tabla es Zero Division Exception */
@@ -42,7 +43,7 @@ void load_idt() {
   picMasterMask(0xFC);
   picSlaveMask(0xFF);
 
-  _sti();                           /* vuelvo a habilitar las interrupciones */
+  pushsti();                           /* vuelvo a habilitar las interrupciones */
 }
 
 static void setup_IDT_entry (int index, uint64_t offset) {

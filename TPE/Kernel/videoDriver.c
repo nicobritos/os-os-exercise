@@ -48,7 +48,7 @@ typedef struct ModeInfoBlock {
   uint32_t reserved1;
   uint16_t reserved2;
 
-} ModeInfoBlock; // __attribute__((packed));
+} __attribute__((packed)) ModeInfoBlock;
 
 
 
@@ -306,7 +306,11 @@ int maxX() {
 }
 
 void printChar(unsigned char myChar, unsigned char r, unsigned char g, unsigned char b) {
-
+  if (myChar == '\n' || myChar == '\r') {
+    newLine();
+    return;
+  }
+  
   drawChar(cursorX, cursorY, myChar,r,g,b);
   cursorX += 8;
   if (cursorX >= maxX()){

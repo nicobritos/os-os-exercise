@@ -1,4 +1,3 @@
-
 GLOBAL _cli
 GLOBAL _sti
 GLOBAL picMasterMask
@@ -6,6 +5,8 @@ GLOBAL picSlaveMask
 GLOBAL haltcpu
 GLOBAL _hlt
 
+EXTERN pushcli
+EXTERN pushsti
 
 GLOBAL _irq00Handler
 GLOBAL _irq01Handler
@@ -38,60 +39,81 @@ EXTERN sys_exec
 SECTION .text
 
 %macro pushState 0
-	push rax
-	push rbx
-	push rcx
-	push rdx
-	push rbp
-	push rdi
-	push rsi
-	push r8
-	push r9
-	push r10
-	push r11
-	push r12
-	push r13
-	push r14
-	push r15
+  push fs
+  push gs
+
+  push rax
+  push rbx
+  push rcx
+  push rdx
+
+  push rbp
+  push rdi
+  push rsi
+
+  push r8
+  push r9
+  push r10
+  push r11
+
+  push r12
+  push r13
+  push r14
+  push r15
 %endmacro
 
 %macro popState 0
-	pop r15
-	pop r14
-	pop r13
-	pop r12
-	pop r11
-	pop r10
-	pop r9
-	pop r8
-	pop rsi
-	pop rdi
-	pop rbp
-	pop rdx
-	pop rcx
-	pop rbx
-	pop rax
+  pop r15
+  pop r14
+  pop r13
+  pop r12
+  
+  pop r11
+  pop r10
+  pop r9
+  pop r8
+
+  pop rsi
+  pop rdi
+  pop rbp
+
+  pop rdx
+  pop rcx
+  pop rbx
+  pop rax
+
+  pop gs
+  pop fs
 %endmacro
 
 %macro irqHandlerMaster 1
+  pushState
 
-	pushState
+  call pushcli
 
+  mov rdi, %1 ; pasaje de parametro
+  mov rsi, rsp; pasaje de parametro del puntero a los registros
+  
+  push rbp 
+  mov rbp, rsp
 
-	mov rdi, %1 ; pasaje de parametro
-	call irqDispatcher
+  call irqDispatcher
+  
+  mov rsp, rbp
+  pop rbp
+  
+  ; signal pic EOI (End of Interrupt)
+  mov al, 20h
+  out 20h, al
 
-	; signal pic EOI (End of Interrupt)
-	mov al, 20h
-	out 20h, al
+  call pushsti
+  popState
 
-	popState
-	iretq
+  iretq
 %endmacro
 
-
-
 %macro exceptionHandler 1
+cli
 pushState
 
 	mov rdi, %1 ; first parameter
@@ -100,11 +122,9 @@ pushState
 	call exceptionDispatcher
 
 	popState
-
 	mov qword [rsp],0x400000
+  sti
 	iretq
-
-
 %endmacro
 
 
@@ -174,6 +194,8 @@ _irq05Handler:
 
 
 _syscall:
+  call pushcli
+
   push rbp
   mov rbp, rsp
 
@@ -225,6 +247,8 @@ _syscall:
 .cont:
 	mov rsp, rbp
   pop rbp
+
+  call pushsti
   iretq	;Dont use ret when returning from int call
 
 
