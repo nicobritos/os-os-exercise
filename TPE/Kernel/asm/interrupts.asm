@@ -89,7 +89,9 @@ SECTION .text
 %macro irqHandlerMaster 1
   pushState
 
+  push rax
   call pushcli
+  pop rax
 
   mov rdi, %1 ; pasaje de parametro
   mov rsi, rsp; pasaje de parametro del puntero a los registros
@@ -106,7 +108,9 @@ SECTION .text
   mov al, 20h
   out 20h, al
 
+  push rax
   call pushsti
+  pop rax
   popState
 
   iretq
@@ -194,7 +198,9 @@ _irq05Handler:
 
 
 _syscall:
+  push rax
   call pushcli
+	pop rax
 
   push rbp
   mov rbp, rsp
@@ -248,7 +254,9 @@ _syscall:
 	mov rsp, rbp
   pop rbp
 
+  push rax
   call pushsti
+  pop rax
   iretq	;Dont use ret when returning from int call
 
 
