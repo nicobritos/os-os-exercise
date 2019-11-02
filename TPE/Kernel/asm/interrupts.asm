@@ -35,6 +35,7 @@ EXTERN sys_new_process
 EXTERN sys_free_process
 EXTERN sys_get_pid
 EXTERN sys_exec
+EXTERN reboot
 
 SECTION .text
 
@@ -117,8 +118,10 @@ SECTION .text
 %endmacro
 
 %macro exceptionHandler 1
-cli
-pushState
+  push rbp
+  mov rbp, rsp
+  cli
+  pushState
 
 	mov rdi, %1 ; first parameter
 	mov rsi, rsp ; second parameter
@@ -126,8 +129,10 @@ pushState
 	call exceptionDispatcher
 
 	popState
-	mov qword [rsp],0x400000
   sti
+  mov rsp, rbp
+  pop rbp
+  mov qword [rsp],reboot
 	iretq
 %endmacro
 
