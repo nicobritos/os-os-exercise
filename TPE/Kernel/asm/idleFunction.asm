@@ -8,7 +8,7 @@ section .text
 
 idleFunction:
 	call pushsti
-	_idleFunction
+	_idleFunction:
 	hlt
 	jmp _idleFunction
 	ret
