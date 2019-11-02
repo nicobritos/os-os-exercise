@@ -143,6 +143,10 @@ pid_t getProcessPid(t_process process) {
     return process->pid;
 }
 
+void execve(t_process process, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
+    initializeStack(process->stackPointer, wrapper, argc, argv, startingPoint);
+}
+
 t_process duplicateProcess(t_process source, pid_t pid) {
     t_process process = createProcess(source->name, (int (*)(int,  char **, int (*)(int,  char **))) source->stackPointer->rip, pid, source->pid, 0, NULL, NULL);
     process->state = source->state;
