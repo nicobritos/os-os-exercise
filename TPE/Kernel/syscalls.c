@@ -1,59 +1,23 @@
 #include <stdint.h>
 #include "include/keyboard-Driver.h"
 #include "include/processHandler.h"
-#include "include/interrupts.h"
+#include "include/systemCalls.h"
+#include "include/videoDriver.h"
+#include "include/memManager.h"
+#include "scheduler.h"
+#include "time.h"
 
-typedef uint64_t(*systemCall)();
-
-int sys_ticks(int * ticks);
-int sys_ticksPerSecond(int * ticks);
-int sys_clear();
-int sys_read(uint64_t fd, char *buffer, uint64_t size);
-int sys_write(uint64_t fd, char *buffer, uint64_t size);
-int sys_draw(uint64_t x, uint64_t y, unsigned char r, unsigned char g, unsigned char b);
-int * sys_time(uint64_t * time);
-uint64_t sys_usedMem();
-uint64_t sys_freeMem(void);
-void * sys_malloc(uint64_t size, uint64_t pid);
-void sys_free(void * address, uint64_t pid);
-void * sys_newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], void * returnPosition);
-void sys_freeProcess(void * process);
-int sys_getPid(void * process);
-int sys_exec(void * process);
-
-systemCall sysCalls[] = { 0, 0, 0,
-        (systemCall) sys_read,
-		(systemCall) sys_write,
-        (systemCall) sys_clear,
-		(systemCall) sys_draw,
-		(systemCall) sys_time,
-		(systemCall) sys_exec,
-		(systemCall) sys_getPid,
-		(systemCall) sys_newProcess,
-		(systemCall) sys_freeProcess,
-		(systemCall) sys_free,
-		(systemCall) sys_ticks,
-		(systemCall) sys_ticksPerSecond,
-		(systemCall) sys_usedMem,
-		(systemCall) sys_freeMem,
-		(systemCall) sys_malloc,
-};
-
-int syscallHandler(unsigned long rdi, unsigned long rsi, unsigned long rdx, unsigned long rcx, unsigned long r8, unsigned long r9, unsigned long r10){
-	return sysCalls[rdi](rsi, rdx, rcx, r8, r9, r10);
-}
-
-int sys_ticks(int * ticks) {
+int sys_total_ticks(int * ticks) {
 	*ticks = ticks_elapsed();
 	return *ticks;
 }
 
-int sys_ticksPerSecond(int * ticks) {
+int sys_ticks_per_second(int * ticks) {
 	*ticks = seconds_elapsed();
 	return *ticks;
 }
 
-int sys_clear() {
+void sys_clear() {
 	clearAll();
 }
 
@@ -61,7 +25,7 @@ int sys_clear() {
  * https://jameshfisher.com/2018/02/19/how-to-syscall-in-c/
  * fd = 0 (stdin)
  */
-int sys_read(uint64_t fd, char *buffer, uint64_t size){
+uint64_t sys_read(uint64_t fd, char *buffer, uint64_t size){
 	uint64_t i = 0;
 	char c;
 	if (fd == 0){
@@ -74,7 +38,7 @@ int sys_read(uint64_t fd, char *buffer, uint64_t size){
 }
 
 //fd = 1 (stdout)
-int sys_write(uint64_t fd, char *buffer, uint64_t size){
+uint64_t sys_write(uint64_t fd, char *buffer, uint64_t size){
 	uint64_t i = 0;
 
 	if (fd == 1) {
@@ -96,11 +60,11 @@ int sys_write(uint64_t fd, char *buffer, uint64_t size){
 }
 
 
-int sys_draw(uint64_t x, uint64_t y, unsigned char r, unsigned char g, unsigned char b) {
+void sys_pixel(uint64_t x, uint64_t y, unsigned char r, unsigned char g, unsigned char b) {
 	putPixel(x,y,r,g,b);
 }
 
-int * sys_time(uint64_t * time) {
+uint64_t * sys_time(uint64_t * time) {
 	uint64_t hour = getHour();
 	uint64_t min = getMin();
 	uint64_t sec = getSec(); 
@@ -124,11 +88,11 @@ int * sys_time(uint64_t * time) {
 	return time;
 }
 
-uint64_t sys_usedMem(){
+uint64_t sys_used_mem(){
 	return usedMemory();
 }
 
-uint64_t sys_freeMem(void){
+uint64_t sys_free_mem(){
 	return freeMemoryLeft();
 }
 
@@ -139,22 +103,19 @@ void sys_free(void * address, uint64_t pid){
 	pfree(address, pid);
 }
 
-void * sys_newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], void * returnPosition){
-	return newProcess(name, foo, ppid, argc, argv, returnPosition);
+void * sys_new_process(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], void *trash){
+	// return newProcess(name, foo, ppid, argc, argv, priority, mode);
+	return newProcess(name, foo, ppid, argc, argv, S_P_LOW, S_M_FOREGROUND);
 }
 
-void sys_freeProcess(void * process){
-	free(process);
+void sys_free_process(void * process){
+	// free(process);
 }
 
-int sys_getPid(void * process){
-	return getPid(process);
+int sys_get_pid(void * process){
+	return getProcessPid(process);
 }
 
 int sys_exec(void * process){
 	// return exec(process);
 }
-
-
-
-
