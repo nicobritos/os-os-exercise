@@ -14,10 +14,10 @@ uint64_t sys_used_mem();
 uint64_t sys_free_mem();
 void * sys_malloc(uint64_t size, uint64_t pid);
 void sys_free(void * address, uint64_t pid);
-void * sys_new_process(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], void * returnPosition);
+void * sys_new_process(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[]);
 void sys_free_process(void * process);
 int sys_get_pid(void * process);
-int sys_exec(void * process);
+int sys_execve(void * process);
 
 
 

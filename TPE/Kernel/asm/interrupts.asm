@@ -1,5 +1,6 @@
 GLOBAL _cli
 GLOBAL _sti
+GLOBAL _killProcess
 GLOBAL picMasterMask
 GLOBAL picSlaveMask
 GLOBAL haltcpu
@@ -34,7 +35,7 @@ EXTERN sys_free
 EXTERN sys_new_process
 EXTERN sys_free_process
 EXTERN sys_get_pid
-EXTERN sys_exec
+EXTERN sys_execve
 EXTERN reboot
 
 SECTION .text
@@ -145,7 +146,6 @@ SECTION .text
   ;mov qword [rsp],reboot
 	iretq
 %endmacro
-
 
 _hlt:
 	sti
@@ -263,7 +263,7 @@ _syscall:
   je .syscallGetPid
 
   cmp rdi, 0x0f
-  je .syscallExec
+  je .syscallExecve
 
 .cont:
 	mov rsp, rbp
@@ -357,9 +357,9 @@ _syscall:
   call sys_get_pid
   jmp .cont
 
-.syscallExec:
+.syscallExecve:
   mov rdi, rsi
-  call sys_exec
+  call sys_execve
   jmp .cont
 
 ;Zero Division Exception

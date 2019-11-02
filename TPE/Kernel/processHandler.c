@@ -26,7 +26,8 @@ t_process newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, i
 int processWrapper(int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
     int retValue = startingPoint(argc, argv);
     pushcli();
-    killProcess(getProcessPid(getCurrentProcess()));
+    // Need to call asm (convert to syscall)
+    // killProcess(getProcessPid(getCurrentProcess()));
     pushsti();
     while (1);
     return retValue;

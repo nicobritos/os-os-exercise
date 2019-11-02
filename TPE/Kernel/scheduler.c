@@ -45,6 +45,10 @@ nodeListADT getNodeWaitingQueue(pid_t pid);
 
 t_priority getProcessNodePriority(nodeListADT node);
 
+void setProcessNodePriority(nodeListADT node, t_priority priority);
+
+void setProcessNodeMode(nodeListADT node, t_mode mode);
+
 void removeProcess(nodeListADT processNode, listADT queue);
 
 void moveNode(nodeListADT processNode, listADT fromQueue, listADT toQueue);
@@ -60,6 +64,8 @@ void freeProcessNodeReadOnly(void *_processNode);
 uint8_t equalsPid(void *_process, void *_pid);
 
 void freeProcessNodeReadOnly(void *_processNode);
+
+t_mode getProcessNodeMode(nodeListADT node);
 
 // Public
 void initializeScheduler() {
@@ -140,10 +146,10 @@ t_priority getCurrentProcessPriority() {
 }
 
 t_priority getProcessPriority(pid_t pid) {
-	return getProcessNodePriority(getProcessNode(pid));
+	return getProcessNodePriority(getNodePid(pid));
 }
 
-void lockProcess(pid_t pid) {
+void lockProcess(pid_t pid, t_stack stackFrame) {
 	nodeListADT processNode = getNodeReadyQueue(pid);
 	if (processNode == NULL) return;
 	setProcessState(getProcessFromNode(processNode), P_LOCKED);
@@ -160,7 +166,7 @@ void lockProcess(pid_t pid) {
 		dispatchProcess(idleProcess, stackFrame);
 }
 
-void unlockProcess(pid_t pid) {
+void unlockProcess(pid_t pid, t_stack stackFrame) {
 	nodeListADT processNode = getNodeWaitingQueue(pid);
 	if (processNode == NULL) return;
 	setProcessState(getProcessFromNode(processNode), P_READY);
@@ -173,7 +179,7 @@ void setCurrentProcessPriority(t_priority priority) {
 }
 
 void setProcessPriority(pid_t pid, t_priority priority) {
-
+	setProcessNodePriority(getNodePid(pid), priority);
 }
 
 void setProcessNodePriority(nodeListADT node, t_priority priority) {
@@ -187,6 +193,14 @@ t_state getCurrentProcessState() {
 }
 
 void setCurrentProcessMode(t_mode mode) {
+	setProcessNodeMode(currentProcessNode, mode);
+}
+
+void setProcessMode(pid_t pid, t_mode mode) {
+	setProcessNodeMode(getNodePid(pid), mode);
+}
+
+void setProcessNodeMode(nodeListADT node, t_mode mode) {
 	if (currentProcessNode == NULL) return;
 	processNodeADT processNode = getProcessNodeFromNode(currentProcessNode);
 	if (processNode->mode == mode) return;
@@ -206,7 +220,7 @@ t_mode getCurrentProcessMode() {
 }
 
 t_mode getProcessMode(pid_t pid) {
-	return getProcessNodeMode(getProcessNode(pid));
+	return getProcessNodeMode(getNodePid(pid));
 }
 
 void setOnProcessKillScheduler(void(_onProcessKill) (t_process process)) {
