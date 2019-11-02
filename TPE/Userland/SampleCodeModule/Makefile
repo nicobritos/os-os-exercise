@@ -19,6 +19,6 @@ $(MODULE): $(OBJECTS_ASM) $(OBJECTS)
 	$(LD) -T sampleCodeModule.ld _loader.o $(OBJECTS) $(OBJECTS_ASM) -o ../$(MODULE)
 
 clean:
-	rm -rf *.o
+	rm -rf *.o asm/*.o
 
 .PHONY: all clean
