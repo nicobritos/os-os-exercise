@@ -400,7 +400,7 @@ void play(){
   int auxTicks;
 
   while(dead == 0){
-    auxTicks = sys_ticks(1);
+    auxTicks = sys_ticks(&auxTicks);
 
     char sec[10];
     // itoa(play_seconds-start_seconds,sec,10);
@@ -412,7 +412,7 @@ void play(){
 
     if(auxTicks >= (ticks + ticksTillRefresh)) {   
       //ticks = os_ticks();
-      ticks = sys_ticks(1);
+      ticks = sys_ticks(&auxTicks);
       dead = move();
     }
     if(aux != totalScore){

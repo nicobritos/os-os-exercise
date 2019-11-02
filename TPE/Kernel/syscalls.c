@@ -1,7 +1,11 @@
 #include <stdint.h>
 #include "include/keyboard-Driver.h"
+#include "include/videoDriver.h"
+#include "time.h"
+#include "include/memManager.h"
 #include "include/processHandler.h"
 #include "include/interrupts.h"
+#include "scheduler.h"
 
 typedef uint64_t(*systemCall)();
 
@@ -139,16 +143,16 @@ void sys_free(void * address, uint64_t pid){
 	pfree(address, pid);
 }
 
-void * sys_new_process(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], void *trash){
+void * sys_newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], void *trash){
 	// return newProcess(name, foo, ppid, argc, argv, priority, mode);
 	return newProcess(name, foo, ppid, argc, argv, S_P_LOW, S_M_FOREGROUND);
 }
 
-void sys_free_process(void * process){
+void sys_freeProcess(void * process){
 	// free(process);
 }
 
-int sys_get_pid(void * process){
+int sys_getPid(void * process){
 	return getProcessPid(process);
 }
 

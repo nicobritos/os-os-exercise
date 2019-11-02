@@ -186,7 +186,7 @@ _irq05Handler:
 
 
 
-_syscall:
+_syscallHandler:
   push rax
   call pushcli
 	pop rax
@@ -199,6 +199,9 @@ _syscall:
 	mov rsp, rbp
 	pop rbp
 
+  push rax
+  call pushsti
+  pop rax
 	iretq
 
 ;Zero Division Exception
