@@ -172,3 +172,14 @@ void freeProcessReadOnly(t_process process) {
     pfree(process->stackPointer, SYSTEM_PID);
     pfree(process, SYSTEM_PID);
 }
+
+void printStackFrame(t_stack stackFrame) {
+    char* regs[]= {"R15 ","R14 ","R13 ","R12 ","R11 ","R10 ","R9 ","R8 ","RSI ","RDI ","RBP ","RDX ","RCX ","RBX ","RAX ", "GS ", "FS ", "RIP ", "CS ", "RFLAGS ", "RSP ", "SS "};
+
+    for (int i = 0; i < sizeof(*stackFrame) / sizeof(uint64_t); i++){
+        newLine();
+        printString(regs[i],255,255,255);
+        printHexa(((uint64_t*)stackFrame)[i]);
+    }
+    newLine();
+}

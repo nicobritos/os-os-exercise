@@ -37,4 +37,6 @@ t_process duplicateProcessReadOnly(t_process source);
 
 void freeProcessReadOnly(t_process process);
 
+void printStackFrame(t_stack stackFrame);
+
 #endif

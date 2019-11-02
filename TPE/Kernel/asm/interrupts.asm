@@ -118,21 +118,31 @@ SECTION .text
 %endmacro
 
 %macro exceptionHandler 1
-  push rbp
-  mov rbp, rsp
-  cli
   pushState
 
-	mov rdi, %1 ; first parameter
-	mov rsi, rsp ; second parameter
+  push rax
+  call pushcli
+  pop rax
 
+
+  mov rdi, %1 ; first parameter
+  mov rsi, rsp ; second parameter
+
+  push rbp
+  mov rbp, rsp
+  
 	call exceptionDispatcher
 
-	popState
-  sti
   mov rsp, rbp
   pop rbp
-  mov qword [rsp],reboot
+
+  push rax
+  call pushsti
+  pop rax
+
+  popState
+
+  ;mov qword [rsp],reboot
 	iretq
 %endmacro
 

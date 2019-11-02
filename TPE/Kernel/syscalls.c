@@ -103,19 +103,22 @@ void sys_free(void * address, uint64_t pid){
 	pfree(address, pid);
 }
 
-void * sys_new_process(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], void *trash){
-	// return newProcess(name, foo, ppid, argc, argv, priority, mode);
+t_process sys_new_process(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[]){
 	return newProcess(name, foo, ppid, argc, argv, S_P_LOW, S_M_FOREGROUND);
 }
 
-void sys_free_process(void * process){
-	// free(process);
+t_process fork() {
+	
 }
 
-int sys_get_pid(void * process){
+void sys_free_process(t_process process, t_stack stackFrame){
+	killProcess(process, stackFrame);
+}
+
+int sys_get_pid(t_process process){
 	return getProcessPid(process);
 }
 
-int sys_exec(void * process){
-	// return exec(process);
+int sys_execve(t_process process){
+	return exec(process);
 }

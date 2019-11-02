@@ -3,7 +3,7 @@
 
 static char pids[MAX_PROC] = {0};
 
-t_process newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], t_priority priority, t_mode mode){
+t_process newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], t_priority priority, t_mode mode) {
     char finished = 0;
     pid_t i;
     for (i = 0; i < MAX_PROC && !finished; i++) {
@@ -32,14 +32,14 @@ int processWrapper(int argc, char * argv[], int(* startingPoint)(int argc, char*
     return retValue;
 }
 
-void freeProcessHandler(t_process process){
+void freeProcessHandler(t_process process) {
     if (getProcessPid(process) != SYSTEM_PID) {
         pids[(getProcessPid(process)) - 1] = 0;
         freeProcess(process);
     }
 }
 
-t_process duplicateProcessHandler(){
+t_process duplicateProcessHandler(t_process source) {
     char finished = 0;
     pid_t i;
     for (i = 0; i < MAX_PROC && !finished; i++) {
@@ -50,8 +50,8 @@ t_process duplicateProcessHandler(){
     }
     if (!finished) return NULL;
 
-    t_process process = duplicateProcess(getCurrentProcess(), i);
-    addProcess(process, getCurrentProcessState(), getCurrentProcessMode());
+    t_process process = duplicateProcess(source, i);
+    // addProcess(process, getProcess()getCurrentProcessState(), getCurrentProcessMode());
 
     return process;
 }
