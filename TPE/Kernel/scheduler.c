@@ -131,6 +131,16 @@ void unlockProcess(pid_t pid) {
 	moveNode(processNode, waitingQueue, readyQueue);
 }
 
+t_priority getCurrentProcessPriority() {
+	if (currentProcessNode == NULL) return S_P_INVALID;
+	return getProcessNodeFromNode(currentProcessNode)->priority;
+}
+
+void setCurrentProcessPriority(t_priority priority) {
+	if (currentProcessNode == NULL) return;
+	getProcessNodeFromNode(currentProcessNode)->priority = priority;
+}
+
 t_state getCurrentProcessState() {
 	if (currentProcessNode == NULL) return P_INVALID;
 	return getProcessState(getProcessFromNode(currentProcessNode));

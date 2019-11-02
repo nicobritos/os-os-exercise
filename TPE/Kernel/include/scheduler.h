@@ -16,6 +16,8 @@
 	t_process getCurrentProcess();
 	void lockProcess(pid_t pid);
 	void unlockProcess(pid_t pid);
+	t_priority getCurrentProcessPriority();
+	void setCurrentProcessPriority(t_priority priority);
 	t_state getCurrentProcessState();
 	void setCurrentProcessMode(t_mode mode);
 	t_mode getCurrentProcessMode();

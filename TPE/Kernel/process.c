@@ -6,7 +6,7 @@ typedef struct t_processCDT {
     pid_t pPid;
     char * name;
     t_state state; 
-    void * stackPointer;
+    t_stack stackPointer;
     int(* processMemoryLowerAddress)(int argc, char** argv);
 } t_processCDT;
 
@@ -40,9 +40,9 @@ typedef struct t_stackCDT {
     uint64_t ss;
 } t_stackCDT;
 
-void initializeStack(t_stack stackFrame, pid_t pid, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv), pid_t pid), int argc, char * argv[], int(* startingPoint)(int argc, char** argv));
+void initializeStack(t_stack stackFrame, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), int argc, char * argv[], int(* startingPoint)(int argc, char** argv));
 
-t_process createProcess(char * name, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv), pid_t pid), pid_t pid, pid_t pPid, int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
+t_process createProcess(char * name, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), pid_t pid, pid_t pPid, int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
     t_process newProcess = pmalloc(sizeof(t_processCDT), pid);
     if(newProcess == NULL) {
         return NULL;
@@ -58,21 +58,21 @@ t_process createProcess(char * name, int(* wrapper)(int argc, char** argv, int(*
     void * processMemoryUpperAddress = newProcess->processMemoryLowerAddress + PROC_SIZE - 1;
     newProcess->state = P_READY;
     newProcess->stackPointer = processMemoryUpperAddress - sizeof(t_stackCDT);
-    initializeStack((t_stack)(newProcess->stackPointer), pid, wrapper, argc, argv, startingPoint);
+    initializeStack((t_stack)(newProcess->stackPointer), wrapper, argc, argv, startingPoint);
 
     return newProcess;
 }
 
 
-void initializeStack(t_stack stackFrame, pid_t pid, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv), pid_t pid), int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
-    stackFrame->r15 = 15;
-    stackFrame->r14 = 14;
-    stackFrame->r13 = 13;
-    stackFrame->r12 = 12;
-    stackFrame->r11 = 11;
-    stackFrame->r10 = 10;
-    stackFrame->r9 =  9;
-    stackFrame->r8 = 8;
+void initializeStack(t_stack stackFrame, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
+    stackFrame->r15 = 0;
+    stackFrame->r14 = 0;
+    stackFrame->r13 = 0;
+    stackFrame->r12 = 0;
+    stackFrame->r11 = 0;
+    stackFrame->r10 = 0;
+    stackFrame->r9 =  0;
+    stackFrame->r8 = 0;
     
     stackFrame->rsi = (uint64_t)argv;
     stackFrame->rdi = (uint64_t)argc;
@@ -80,17 +80,17 @@ void initializeStack(t_stack stackFrame, pid_t pid, int(* wrapper)(int argc, cha
     stackFrame->rsp = (uint64_t)(stackFrame);
 
     stackFrame->rdx = (uint64_t)startingPoint;
-    stackFrame->rcx = (uint64_t)pid;
-    stackFrame->rbx = 6;
-    stackFrame->rax = 5;
+    stackFrame->rcx = 0;
+    stackFrame->rbx = 0;
+    stackFrame->rax = 0;
 
     stackFrame->rip = (uint64_t)wrapper;
     stackFrame->rflags = 0x202;
     
-    stackFrame->gs = 0x000;
-    stackFrame->fs = 0x000;
-    stackFrame->cs = 0x008;
-    stackFrame->ss = 0x000;
+    stackFrame->gs = 0;
+    stackFrame->fs = 0;
+    stackFrame->cs = 8;
+    stackFrame->ss = 0;
 }
 
 void freeProcess(t_process process) {
@@ -143,9 +143,12 @@ pid_t getProcessPid(t_process process) {
     return process->pid;
 }
 
-// t_process duplicateProcess(t_process source, pid_t pid, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv), pid_t pid)) {
-    // t_process process = createProcess(source->name, wrapper, pid, source->pid, source->argc, source->argv, source->stackPointer->rip);
-// }
+t_process duplicateProcess(t_process source, pid_t pid) {
+    t_process process = createProcess(source->name, (int (*)(int,  char **, int (*)(int,  char **))) source->stackPointer->rip, pid, source->pid, 0, NULL, NULL);
+    process->state = source->state;
+    updateProcessStack(process->stackPointer, source->stackPointer);
+    return process;
+}
 
 t_process duplicateProcessReadOnly(t_process source) {
     t_process process = pmalloc(sizeof(t_processCDT), SYSTEM_PID);
@@ -153,7 +156,7 @@ t_process duplicateProcessReadOnly(t_process source) {
     process->pPid = source->pPid;
     process->name = source->name;
     process->state = source->state;
-    process->processMemoryLowerAddress = NULL;
+    process->processMemoryLowerAddress = source->processMemoryLowerAddress;
 
     process->stackPointer = pmalloc(sizeof(t_stackCDT), SYSTEM_PID);
     memcpy(process->stackPointer, source->stackPointer, sizeof(t_stackCDT));
