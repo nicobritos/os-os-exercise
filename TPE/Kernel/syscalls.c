@@ -1,8 +1,5 @@
 #include <stdint.h>
 #include "include/keyboard-Driver.h"
-#include "include/videoDriver.h"
-#include "time.h"
-#include "include/memManager.h"
 #include "include/processHandler.h"
 #include "include/interrupts.h"
 
@@ -155,7 +152,7 @@ int sys_getPid(void * process){
 }
 
 int sys_exec(void * process){
-	return exec(process);
+	// return exec(process);
 }
 
 
