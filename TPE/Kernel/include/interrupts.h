@@ -17,8 +17,7 @@ void _irq03Handler(void);
 void _irq04Handler(void);
 void _irq05Handler(void);
 
-uint64_t _syscall(uint64_t sysCode, ...);
-
+void _syscallHandler(void);
 
 // comentado hasta que la hagamos
 void _exception0Handler(void);

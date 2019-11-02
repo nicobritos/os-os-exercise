@@ -1,27 +1,28 @@
 #include "includes/stdlib.h"
 #include <stdarg.h> 			/* incluyo esta libreria para usar va_list va_arg va_start en printf y scanf */
-#include "includes/syscalls.h"
+//#include "includes/syscalls.h"
+#include "includes/newSyscalls.h"
 
 int printf(const char* format, ...);
 
 void putchar(char letter){
 	if(letter == -1){
 		char * ctrld = "^D";
-		write(1, ctrld, 2);
+		sys_write(1, ctrld, 2);
 	}
 	else if(letter == 0x03){
 		char * ctrlc = "^C";
-		write(1, ctrlc, 2);
+		sys_write(1, ctrlc, 2);
 	}
 	else{
-		write(1,&letter, 1);     		/* write -- recibe char * y la longitud (siempre 1) */
+		sys_write(1,&letter, 1);     		/* write -- recibe char * y la longitud (siempre 1) */
 	}
 }
 
 int getchar(){
 	char letter = 0;
 	while(1){
-		read(0,&letter, 1); 	/* read -- recibe char * y la longitud (siempre 1) */
+		sys_read(0,&letter, 1); 	/* read -- recibe char * y la longitud (siempre 1) */
 		if(letter == -1 || (letter > 0 && letter < 128 )){
 			return letter;
 		}
@@ -31,7 +32,7 @@ int getchar(){
 char getCharWithZero() {
 	char c = 0;
 	while(1) {
-		read(0, &c, 1);	
+		sys_read(0, &c, 1);	
 		if (c >= -1 && c < 128) {
 			return c;
 		}
@@ -56,7 +57,7 @@ int printf(const char* format, ...){
 				case 'd':
 					num = (int) va_arg(args, int);   /* Guarda en num el siguiente argumento 'int' */
 					length = itoa(num, buffer, 10);  /* Convierte el int guardado en num en string, (el 10 es la base de num) y guarda en length la longitud */
-					write(1,buffer, length);	
+					sys_write(1,buffer, length);	
 					index++;
 					break;
 
@@ -67,20 +68,20 @@ int printf(const char* format, ...){
 
 				case 's': 
 					str = (char*) va_arg(args, char*); 		/* Guarda en str el siguiente argumento 'char *' */
-					write(1,str, strlen(str));
+					sys_write(1,str, strlen(str));
 					index++;
 					break;
 
 				case 'x':
 					num = (int) va_arg(args, int);
 					length = itoa(num, buffer, 16);
-					write(1,buffer, length);
+					sys_write(1,buffer, length);
 					index ++;
 					break;
 				case 'l':
 					llunum = (long long unsigned) va_arg(args, long long unsigned);
 					length = itoa(llunum, buffer, 10);
-					write(1, buffer, length);
+					sys_write(1, buffer, length);
 					index++;
 					break;
 					
