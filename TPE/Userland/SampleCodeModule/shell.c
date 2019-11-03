@@ -14,9 +14,6 @@ int parse(char* input){
       printf("\n%s", phrase);
       return 0;
     } else if(strcmp(input,"snake") == 0){
-        // void * snakeProcess = newProcess("Snake", snake_game, 0, 0, NULL, NULL);
-        // execute(snakeProcess);
-        // freeProcess(snakeProcess);
         snake_game(0, NULL);
         return 0;
     } else if(strcmp(input, "getTime") == 0) {

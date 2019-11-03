@@ -3,6 +3,7 @@
 #include "includes/newSyscalls.h"
 #include "includes/exceptions.h"
 void invalidOpCode();
+void div0exc();
 
 void printHelp() {
     printf("\nhelp - display available commands \n");
@@ -27,7 +28,7 @@ void clearScreen(){
 
 
 void time(){
-	uint64_t currTime[6];
+	int currTime[6];
 	sys_time(currTime);
 
 	char time[9];					//pass the array to a string to print
