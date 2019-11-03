@@ -6,10 +6,10 @@
 int sys_ticks(int * ticks);
 int sys_ticksPerSecond(int * ticks);
 int sys_clear();
-int sys_read(uint64_t fd, char *buffer, uint64_t size);
-int sys_write(uint64_t fd, char *buffer, uint64_t size);
-int sys_draw(uint64_t x, uint64_t y, unsigned char r, unsigned char g, unsigned char b);
-int * sys_time(int * time);
+int sys_read(int fd, char *buffer, int size);
+int sys_write(int fd, char *buffer, int size);
+int sys_draw(int x, int y, unsigned char r, unsigned char g, unsigned char b);
+int * sys_time(int * dest);
 uint64_t sys_usedMem();
 uint64_t sys_freeMem(void);
 void * sys_malloc(uint64_t size, uint64_t pid);

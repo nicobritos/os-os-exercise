@@ -1,6 +1,5 @@
 #include "processHandler.h"
 #include "memManager.h"
-#include <stdint.h>
 #include "list.h"
 
 #define MAX(x, y) (x > y ? x : y)

@@ -16,8 +16,3 @@ int getPid(void * process){
     //return os_get_pid(process);
     return sys_getPid(process);
 }
-
-int execute(void * process){
-    //return os_exec(process);
-    return sys_exec(process);
-}

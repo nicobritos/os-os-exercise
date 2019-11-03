@@ -433,7 +433,8 @@ void showScore(){
 
 int getseconds(){
   //uint64_t *currTime = os_time();
-  int *currTime = sys_time();
+  int currTime[6];
+  sys_time(currTime);
 
   // printf("%d%d , %d%d, %d%d",currTime[5],currTime[4],currTime[3],currTime[2],currTime[1],currTime[0]);
 

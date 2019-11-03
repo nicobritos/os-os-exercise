@@ -1,15 +1,15 @@
 #include "includes/newSyscalls.h"
 
-int _systemCall();
+int64_t _systemCall();
 
-int sys_read( int fileDescriptor, void * buff, int length)
+int sys_read( int fileDescriptor, char * buff, int length)
 {
-    return _systemCall(3, fileDescriptor, buff, length,0,0,0);
+    return _systemCall(3, fileDescriptor, (void *)buff, length,0,0,0);
 }
 
-int sys_write(int fileDescriptor, void * buff, int length)
+int sys_write(int fileDescriptor, char * buff, int length)
 {
-    return _systemCall(4, fileDescriptor, buff, length, 0, 0,0);
+    return _systemCall(4, fileDescriptor, (void *)buff, length, 0, 0,0);
 }
 
 int sys_clear()
@@ -17,13 +17,13 @@ int sys_clear()
     return _systemCall(5,0,0,0,0,0,0);
 }
 
-int sys_draw( int x, int y, int red, int green, int blue)
+int sys_draw( int x, int y, unsigned char red, unsigned char green, unsigned char blue)
 {
-    return _systemCall(6, x, y, red, green, blue,0);
+    return _systemCall(6, x, y, (int)red, (int)green, (int)blue,0);
 }
 
-int * sys_time(){
-    return (int *)_systemCall(7,0,0,0,0,0,0);
+int * sys_time(int * dest){
+    return (int *)_systemCall(7,dest,0,0,0,0,0);
 }
 
 int sys_getPid(void * process)
@@ -80,25 +80,25 @@ int sys_writePipe(void * pipe, char *buffer, uint64_t size){
 }
 
 void * sys_createSem(char *name){
-    return _systemCall(19, name, 0,0,0,0,0);
+    return (void *)_systemCall(19, name, 0,0,0,0,0);
 }
 
 void * sys_openSem(char *name){
-    return _systemCall(20, name, 0,0,0,0,0);
+    return (void *)_systemCall(20, name, 0,0,0,0,0);
 }
 
 void sys_closeSem(void * sem){
-    return _systemCall(21, sem, 0,0,0,0,0);
+    _systemCall(21, sem, 0,0,0,0,0);
 }
 
 void sys_wait(void * sem, uint64_t pid){
-    return _systemCall(22, sem, pid, 0,0,0,0);
+    _systemCall(22, sem, pid, 0,0,0,0);
 }
 
 void sys_post(void * sem){
-    return _systemCall(23, sem, 0,0,0,0,0);
+    _systemCall(23, sem, 0,0,0,0,0);
 }
 
 void sys_printSems(){
-    return _systemCall(24, 0,0,0,0,0,0);
+    _systemCall(24, 0,0,0,0,0,0);
 }

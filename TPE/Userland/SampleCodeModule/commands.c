@@ -27,7 +27,8 @@ void clearScreen(){
 
 
 void time(){
-	int * currTime = sys_time();
+	int currTime[6];
+	sys_time(currTime);
 	// uint64_t * currTime = os_time();		returns an array with the current hour, minutes, and seconds
 
 	char time[9];					//pass the array to a string to print

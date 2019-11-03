@@ -7,6 +7,10 @@
 
 listADT semList = NULL;
 
+uint8_t equals(t_sem * elem, t_sem * other){
+    return strcmp(elem->name, other->name);
+}
+
 t_sem * createSem(char * name){
     t_sem * newSem = pmalloc(sizeof(t_sem), 0);
     strcpy(newSem->name, name);
@@ -34,7 +38,7 @@ t_sem * openSem(char * name){
 
 void closeSem(t_sem * sem){
     if(!isEmptyList(semList)){
-        removeNodeList(semList, sem);
+        removeNodeList(semList, searchNodeList(semList, sem, (uint8_t (*)(void *, void *))equals));
         pfree(sem, 0);
     }
 }
@@ -42,7 +46,7 @@ void closeSem(t_sem * sem){
 void wait(t_sem * sem, uint64_t pid){
     (sem->value)--;
     if(sem->value < 0){
-        addElementToIndexList(sem->processes, pid, getSizeList(sem->processes));
+        addElementToIndexList(sem->processes, (void *)pid, getSizeList(sem->processes));
         lockProcess(pid);
     }
 }
@@ -82,8 +86,10 @@ char * semListString(){
             if(i < MAX_STR_SIZE){
                 buffer[i++] = ' ';
                 if(i < MAX_STR_SIZE){
-                    strncpy(buffer + i, itoa(sem->value), MAX_STR_SIZE - i);
-                    i += strlen(itoa(sem->value));
+                    char aux[10];
+                    itoa(sem->value, aux, 10);
+                    strncpy(buffer + i, aux, MAX_STR_SIZE - i);
+                    i += strlen(aux);
                     if(i < MAX_STR_SIZE){
                         buffer[i++] = '\n';
                     }

@@ -204,6 +204,6 @@ void sys_post(t_sem * sem){
 
 void sys_printSems(){
 	char * str = semListString();
-	write(1, str, strlen(str));
+	sys_write(1, str, strlen(str));
 	pfree(str, 0);
 }
