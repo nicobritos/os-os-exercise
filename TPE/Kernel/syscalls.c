@@ -8,7 +8,7 @@
 #include "scheduler.h"
 #include "process.h"
 
-#define AMMOUNT_SYSCALLS 14
+#define AMOUNT_SYSCALLS 14
 
 typedef uint64_t(*systemCall)();
 
@@ -64,7 +64,7 @@ systemCall sysCalls[] = {
 void syscallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack stackFrame){
 	uint64_t returnValue;
 
-	if (rdi < AMMOUNT_SYSCALLS)	returnValue = sysCalls[rdi](rsi, rdx, rcx, r8, stackFrame);
+	if (rdi < AMOUNT_SYSCALLS)	returnValue = sysCalls[rdi](rsi, rdx, rcx, r8, stackFrame);
 	else returnValue = sys_not_implemented();
 	updateProcessStackRegister(stackFrame, returnValue, REGISTER_RAX);
 }
