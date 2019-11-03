@@ -1,18 +1,20 @@
 #include "processHandler.h"
 #include "memManager.h"
 
+#define STARTING_PID (SYSTEM_PID + 1)
+
 static t_process processes[MAX_PROC] = {0};
 
 void _killProcessSyscallKernel();
 void _reboot();
 
-
 t_process newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], t_priority priority, t_mode mode) {
     char finished = 0;
     pid_t i;
-    for (i = 0; i < MAX_PROC && !finished; i++) {
+    for (i = STARTING_PID; i < MAX_PROC && !finished; i++) {
         if (processes[i] == 0) {
             finished = 1;
+            break;
         }
     }
     if (!finished) return NULL;
@@ -24,6 +26,8 @@ t_process newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, i
     processes[i] = newProcess;
 
     addProcess(newProcess, priority, mode);
+    printString(" new PID: ", 255, 0, 0);
+    printHexa(i);
     return newProcess;
 }
 

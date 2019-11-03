@@ -1,9 +1,8 @@
 #include <stdint.h>
-#include "includes/snake.h"
-#include "includes/stdio.h"
-#include "includes/stdlib.h"
-//#include "includes/syscalls.h"
-#include "includes/newSyscalls.h"
+#include "snake.h"
+#include "stdio.h"
+#include "stdlib.h"
+#include "newSyscalls.h"
 
 void drawString(int x, int y, char * str , unsigned char r, unsigned char g, unsigned char b, unsigned char size);
 

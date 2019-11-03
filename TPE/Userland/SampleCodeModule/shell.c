@@ -1,12 +1,10 @@
-#include "includes/defines.h"
-#include "includes/stdlib.h"
-#include "includes/stdio.h"
-#include "includes/unistd.h"
-#include "includes/commands.h"
-#include "includes/snake.h"
-#include "includes/exceptions.h"
-#define NULL ((void *) 0)
-
+#include "stdlib.h"
+#include "stdio.h"
+#include "unistd.h"
+#include "exceptions.h"
+#include "commands.h"
+#include "snake.h"
+#include "defines.h"
 
 int parse(char* input){
     if(strncmp(input, "cat ", 4) == 0) {
@@ -14,10 +12,9 @@ int parse(char* input){
       printf("\n%s", phrase);
       return 0;
     } else if(strcmp(input,"snake") == 0){
-        // void * snakeProcess = newProcess("Snake", snake_game, 0, 0, NULL, NULL);
-        // execute(snakeProcess);
-        // freeProcess(snakeProcess);
-        snake_game(0, NULL);
+        pid_t snakeProcessPid = newProcess("Snake", snake_game);
+        // Set foreground
+        waitpid(snakeProcessPid);
         return 0;
     } else if(strcmp(input, "getTime") == 0) {
       printf("\n");
@@ -62,12 +59,12 @@ int parse(char* input){
     //   printf("\n%x", proceso);
     //   return 0;
     // }
-    // else if(strncmp(input, "free ", 5) == 0){
-    //   char* phrase = &(input[5]);
-    //   int i = atox(phrase);
-    //   freeProcess((void *) atox(phrase));
-    //   return 0;
-    // }
+    else if(strncmp(input, "free ", 5) == 0){
+      char* phrase = &(input[5]);
+      pid_t i = atox(phrase);
+      killProcess(i);
+      return 0;
+    }
     // else if(strncmp(input, "get ", 4) == 0){
     //   char* phrase = &(input[4]);
     //   int i = atox(phrase);

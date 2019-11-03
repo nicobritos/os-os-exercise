@@ -92,6 +92,6 @@ void sys_post_semaphore(void * sem);
 
 void sys_printSems();
 
-void sys_wait_pid(pid_t pid);
+int sys_wait_pid(pid_t pid);
 
 #endif

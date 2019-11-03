@@ -1,13 +1,6 @@
-/* sampleCodeModule.c */
-
-#include "includes/shell.h"
-
-char * v = (char*)0xB8000 + 79 * 2;
+#include "shell.h"
 
 int main() {
-
 	shell();
 	return 0;
 }
-
-

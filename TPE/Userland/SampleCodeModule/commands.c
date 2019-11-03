@@ -1,7 +1,7 @@
 #include "stdio.h"
-//#include "includes/syscalls.h"
-#include "includes/newSyscalls.h"
-#include "includes/exceptions.h"
+//#include "syscalls.h"
+#include "newSyscalls.h"
+#include "exceptions.h"
 void invalidOpCode();
 
 void printHelp() {

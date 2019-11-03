@@ -1,6 +1,5 @@
-#include "includes/defines.h"
-//#include "includes/syscalls.h"
-#include "includes/newSyscalls.h"
+#include "defines.h"
+#include "newSyscalls.h"
 #include <stdint.h>
 
 

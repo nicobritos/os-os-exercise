@@ -229,6 +229,10 @@ void yieldScheduler(t_stack stackFrame) {
 // Lock process until pid is killed
 void waitpid(pid_t pid, t_stack currentProcessStack) {
 	processNodeADT observedProcessNode = getProcessNodeFromNode(getNodePid(pid));
+	printString(" waitpid: ", 255, 0, 0);
+	printHexa(pid);
+	printString(" observedProcessNode: ", 255, 0, 0);
+	printHexa(observedProcessNode);
 	if (observedProcessNode != NULL) {
 		processNodeADT processNode = getProcessNodeFromNode(currentProcessNode);
 		waitMutex(observedProcessNode->waitpidMutex, getProcessPid(processNode->process), currentProcessStack);
@@ -415,7 +419,7 @@ nodeListADT getNodePid(pid_t pid) {
 	nodeListADT node = getNodeReadyQueue(pid);
 	if (node == NULL)
 		return getNodeWaitingQueue(pid);
-	return NULL;
+	return node;
 }
 
 t_priority getProcessNodePriority(nodeListADT node) {
