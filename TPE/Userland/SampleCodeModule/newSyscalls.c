@@ -95,3 +95,34 @@ t_state sys_get_process_state(pid_t pid) {
     return (t_state) _systemCall(__SYSTEM_CALL_GET_PROCESS_STATE, pid);
 }
 
+int sys_readPipe(void * pipe, char *buffer, uint64_t size){
+    return _systemCall(17, pipe, buffer, size, 0,0,0);
+}
+
+int sys_writePipe(void * pipe, char *buffer, uint64_t size){
+    return _systemCall(18, pipe, buffer, size, 0,0,0);
+}
+
+void * sys_createSem(char *name){
+    return (void *)_systemCall(19, name, 0,0,0,0,0);
+}
+
+void * sys_openSem(char *name){
+    return (void *)_systemCall(20, name, 0,0,0,0,0);
+}
+
+void sys_closeSem(void * sem){
+    _systemCall(21, sem, 0,0,0,0,0);
+}
+
+void sys_wait(void * sem, uint64_t pid){
+    _systemCall(22, sem, pid, 0,0,0,0);
+}
+
+void sys_post(void * sem){
+    _systemCall(23, sem, 0,0,0,0,0);
+}
+
+void sys_printSems(){
+    _systemCall(24, 0,0,0,0,0,0);
+}

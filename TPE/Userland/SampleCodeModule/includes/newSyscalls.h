@@ -66,5 +66,13 @@ t_priority sys_get_process_priority(pid_t pid);
 void sys_set_process_priority(pid_t pid, t_priority priority);
 
 t_state sys_get_process_state(pid_t pid);
+int sys_readPipe(void * pipe, char *buffer, uint64_t size);
+int sys_writePipe(void * pipe, char *buffer, uint64_t size);
+void * sys_createSem(char *name);
+void * sys_openSem(char *name);
+void sys_closeSem(void * sem);
+void sys_wait(void * sem, uint64_t pid);
+void sys_post(void * sem);
+void sys_printSems();
 
 #endif

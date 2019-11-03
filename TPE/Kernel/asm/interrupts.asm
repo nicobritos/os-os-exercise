@@ -28,7 +28,6 @@ EXTERN exceptionDispatcher
 EXTERN getCurrentProcess
 EXTERN getProcessPid
 
-
 SECTION .text
 
 %macro pushState 0
@@ -235,12 +234,11 @@ _syscallHandler:
 
 	mov rsp, rbp
 	pop rbp
-
-
+  
   push rax
   call pushsti
   pop rax
-
+  
   popState
 
 	iretq

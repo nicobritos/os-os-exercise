@@ -7,6 +7,8 @@
 #include "include/interrupts.h"
 #include "scheduler.h"
 #include "process.h"
+#include "include/ipc.h"
+#include "include/semaphore.h"
 
 typedef uint64_t(*systemCall)();
 
@@ -52,11 +54,26 @@ void sys_set_process_priority(pid_t pid, t_priority priority);
 
 t_state sys_get_process_state(pid_t pid);
 
+int sys_readPipe(t_pipeADT pipe, char *buffer, uint64_t size);
+
+int sys_writePipe(t_pipeADT pipe, char *buffer, uint64_t size);
+
+t_sem * sys_createSem(char *name);
+
+t_sem * sys_openSem(char *name);
+
+void sys_closeSem(t_sem * sem);
+
+void sys_wait(t_sem * sem, uint64_t pid);
+
+void sys_post(t_sem * sem);
+
+void sys_printSems();
 
 systemCall sysCalls[] = { 
-    (systemCall) sys_read,
+  (systemCall) sys_read,
 	(systemCall) sys_write,
-    (systemCall) sys_clear,
+  (systemCall) sys_clear,
 	(systemCall) sys_draw,
 	(systemCall) sys_time,
 	(systemCall) sys_get_pid,
@@ -74,6 +91,14 @@ systemCall sysCalls[] = {
 	(systemCall) sys_get_process_priority,
 	(systemCall) sys_set_process_priority,
 	(systemCall) sys_get_process_state,
+  (systemCall) sys_readPipe,
+  (systemCall) sys_writePipe,
+  (systemCall) sys_createSem,
+  (systemCall) sys_openSem,
+  (systemCall) sys_closeSem,
+  (systemCall) sys_wait,
+  (systemCall) sys_post,
+  (systemCall) sys_printSems
 };
 
 void syscallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack stackFrame){
@@ -108,7 +133,7 @@ uint64_t sys_clear() {
  * https://jameshfisher.com/2018/02/19/how-to-syscall-in-c/
  * fd = 0 (stdin)
  */
-uint64_t sys_read(uint64_t fd, char *buffer, uint64_t size){
+int sys_read(uint64_t fd, char *buffer, uint64_t size){
 	uint64_t i = 0;
 	char c;
 	if (fd == 0){
@@ -121,7 +146,7 @@ uint64_t sys_read(uint64_t fd, char *buffer, uint64_t size){
 }
 
 //fd = 1 (stdout)
-uint64_t sys_write(uint64_t fd, char *buffer, uint64_t size){
+int sys_write(uint64_t fd, char *buffer, uint64_t size){
 	uint64_t i = 0;
 
 	if (fd == 1) {
@@ -221,4 +246,48 @@ void sys_set_process_priority(pid_t pid, t_priority priority) {
 
 t_state sys_get_process_state(pid_t pid) {
 	return getProcessStatePid(pid);
+
+int sys_readPipe(t_pipeADT pipe, char *buffer, uint64_t size){
+	return read(pipe, buffer, size);
+}
+
+int sys_writePipe(t_pipeADT pipe, char *buffer, uint64_t size){
+	return write(pipe, buffer, size);
+}
+void * sys_newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], void *trash){
+	return newProcess(name, foo, ppid, argc, argv, S_P_LOW, S_M_FOREGROUND);
+}
+
+void sys_freeProcess(void * process){
+	freeProcess(process);
+}
+
+int sys_getPid(void * process){
+	return getProcessPid(process);
+}
+
+t_sem * sys_createSem(char *name){
+	return createSem(name);
+}
+
+t_sem * sys_openSem(char *name){
+	return openSem(name);
+}
+
+void sys_closeSem(t_sem * sem){
+	return closeSem(sem);
+}
+
+void sys_wait(t_sem * sem, uint64_t pid){
+	wait(sem, 0); // GET CURRENT PID
+}
+
+void sys_post(t_sem * sem){
+	post(sem);
+}
+
+void sys_printSems(){
+	char * str = semListString();
+	sys_write(1, str, strlen(str));
+	pfree(str, 0);
 }
