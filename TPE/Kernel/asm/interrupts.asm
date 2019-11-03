@@ -23,6 +23,7 @@ GLOBAL _exceptionInvalidOpcodeHandler
 GLOBAL _syscall
 EXTERN irqDispatcher
 EXTERN exceptionDispatcher
+EXTERN reboot
 
 SECTION .text
 
