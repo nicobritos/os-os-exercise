@@ -1,12 +1,13 @@
 #include <stdint.h>
 #include "include/keyboard-Driver.h"
 #include "include/videoDriver.h"
-#include "time.h"
+#include "include/time.h"
 #include "include/memManager.h"
 #include "include/processHandler.h"
 #include "include/interrupts.h"
-#include "scheduler.h"
+#include "include/scheduler.h"
 #include "include/ipc.h"
+#include "include/semaphore.h"
 
 
 typedef uint64_t(*systemCall)();
@@ -27,24 +28,37 @@ void sys_freeProcess(void * process);
 int sys_getPid(void * process);
 int sys_readPipe(t_pipeADT pipe, char *buffer, uint64_t size);
 int sys_writePipe(t_pipeADT pipe, char *buffer, uint64_t size);
+t_sem * sys_createSem(char *name);
+t_sem * sys_openSem(char *name);
+void sys_closeSem(t_sem * sem);
+void sys_wait(t_sem * sem, uint64_t pid);
+void sys_post(t_sem * sem);
+void sys_printSems();
+
 
 systemCall sysCalls[] = { 0, 0, 0,
-        (systemCall) sys_read,
-		(systemCall) sys_write,
-        (systemCall) sys_clear,
-		(systemCall) sys_draw,
-		(systemCall) sys_time,
-		(systemCall) sys_getPid,
-		(systemCall) sys_newProcess,
-		(systemCall) sys_freeProcess,
-		(systemCall) sys_free,
-		(systemCall) sys_ticks,
-		(systemCall) sys_ticksPerSecond,
-		(systemCall) sys_usedMem,
-		(systemCall) sys_freeMem,
-		(systemCall) sys_malloc,
-		(systemCall) sys_readPipe,
-		(systemCall) sys_writePipe,
+        (systemCall) sys_read, 				// 3
+		(systemCall) sys_write, 			// 4
+        (systemCall) sys_clear,				// 5
+		(systemCall) sys_draw,				// 6
+		(systemCall) sys_time,				// 7
+		(systemCall) sys_getPid,			// 8
+		(systemCall) sys_newProcess,		// 9
+		(systemCall) sys_freeProcess,		// 10
+		(systemCall) sys_free,				// 11
+		(systemCall) sys_ticks,				// 12
+		(systemCall) sys_ticksPerSecond,	// 13
+		(systemCall) sys_usedMem,			// 14
+		(systemCall) sys_freeMem,			// 15
+		(systemCall) sys_malloc,			// 16
+		(systemCall) sys_readPipe,			// 17
+		(systemCall) sys_writePipe,			// 18
+		(systemCall) sys_createSem,			// 19
+		(systemCall) sys_openSem,			// 20
+		(systemCall) sys_closeSem,			// 21
+		(systemCall) sys_wait,				// 22
+		(systemCall) sys_post,				// 23
+		(systemCall) sys_printSems,			// 24
 };
 
 int syscallHandler(unsigned long rdi, unsigned long rsi, unsigned long rdx, unsigned long rcx, unsigned long r8, unsigned long r9, unsigned long r10){
@@ -166,4 +180,30 @@ void sys_freeProcess(void * process){
 
 int sys_getPid(void * process){
 	return getProcessPid(process);
+}
+
+t_sem * sys_createSem(char *name){
+	return createSem(name);
+}
+
+t_sem * sys_openSem(char *name){
+	return openSem(name);
+}
+
+void sys_closeSem(t_sem * sem){
+	return closeSem(sem);
+}
+
+void sys_wait(t_sem * sem, uint64_t pid){
+	wait(sem, 0); // GET CURRENT PID
+}
+
+void sys_post(t_sem * sem){
+	post(sem);
+}
+
+void sys_printSems(){
+	char * str = semListString();
+	write(1, str, strlen(str));
+	pfree(str, 0);
 }

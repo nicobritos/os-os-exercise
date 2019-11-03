@@ -3,6 +3,8 @@
 #include "include/lib.h"
 #include "include/scheduler.h"
 
+#define MAX_STR_SIZE 500
+
 listADT semList = NULL;
 
 t_sem * createSem(char * name){
@@ -64,4 +66,54 @@ uint8_t hasNextSemListIterator(){
 
 t_sem * getNextSemIterator(){
     return getElementList(getNextNodeListIterator(semList));
+}
+
+char * semListString(){
+    char * buffer = pmalloc(MAX_STR_SIZE, 0);
+    uint64_t i = 0;
+    prepareSemListIterator();
+    while (hasNextSemListIterator())
+    {
+        t_sem * sem = getNextSemIterator();
+        strncpy(buffer + i, sem->name, MAX_STR_SIZE - i);
+        i += strlen(sem->name);
+        if(i < MAX_STR_SIZE){
+            buffer[i++] = ':';
+            if(i < MAX_STR_SIZE){
+                buffer[i++] = ' ';
+                if(i < MAX_STR_SIZE){
+                    strncpy(buffer + i, itoa(sem->value), MAX_STR_SIZE - i);
+                    i += strlen(itoa(sem->value));
+                    if(i < MAX_STR_SIZE){
+                        buffer[i++] = '\n';
+                    }
+                    else{
+                        buffer[MAX_STR_SIZE - 1] = 0;
+                        return buffer;
+                    }
+                }
+                else{
+                    buffer[MAX_STR_SIZE - 1] = 0;
+                    return buffer;
+                }
+            }
+            else{
+                buffer[MAX_STR_SIZE - 1] = 0;
+                return buffer;
+            }
+        }
+        else{
+            buffer[MAX_STR_SIZE - 1] = 0;
+            return buffer;
+        }
+        
+    }
+    if( i < MAX_STR_SIZE)
+        buffer[i] = 0;
+    else{
+        buffer[MAX_STR_SIZE - 1] = 0;
+    }
+    return buffer;
+    
+    
 }

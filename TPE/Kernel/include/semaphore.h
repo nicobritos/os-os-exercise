@@ -16,6 +16,8 @@ void closeSem(t_sem * sem);
 void wait(t_sem * sem, uint64_t pid);
 void post(t_sem * sem);
 
+char * semListString();
+
 void prepareSemListIterator();
 uint8_t hasNextSemListIterator();
 t_sem * getNextSemIterator();
