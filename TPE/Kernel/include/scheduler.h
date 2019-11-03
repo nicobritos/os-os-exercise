@@ -42,6 +42,7 @@
 
 	void setOnProcessKillScheduler(void(_onProcessKill) (t_process process));
 
+	void yieldScheduler(t_stack stackFrame);
 
 	// Process iterator
 	listADT createProcessList();

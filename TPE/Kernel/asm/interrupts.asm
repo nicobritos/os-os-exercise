@@ -1,6 +1,6 @@
 GLOBAL _cli
 GLOBAL _sti
-GLOBAL _killProcess
+GLOBAL _killProcessSyscallKernel
 GLOBAL picMasterMask
 GLOBAL picSlaveMask
 GLOBAL haltcpu
@@ -22,8 +22,11 @@ EXTERN syscallHandler
 GLOBAL _exception0Handler
 GLOBAL _exceptionInvalidOpcodeHandler
 GLOBAL _syscall
+
 EXTERN irqDispatcher
 EXTERN exceptionDispatcher
+EXTERN getCurrentProcess
+EXTERN getProcessPid
 
 
 SECTION .text
@@ -130,7 +133,6 @@ SECTION .text
 
   popState
 
-  ;mov qword [rsp],reboot
 	iretq
 %endmacro
 
@@ -196,6 +198,26 @@ _irq04Handler:
 ;USB
 _irq05Handler:
   irqHandlerMaster 5
+
+_killProcessSyscallKernel:
+  push rbp
+  mov rbp, rsp
+
+  xor rax, rax
+  call getCurrentProcess
+  mov rdi, rax
+
+  xor rax, rax
+  call getProcessPid
+  mov rdi, 7 ; freeProcess (see syscalls.c)
+  mov rsi, rax
+
+  int 80h
+
+  mov rsp, rbp
+  pop rbp
+
+  ret
 
 _syscallHandler:
   pushState

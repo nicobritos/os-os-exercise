@@ -31,9 +31,9 @@ pid_t sys_getPid()
     return (pid_t)_systemCall(__SYSTEM_CALL_GET_PID);
 }
 
-void *sys_newProcess(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[])
+pid_t sys_newProcess(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[])
 {
-    return (void*)_systemCall(__SYSTEM_CALL_NEW_PROCESS,name,foo,argc,argv);
+    return (pid_t)_systemCall(__SYSTEM_CALL_NEW_PROCESS,name,foo,argc,argv);
 }
 
 void sys_freeProcess(pid_t pid)
@@ -70,3 +70,28 @@ void *sys_malloc(uint64_t size)
 {
     return (void*)_systemCall(__SYSTEM_CALL_MALLOC,size);
 }
+
+void sys_yield() {
+    _systemCall(__SYSTEM_CALL_YIELD);
+}
+
+t_mode sys_get_process_mode(pid_t pid) {
+    return (t_mode) _systemCall(__SYSTEM_CALL_GET_PROCESS_MODE, pid);
+}
+
+void sys_set_process_mode(pid_t pid, t_mode mode) {
+    _systemCall(__SYSTEM_CALL_SET_PROCESS_MODE, pid, mode);
+}
+
+t_priority sys_get_process_priority(pid_t pid) {
+    return (t_priority) _systemCall(__SYSTEM_CALL_GET_PROCESS_PRIORITY, pid);
+}
+
+void sys_set_process_priority(pid_t pid, t_priority priority) {
+    _systemCall(__SYSTEM_CALL_SET_PROCESS_PRIORITY, pid, priority);
+}
+
+t_state sys_get_process_state(pid_t pid) {
+    return (t_state) _systemCall(__SYSTEM_CALL_GET_PROCESS_STATE, pid);
+}
+

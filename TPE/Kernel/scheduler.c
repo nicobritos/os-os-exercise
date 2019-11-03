@@ -29,6 +29,9 @@ static void (*onProcessKill) (t_process process) = NULL;
 
 void idleFunction();
 
+
+void runSchedulerForce(t_stack currentProcessStack, uint8_t force);
+
 void loadNextProcess(t_stack currentProcessStack);
 
 nodeListADT fetchNextNode();
@@ -78,20 +81,7 @@ void initializeScheduler() {
 }
 
 void runScheduler(t_stack currentProcessStack) {
-	if (!initialized || getSizeList(readyQueue) == 0) {
-		return;
-	}
-
-	if (currentProcessNode != NULL) {
-		processNodeADT myCurrentProcessNode = getProcessNodeFromNode(currentProcessNode);
-
-		if (getProcessState(myCurrentProcessNode->process) == P_RUNNING && 
-				ticks_elapsed() - myCurrentProcessNode->executedOnTicks < quantumSlice[myCurrentProcessNode->priority]) {
-			return;
-		}
-	}
-
-	loadNextProcess(currentProcessStack);
+	runSchedulerForce(currentProcessStack, 0);
 }
 
 uint8_t addProcess(t_process process, t_priority priority, t_mode mode) {
@@ -227,6 +217,10 @@ void setOnProcessKillScheduler(void(_onProcessKill) (t_process process)) {
 	onProcessKill = _onProcessKill;
 }
 
+void yieldScheduler(t_stack stackFrame) {
+	runSchedulerForce(stackFrame, 1);
+}
+
 // Iterator
 listADT createProcessList() {
 	listADT newList = duplicateList(readyQueue, duplicateProcessNode);
@@ -255,6 +249,23 @@ void freeProcessesList(listADT list) {
 }
 
 // Private
+void runSchedulerForce(t_stack currentProcessStack, uint8_t force) {
+	if (!initialized || getSizeList(readyQueue) == 0) {
+		return;
+	}
+
+	if (currentProcessNode != NULL) {
+		processNodeADT myCurrentProcessNode = getProcessNodeFromNode(currentProcessNode);
+
+		if (!force && getProcessState(myCurrentProcessNode->process) == P_RUNNING && 
+				ticks_elapsed() - myCurrentProcessNode->executedOnTicks < quantumSlice[myCurrentProcessNode->priority]) {
+			return;
+		}
+	}
+
+	loadNextProcess(currentProcessStack);
+}
+
 void loadNextProcess(t_stack currentProcessStack) {
 	nodeListADT nextProcessNode = fetchNextNode();
 	if (nextProcessNode == NULL) {		

@@ -18,7 +18,13 @@ typedef enum {
 	__SYSTEM_CALL_TICKS_PER_SECOND = 10,
 	__SYSTEM_CALL_USED_MEM = 11,
 	__SYSTEM_CALL_FREE_MEM = 12,
-	__SYSTEM_CALL_MALLOC = 13
+	__SYSTEM_CALL_MALLOC = 13,
+	__SYSTEM_CALL_YIELD = 14,
+	__SYSTEM_CALL_GET_PROCESS_MODE = 15,
+	__SYSTEM_CALL_SET_PROCESS_MODE = 16,
+	__SYSTEM_CALL_GET_PROCESS_PRIORITY = 17,
+	__SYSTEM_CALL_SET_PROCESS_PRIORITY = 18,
+	__SYSTEM_CALL_GET_PROCESS_STATE = 19
 } t_system_call;
 
 uint64_t sys_read(int fileDescriptor, void * buff, int length);
@@ -33,7 +39,7 @@ uint64_t *sys_time();
 
 pid_t sys_getPid();
 
-void *sys_newProcess(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[]);
+pid_t sys_newProcess(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[]);
 
 void sys_freeProcess(pid_t pid);
 
@@ -48,5 +54,17 @@ uint64_t sys_usedMem();
 uint64_t sys_freeMem();
 
 void *sys_malloc(uint64_t size);
+
+void sys_yield();
+
+t_mode sys_get_process_mode(pid_t pid);
+
+void sys_set_process_mode(pid_t pid, t_mode mode);
+
+t_priority sys_get_process_priority(pid_t pid);
+
+void sys_set_process_priority(pid_t pid, t_priority priority);
+
+t_state sys_get_process_state(pid_t pid);
 
 #endif
