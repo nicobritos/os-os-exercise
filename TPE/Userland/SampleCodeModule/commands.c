@@ -44,11 +44,8 @@ void time(){
 	printf(time);
 }
 
-int division(int n){
-  return 666/n;
-}
 void divisionExc(){
-  division(0);
+	div0exc();
 }
 void invalidOpCodeException() {
 	invalidOpCode();
