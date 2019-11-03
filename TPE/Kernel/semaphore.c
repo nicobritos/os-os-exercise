@@ -12,7 +12,7 @@ uint8_t equals(t_sem * elem, t_sem * other){
 }
 
 t_sem * createSem(char * name){
-    t_sem * newSem = pmalloc(sizeof(t_sem), 0);
+    t_sem * newSem = pmalloc(sizeof(t_sem), SYSTEM_PID);
     strcpy(newSem->name, name);
     newSem->value = 0;
     newSem->processes = createList();
@@ -39,7 +39,8 @@ t_sem * openSem(char * name){
 void closeSem(t_sem * sem){
     if(!isEmptyList(semList)){
         removeNodeList(semList, searchNodeList(semList, sem, (uint8_t (*)(void *, void *))equals));
-        pfree(sem, 0);
+        freeList(sem->processes, NULL);
+        pfree(sem, SYSTEM_PID);
     }
 }
 
@@ -120,6 +121,4 @@ char * semListString(){
         buffer[MAX_STR_SIZE - 1] = 0;
     }
     return buffer;
-    
-    
 }

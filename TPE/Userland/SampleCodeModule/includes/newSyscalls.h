@@ -33,6 +33,7 @@ typedef enum {
 	__SYSTEM_CALL_WAIT = 25,
 	__SYSTEM_CALL_POST = 26,
 	__SYSTEM_CALL_PRINT_SEMS = 27,
+	__SYSTEM_CALL_WAIT_PID = 28
 } t_system_call;
 
 uint64_t sys_read(int fileDescriptor, void * buff, int length);
@@ -90,5 +91,7 @@ void sys_wait_semaphore(void * sem, uint64_t pid);
 void sys_post_semaphore(void * sem);
 
 void sys_printSems();
+
+void sys_wait_pid(pid_t pid);
 
 #endif

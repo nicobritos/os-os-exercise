@@ -44,6 +44,8 @@
 
 	void yieldScheduler(t_stack stackFrame);
 
+	void waitpid(pid_t pid, t_stack currentProcessStack);
+
 	// Process iterator
 	listADT createProcessList();
 	uint64_t getProcessListLength(listADT processList);

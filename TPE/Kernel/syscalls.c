@@ -70,6 +70,8 @@ void sys_post_semaphore(t_sem * sem);
 
 void sys_printSems();
 
+void sys_wait_pid(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame);
+
 systemCall sysCalls[] = { 
 	(systemCall) sys_read,
 	(systemCall) sys_write,
@@ -98,7 +100,8 @@ systemCall sysCalls[] = {
 	(systemCall) sys_closeSem,
 	(systemCall) sys_wait_semaphore,
 	(systemCall) sys_post_semaphore,
-	(systemCall) sys_printSems
+	(systemCall) sys_printSems,
+	(systemCall) sys_wait_pid
 };
 
 void syscallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack stackFrame){
@@ -291,4 +294,8 @@ void sys_printSems(){
 	char * str = semListString();
 	sys_write(1, str, strlen(str));
 	pfree(str, 0);
+}
+
+void sys_wait_pid(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame) {
+	waitpid(pid, currentProcessStackFrame);
 }

@@ -119,7 +119,8 @@ void freeList(listADT list, void(freeElement) (void * element)) {
 	nodeListADT auxNode;
 	while (node != NULL) {
 		auxNode = node->next;
-		freeElement(node->element);
+		if (freeElement != NULL)
+			freeElement(node->element);
 		pfree(node, SYSTEM_PID);
 		node = auxNode;
 	}

@@ -10,8 +10,8 @@ typedef struct t_sem{
     char * name;
 }t_sem;
 
-t_sem * createSem(char * name);
-t_sem * openSem(char * name);
+t_sem *createSem(char * name);
+t_sem *openSem(char * name);
 void closeSem(t_sem * sem);
 
 void waitSemaphore(t_sem * sem, uint64_t pid, t_stack currentProcessStackFrame);

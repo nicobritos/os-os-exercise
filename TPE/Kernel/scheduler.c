@@ -1,7 +1,9 @@
 #include "processHandler.h"
 #include "memManager.h"
 #include "scheduler.h"
+#include "semaphore.h"
 #include "stdio.h"
+#include "mutex.h"
 #include "time.h"
 
 #define QUANTUM 4
@@ -10,9 +12,10 @@ typedef struct processNodeCDT *processNodeADT;
 
 typedef struct processNodeCDT {
     uint64_t executedOnTicks;
-    t_mode mode;
-	t_process process;
+    t_mutexADT waitpidMutex;
 	t_priority priority;
+	t_process process;
+    t_mode mode;
 } processNodeCDT;
 
 static const uint64_t quantumSlice[2] = {QUANTUM * 2, QUANTUM};
@@ -94,6 +97,7 @@ uint8_t addProcess(t_process process, t_priority priority, t_mode mode) {
 	processNode->process = process;
 	processNode->priority = priority;
 	processNode->mode = mode;
+	processNode->waitpidMutex = createMutex();
 
 	if (mode == S_M_FOREGROUND) {
 		foregroundProcesses++;
@@ -221,6 +225,15 @@ void yieldScheduler(t_stack stackFrame) {
 	runSchedulerForce(stackFrame, 1);
 }
 
+// Lock process until pid is killed
+void waitpid(pid_t pid, t_stack currentProcessStack) {
+	processNodeADT observedProcessNode = getProcessNodeFromNode(getNodePid(pid));
+	if (observedProcessNode != NULL) {
+		processNodeADT processNode = getProcessNodeFromNode(currentProcessNode);
+		waitMutex(observedProcessNode->waitpidMutex, getProcessPid(processNode->process), currentProcessStack);
+	}
+}
+
 // Iterator
 listADT createProcessList() {
 	listADT newList = duplicateList(readyQueue, duplicateProcessNode);
@@ -343,11 +356,15 @@ nodeListADT getNodeWaitingQueue(pid_t pid) {
 void removeProcess(nodeListADT processNode, listADT queue) {
 	processNodeADT myProcessNode = getProcessNodeFromNode(processNode);
 	removeNodeList(queue, processNode);
+	
 	if (myProcessNode->mode == S_M_FOREGROUND) {
 		foregroundProcesses--;
 	} else {
 		backgroundProcesses--;
 	}
+
+	postMutex(myProcessNode->waitpidMutex);
+	closeMutex(myProcessNode->waitpidMutex);
 	if (onProcessKill != NULL) onProcessKill(myProcessNode->process);
 	pfree(myProcessNode, SYSTEM_PID);
 }
@@ -376,6 +393,7 @@ void freeProcessNodeReadOnly(void *_processNode) {
 }
 
 processNodeADT getProcessNodeFromNode(nodeListADT node) {
+	if (node == NULL) return NULL;
 	return (processNodeADT)(getElementList(node));
 }
 

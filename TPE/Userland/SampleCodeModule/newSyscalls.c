@@ -126,3 +126,7 @@ void sys_post_semaphore(void * sem){
 void sys_printSems(){
     _systemCall(__SYSTEM_CALL_PRINT_SEMS);
 }
+
+void sys_wait_pid(pid_t pid) {
+    _systemCall(__SYSTEM_CALL_WAIT_PID, pid);
+}
