@@ -43,15 +43,15 @@ void closeSem(t_sem * sem){
     }
 }
 
-void wait(t_sem * sem, uint64_t pid){
+void waitSemaphore(t_sem * sem, uint64_t pid, t_stack currentProcessStackFrame){
     (sem->value)--;
     if(sem->value < 0){
         addElementToIndexList(sem->processes, (void *)pid, getSizeList(sem->processes));
-        lockProcess(pid);
+        lockProcess(pid, currentProcessStackFrame);
     }
 }
 
-void post(t_sem * sem){
+void postSemaphore(t_sem * sem){
     (sem->value)++;
     if(!isEmptyList(sem->processes)){
         uint64_t pid = (uint64_t) getElementList(getNodeAtIndexList(sem->processes, 0));

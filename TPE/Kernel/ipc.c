@@ -94,9 +94,9 @@ void closePipe(t_pipeADT pipe, t_process process) {
 	}
 }
 
-uint64_t read(t_pipeADT pipe, char *dst, uint64_t length){
+uint64_t readPipe(t_pipeADT pipe, char *dst, uint64_t length, t_stack currentProcessStackFrame){
 	if(pipe->readingPointer == pipe->writingPointer){ // no hay nada mas que leer
-		lockProcess(getProcessPid(pipe->readingProcess));
+		lockProcess(getProcessPid(pipe->readingProcess), currentProcessStackFrame);
 	}
 	uint64_t i;
 	for (i = 0; i < length; i++)
@@ -115,9 +115,9 @@ uint64_t read(t_pipeADT pipe, char *dst, uint64_t length){
 	return i;
 }
 
-uint64_t write(t_pipeADT pipe, char *src, uint64_t length){
+uint64_t writePipe(t_pipeADT pipe, char *src, uint64_t length, t_stack currentProcessStackFrame){
 	if((pipe->readingPointer + 1 == pipe->writingPointer) || ((pipe->writingPointer == pipe->buffer + _PIPE_BUFFER - 1) && (pipe->readingPointer == pipe->buffer))){ // no hay espacio para escribir
-		lockProcess(getProcessPid(pipe->writingProcess));
+		lockProcess(getProcessPid(pipe->writingProcess), currentProcessStackFrame);
 	}
 	uint64_t i;
 	for (i = 0; i < length; i++)

@@ -12,7 +12,6 @@ static void invalid_opcode(t_stack stackPointer);
 void _killProcessSyscallKernel();
 
 void exceptionDispatcher(uint64_t exception, t_stack stackPointer) {
-	printString("asds\n", 255, 255, 255);
 	switch(exception){
 		case ZERO_EXCEPTION_ID:
 			zero_division(stackPointer);
@@ -21,8 +20,6 @@ void exceptionDispatcher(uint64_t exception, t_stack stackPointer) {
 			invalid_opcode(stackPointer);
 		break;
 	}
-
-	printString("asds\n", 255, 255, 255);
 	updateProcessStackRegister(stackPointer, REGISTER_RIP, (uint64_t) _killProcessSyscallKernel);
 }
 
@@ -31,7 +28,6 @@ static void zero_division(t_stack stackPointer) {
 
 	printExceptions("ERROR: DIVISION POR CERO");
 	printStackFrame(stackPointer);
-
 }
 
 static void invalid_opcode(t_stack stackPointer){

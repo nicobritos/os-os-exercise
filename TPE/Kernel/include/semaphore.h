@@ -1,6 +1,7 @@
 #ifndef SEMAPHORE_H_
 #define SEMAPHORE_H_
 
+#include "process.h"
 #include "list.h"
 
 typedef struct t_sem{
@@ -13,8 +14,8 @@ t_sem * createSem(char * name);
 t_sem * openSem(char * name);
 void closeSem(t_sem * sem);
 
-void wait(t_sem * sem, uint64_t pid);
-void post(t_sem * sem);
+void waitSemaphore(t_sem * sem, uint64_t pid, t_stack currentProcessStackFrame);
+void postSemaphore(t_sem * sem);
 
 char * semListString();
 

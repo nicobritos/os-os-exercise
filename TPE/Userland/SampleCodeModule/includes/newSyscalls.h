@@ -24,7 +24,15 @@ typedef enum {
 	__SYSTEM_CALL_SET_PROCESS_MODE = 16,
 	__SYSTEM_CALL_GET_PROCESS_PRIORITY = 17,
 	__SYSTEM_CALL_SET_PROCESS_PRIORITY = 18,
-	__SYSTEM_CALL_GET_PROCESS_STATE = 19
+	__SYSTEM_CALL_GET_PROCESS_STATE = 19,
+	__SYSTEM_CALL_READ_PIPE = 20,
+	__SYSTEM_CALL_WRITE_PIPE = 21,
+	__SYSTEM_CALL_CREATE_SEM = 22,
+	__SYSTEM_CALL_OPEN_SEM = 23,
+	__SYSTEM_CALL_CLOSE_SEM = 24,
+	__SYSTEM_CALL_WAIT = 25,
+	__SYSTEM_CALL_POST = 26,
+	__SYSTEM_CALL_PRINT_SEMS = 27,
 } t_system_call;
 
 uint64_t sys_read(int fileDescriptor, void * buff, int length);
@@ -66,13 +74,21 @@ t_priority sys_get_process_priority(pid_t pid);
 void sys_set_process_priority(pid_t pid, t_priority priority);
 
 t_state sys_get_process_state(pid_t pid);
+
 int sys_readPipe(void * pipe, char *buffer, uint64_t size);
+
 int sys_writePipe(void * pipe, char *buffer, uint64_t size);
+
 void * sys_createSem(char *name);
+
 void * sys_openSem(char *name);
+
 void sys_closeSem(void * sem);
-void sys_wait(void * sem, uint64_t pid);
-void sys_post(void * sem);
+
+void sys_wait_semaphore(void * sem, uint64_t pid);
+
+void sys_post_semaphore(void * sem);
+
 void sys_printSems();
 
 #endif

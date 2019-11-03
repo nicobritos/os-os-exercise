@@ -156,7 +156,7 @@ void lockProcess(pid_t pid, t_stack stackFrame) {
 		dispatchProcess(idleProcess, stackFrame);
 }
 
-void unlockProcess(pid_t pid, t_stack stackFrame) {
+void unlockProcess(pid_t pid) {
 	nodeListADT processNode = getNodeWaitingQueue(pid);
 	if (processNode == NULL) return;
 	setProcessState(getProcessFromNode(processNode), P_READY);

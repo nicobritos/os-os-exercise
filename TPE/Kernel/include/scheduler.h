@@ -38,7 +38,7 @@
 	
 	void lockProcess(pid_t pid, t_stack stackFrame);
 	
-	void unlockProcess(pid_t pid, t_stack stackFrame);
+	void unlockProcess(pid_t pid);
 
 	void setOnProcessKillScheduler(void(_onProcessKill) (t_process process));
 
