@@ -9,5 +9,7 @@ int printf(const char* format, ...);
 
 int scanf(char * str , int bytes, int separator);
 
+char getCharWithZero();
+
 #endif  /* stdio__h___ */
 

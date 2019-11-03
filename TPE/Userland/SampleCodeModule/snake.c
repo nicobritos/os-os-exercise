@@ -2,6 +2,10 @@
 #include "includes/snake.h"
 #include "includes/stdio.h"
 #include "includes/stdlib.h"
+//#include "includes/syscalls.h"
+#include "includes/newSyscalls.h"
+
+void drawString(int x, int y, char * str , unsigned char r, unsigned char g, unsigned char b, unsigned char size);
 
 char fonts[130][8] = {
 
@@ -167,7 +171,8 @@ int count = 0;
 int totalScore = 0;
 
 void drawPixel(uint64_t x, uint64_t y, uint64_t r ,uint64_t g,uint64_t b) {
-  os_draw(x,y,r,g,b);
+  //os_draw(x,y,r,g,b);
+  sys_draw(x,y,r,g,b);
   return;
 }
 
@@ -242,8 +247,8 @@ void start(){
   snake_size = INITIAL_SNAKE_SIZE;
 
   //Clear the screen 
-  os_clear();
-  
+  //os_clear();
+  sys_clear();
   setupSnake();
   window();
 
@@ -269,7 +274,7 @@ void incrementSize(){
 
 int move(){
   char c;
-  while( c = getCharWithZero() ){
+  while( (c = getCharWithZero()) ){
       if(c!=0){
         count++;
       }
@@ -385,7 +390,7 @@ int increaseSize( int num ){
 
 void play(){
   int dead = 0;
-  int c = getchar();
+  getchar();
   delete((int)(RIGHT - 2 * SIZE)/2 - 200,(int)(BOTTOM - 2 * SIZE) / 2 - 200,SIZE * strlen(start_message),SIZE); // Borra el mensaje cuando aprieta la primer letra
   delete(SIZE,(int)(BOTTOM - 2 * SIZE) / 2 - 100,RIGHT-2*SIZE,SIZE);
   
@@ -395,7 +400,7 @@ void play(){
   int auxTicks;
 
   while(dead == 0){
-    auxTicks = os_ticks();
+    auxTicks = sys_ticks(&auxTicks);
 
     char sec[10];
     // itoa(play_seconds-start_seconds,sec,10);
@@ -406,7 +411,8 @@ void play(){
     int aux = totalScore;
 
     if(auxTicks >= (ticks + ticksTillRefresh)) {   
-      ticks = os_ticks();
+      //ticks = os_ticks();
+      ticks = sys_ticks(&auxTicks);
       dead = move();
     }
     if(aux != totalScore){
@@ -426,7 +432,8 @@ void showScore(){
 }
 
 int getseconds(){
-  uint64_t *currTime = os_time();
+  //uint64_t *currTime = os_time();
+  uint64_t *currTime = sys_time();
 
   // printf("%d%d , %d%d, %d%d",currTime[5],currTime[4],currTime[3],currTime[2],currTime[1],currTime[0]);
 
@@ -436,8 +443,7 @@ int getseconds(){
 }
 
 
-void snake_game(){
-
+int snake_game(int argc, char * argv[]){
   start();
   printSnake();
 
@@ -445,10 +451,10 @@ void snake_game(){
 
   showScore();
 
-  os_clear();
- 
+  //os_clear();
+  sys_clear();
+  return 0;
 }
-
 
 /* Sacado de internet, no recuerdo que pagina */
 void drawChar(int  x, int  y, unsigned char myChar, unsigned char r, unsigned char g, unsigned char b, unsigned char size) {

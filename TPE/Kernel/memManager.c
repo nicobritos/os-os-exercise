@@ -1,18 +1,20 @@
 #include "include/memManager.h"
+#include "include/lib.h"
 #define FALSE 0
 #define TRUE !FALSE
-#define NULL ((void *)0)
 
 #define MEM_SIZE 1048576 // 1 MiB (a parte de la usada para el arbol)
 
-#define TREE_ADDRESS ((void *) 0x0000000000050000)
-#define TREE_END_ADDRESS ((void *) 0x000000000009FFFF)
+#define TREE_ADDRESS ((void *) 0x0000000000050000L)
+#define TREE_END_ADDRESS ((void *) 0x000000000009FFFFL)
 #define TREE_MAX_SIZE ((uint64_t)((uint64_t)TREE_END_ADDRESS - (uint64_t)TREE_ADDRESS)) // 327680
 #define MAX_NODES 8192 // 2^(floor(log2((TREE_MAX_SIZE / sizeof(Node))))    (MAXIMA CANTIDAD DE NODOS QUE ENTRAN ENTRE TREE_ADDRESS Y TREE_END_ADDRESS)
 #define MIN_BLOCK_SIZE (MEM_SIZE / MAX_NODES) // 128
 
 #define MAX_LIST_NODES 8192  //2^(floor(log2((TREE_MAX_SIZE - sizeof(List))/ sizeof(ListNode)))    (MAXIMA CANTIDAD DE NODOS QUE ENTRAN ENTRE TREE_ADDRESS Y TREE_END_ADDRESS)
 #define MIN_PAGE_SIZE (MEM_SIZE / MAX_LIST_NODES) // 128
+
+// #define MODO_FREE_LIST
 
 typedef char bool;
 
@@ -74,6 +76,7 @@ Node createNode(void * address, uint64_t size, uint64_t pid){
 void * buddyAlloc(uint64_t size, uint64_t pid){
     uint64_t childBlockSize;
     for (childBlockSize = MIN_BLOCK_SIZE; childBlockSize < size; childBlockSize *= 2); // Me fijo cual es la menor potencia de 2 que es mayor al size
+    //return 0x7000000;
     void * ans = recursiveBuddyAlloc(size, pid, childBlockSize, root, MEM_SIZE);
     if(ans != NULL)
         memUsed += childBlockSize;
@@ -154,7 +157,7 @@ bool pBuddyFreeRec(uint64_t pid, void * address, Node * current){
     if((current->left == NULL) && (current->right == NULL)){ // es memoria ocupada
         if((pid == current->pid) && (address == current->address)){
             uint64_t i;
-            for ( i = 1; i < current->size; i*=2);
+            for ( i = MIN_BLOCK_SIZE; i < current->size; i*=2);
             memUsed -= i; 
             return TRUE; // liberar
         }

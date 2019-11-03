@@ -10,7 +10,9 @@ int strncmp(char* str1, char* str2, int n);
 
 int itoa(int num, char* string, int base);
 
-int atoi(char c);
+int atoi(char * s);
+
+int atox(char * s);
 
 void * malloc(uint64_t size);
 

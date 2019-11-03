@@ -43,22 +43,22 @@ static void invalid_opcode(uint64_t *stackPointer){
 
 void printIpAndRegs(uint64_t* stackPointer){
 
-	 char* regs[]= {"RAX ","RBX ","RCX ","RDX ","RBP ","RDI ","RSI ","R8 ","R9 ","R10 ","R11 ","R12 ","R13 ","R14 ","R15  "};
+	//  char* regs[]= {"RAX ","RBX ","RCX ","RDX ","RBP ","RDI ","RSI ","R8 ","R9 ","R10 ","R11 ","R12 ","R13 ","R14 ","R15  "};
 
-	 /*stack frame tiene la direccion del
-	 r15. adelante esta r14 y asi sucesivamente. uno antes de r15 esta la direccion
-	 de retorno de la handler que seria el rip. */
+	//  /*stack frame tiene la direccion del
+	//  r15. adelante esta r14 y asi sucesivamente. uno antes de r15 esta la direccion
+	//  de retorno de la handler que seria el rip. */
 
-	 int j=0;
-	 int i=0;
-	for (i =14, j=0; i>=0; i--, j++){
-		newLine();
-		printString(regs[i],255,255,255);
-		printHexa(stackPointer[j]);
-	}
-	newLine();
-	printString("RIP ",255,255,255);
-	printHexa(stackPointer[j]);
-	newLine();
+	//  int j=0;
+	//  int i=0;
+	// for (i =14, j=0; i>=0; i--, j++){
+	// 	newLine();
+	// 	printString(regs[i],255,255,255);
+	// 	printHexa(stackPointer[j]);
+	// }
+	// newLine();
+	// printString("RIP ",255,255,255);
+	// printHexa(stackPointer[j]);
+	// newLine();
 
   }

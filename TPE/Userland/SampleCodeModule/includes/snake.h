@@ -12,7 +12,6 @@
 #define INITIAL_SNAKE_SIZE 5
 #define MAX_SNAKE 100
 
-
-
+int snake_game(int argc, char * argv[]);
 
 #endif  /* SNAKE_H_ */
