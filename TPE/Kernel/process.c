@@ -128,7 +128,7 @@ void updateProcessStack(t_stack dst, t_stack src) {
     dst->ss = src->ss;
 }
 
-void updateProcessStackRegister(t_stack stackFrame, uint64_t value, t_process_register processRegister) {
+void updateProcessStackRegister(t_stack stackFrame, t_process_register processRegister, uint64_t value) {
     switch (processRegister) {
         case REGISTER_R15:
             stackFrame->r15 = value;

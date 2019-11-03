@@ -52,7 +52,7 @@ void setProcessState(t_process process, t_state state);
 
 void updateProcessStack(t_stack dst, t_stack src);
 
-void updateProcessStackRegister(t_stack stackFrame, uint64_t value, t_process_register processRegister);
+void updateProcessStackRegister(t_stack stackFrame, t_process_register processRegister, uint64_t value);
 
 t_state getProcessState(t_process process);
 
