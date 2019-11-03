@@ -2,7 +2,8 @@
 #include "includes/snake.h"
 #include "includes/stdio.h"
 #include "includes/stdlib.h"
-#include "includes/syscalls.h"
+//#include "includes/syscalls.h"
+#include "includes/newSyscalls.h"
 
 void drawString(int x, int y, char * str , unsigned char r, unsigned char g, unsigned char b, unsigned char size);
 
@@ -170,7 +171,8 @@ int count = 0;
 int totalScore = 0;
 
 void drawPixel(uint64_t x, uint64_t y, uint64_t r ,uint64_t g,uint64_t b) {
-  os_draw(x,y,r,g,b);
+  //os_draw(x,y,r,g,b);
+  sys_draw(x,y,r,g,b);
   return;
 }
 
@@ -245,8 +247,8 @@ void start(){
   snake_size = INITIAL_SNAKE_SIZE;
 
   //Clear the screen 
-  os_clear();
-  
+  //os_clear();
+  sys_clear();
   setupSnake();
   window();
 
@@ -398,7 +400,7 @@ void play(){
   int auxTicks;
 
   while(dead == 0){
-    auxTicks = os_ticks();
+    auxTicks = sys_ticks(&auxTicks);
 
     char sec[10];
     // itoa(play_seconds-start_seconds,sec,10);
@@ -409,7 +411,8 @@ void play(){
     int aux = totalScore;
 
     if(auxTicks >= (ticks + ticksTillRefresh)) {   
-      ticks = os_ticks();
+      //ticks = os_ticks();
+      ticks = sys_ticks(&auxTicks);
       dead = move();
     }
     if(aux != totalScore){
@@ -429,7 +432,9 @@ void showScore(){
 }
 
 int getseconds(){
-  uint64_t *currTime = os_time();
+  //uint64_t *currTime = os_time();
+  int currTime[6];
+  sys_time(currTime);
 
   // printf("%d%d , %d%d, %d%d",currTime[5],currTime[4],currTime[3],currTime[2],currTime[1],currTime[0]);
 
@@ -447,7 +452,8 @@ int snake_game(int argc, char * argv[]){
 
   showScore();
 
-  os_clear();
+  //os_clear();
+  sys_clear();
   return 0;
 }
 

@@ -1,5 +1,6 @@
 #include "includes/defines.h"
-#include "includes/syscalls.h"
+//#include "includes/syscalls.h"
+#include "includes/newSyscalls.h"
 #include <stdint.h>
 
 
@@ -137,11 +138,13 @@ int atox(char * s){
 }
 
 void * malloc(uint64_t size){
-	return os_malloc(size, 0); //CAMBIAR 0 POR GETPID
+	// return os_malloc(size, 0); CAMBIAR 0 POR GETPID
+	return sys_malloc(size, 0);
 }
 
 void free(void * address){
-	os_free(address, 0); //CAMBIAR 0 POR GETPID
+	//os_free(address, 0); CAMBIAR 0 POR GETPID
+	sys_free(address,0);
 }
 
 unsigned int lineCount(char * input){

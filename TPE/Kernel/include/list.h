@@ -1,4 +1,5 @@
 #ifndef _LIST_DATA_STRUCTURE_H
+	#include <stdint.h>
 	#define _LIST_DATA_STRUCTURE_H
 
 	typedef struct nodeListCDT *nodeListADT;

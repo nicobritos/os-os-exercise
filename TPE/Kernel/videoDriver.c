@@ -1,12 +1,11 @@
 #include <stdint.h>
 #include "naiveConsole.h"
-#include "./include/lib.h"
+#include "include/lib.h"
 
 /*
  * Prototipos
  */
 void backspace();
-int strlen(const char * str);
 void putPixel(uint64_t x,uint64_t y, unsigned char r, unsigned char g, unsigned char b);
 void fillRect(unsigned char x, unsigned char y, uint16_t width, uint16_t height, unsigned char r, unsigned char g, unsigned char b);
 void drawCharForString(char* pos, char myChar, unsigned char pixelWidth, int pitch, unsigned char r, unsigned char g, unsigned char b);
@@ -200,14 +199,6 @@ static int cursorYStart = 10;
 static int cursorY = 10;
 
 int maxLines = 38 ;
-
-int strlen(const char * str) {
-    int i = 0;
-    while(*(str+i)) {
-        i++;
-    }
-    return i;
-}
 
 /*
  * https://wiki.osdev.org/Drawing_In_Protected_Mode
