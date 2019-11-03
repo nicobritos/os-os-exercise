@@ -4,6 +4,8 @@
 static t_process processes[MAX_PROC] = {0};
 
 void _killProcessSyscallKernel();
+void _reboot();
+
 
 t_process newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], t_priority priority, t_mode mode) {
     char finished = 0;
@@ -35,11 +37,14 @@ int processWrapper(int argc, char * argv[], int(* startingPoint)(int argc, char*
     return retValue;
 }
 
-void freeProcessHandler(t_process process) {
-    pid_t pid = getProcessPid(process);
+void killProcessHandler(pid_t pid, t_stack currentProcessStackFrame) {
     if (pid != SYSTEM_PID && pid < MAX_PROC) {
+        t_process process = processes[pid];
         processes[pid] = 0;
+        killProcess(pid, currentProcessStackFrame);
         freeProcess(process);
+    } else if (pid == SYSTEM_PID) {
+        updateProcessStackRegister(currentProcessStackFrame, REGISTER_RIP, (uint64_t) _reboot);
     }
 }
 

@@ -21,6 +21,7 @@ static void * const sampleCodeModuleAddress = (void*)0x400000;
 static void * const sampleDataModuleAddress = (void*)0x500000;
 
 void idleKernel();
+void _reboot();
 
 void clearBSS(void * bssAddress, uint64_t bssSize) {
 	memset(bssAddress, 0, bssSize);
@@ -52,9 +53,7 @@ int main(){
 
 	initializeMemoryManager();
 	initializeScheduler();
-	setOnProcessKillScheduler(freeProcessHandler);
 	load_idt();
-
 	newProcess("shell", sampleCodeModuleAddress, SYSTEM_PID, 0, NULL, S_P_LOW, S_M_FOREGROUND);
 
 	pushsti();
@@ -62,7 +61,6 @@ int main(){
 	return 0;
 }
 
-
-void reboot(){
+void _reboot(){
 	main();
 }

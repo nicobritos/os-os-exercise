@@ -220,7 +220,7 @@ pid_t sys_new_process(char * name, int(* foo)(int argc, char** argv), int argc, 
 }
 
 void sys_free_process(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack stackFrame) {
-	killProcess(pid, stackFrame);
+	killProcessHandler(pid, stackFrame);
 }
 
 pid_t sys_get_pid(){

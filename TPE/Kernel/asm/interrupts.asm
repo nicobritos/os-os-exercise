@@ -208,7 +208,7 @@ _killProcessSyscallKernel:
 
   xor rax, rax
   call getProcessPid
-  mov rdi, 7 ; freeProcess (see syscalls.c)
+  mov rdi, 7 ; killProcess (see syscalls.c)
   mov rsi, rax
 
   int 80h

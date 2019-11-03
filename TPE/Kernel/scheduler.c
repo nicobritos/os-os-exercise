@@ -121,10 +121,11 @@ void killProcess(pid_t pid, t_stack stackFrame) {
 	if (processNode == currentProcessNode) {
 		setProcessState(getProcessFromNode(processNode), P_DEAD);
 		currentProcessNode = fetchNextNode();
-		if (currentProcessNode != NULL)
+		if (currentProcessNode != NULL) {
 			dispatchProcess(getProcessFromNode(currentProcessNode), stackFrame);
-		else
+		} else {
 			dispatchProcess(idleProcess, stackFrame);
+		}
 	}
 
 	removeProcess(processNode, readyQueue);
@@ -327,6 +328,8 @@ nodeListADT fetchNextNode() {
 		}
 	}
 	if (currentNode == currentProcessNode) {
+		t_state state = getProcessState(getProcessFromNode(currentNode));
+		if (state != P_READY && state != P_RUNNING) return NULL;
 		return currentNode;
 	}
 	if (getSizeList(readyQueue) == 0 || currentNode == NULL || getProcessState(getProcessFromNode(currentNode)) != P_READY) {
@@ -402,8 +405,8 @@ t_process getProcessFromNode(nodeListADT node) {
 	return getProcessNodeFromNode(node)->process;
 }
 
-uint8_t equalsPid(void *_process, void *_pid) {
-	t_process process = (t_process ) process;
+uint8_t equalsPid(void *processNode, void *_pid) {
+	t_process process = ((processNodeADT) processNode)->process;
 	pid_t pid = (pid_t) _pid;
 	return getProcessPid(process) == pid;
 }
