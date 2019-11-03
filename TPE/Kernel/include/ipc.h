@@ -19,8 +19,8 @@
 	typedef struct t_pipeCDT *t_pipeADT;
 	typedef struct t_pipe_listCDT *t_pipe_listADT;
 
-	t_pipeADT openPipe(const char *name, uint8_t mode, int pid);
-	void closePipe(t_pipeADT pipe, int pid);
+	t_pipeADT openPipe(const char *name, uint8_t mode, t_process process);
+	void closePipe(t_pipeADT pipe, t_process process);
 
 	uint64_t read(t_pipeADT pipe, char *dst, uint64_t length);
 	uint64_t write(t_pipeADT pipe, char *src, uint64_t length);

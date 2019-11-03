@@ -17,7 +17,7 @@ int sys_clear();
 int sys_read(uint64_t fd, char *buffer, uint64_t size);
 int sys_write(uint64_t fd, char *buffer, uint64_t size);
 int sys_draw(uint64_t x, uint64_t y, unsigned char r, unsigned char g, unsigned char b);
-int * sys_time(uint64_t * time);
+int * sys_time(int * time);
 uint64_t sys_usedMem();
 uint64_t sys_freeMem(void);
 void * sys_malloc(uint64_t size, uint64_t pid);
@@ -25,7 +25,8 @@ void sys_free(void * address, uint64_t pid);
 void * sys_newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], void * returnPosition);
 void sys_freeProcess(void * process);
 int sys_getPid(void * process);
-int sys_exec(void * process);
+int sys_readPipe(t_pipeADT pipe, char *buffer, uint64_t size);
+int sys_writePipe(t_pipeADT pipe, char *buffer, uint64_t size);
 
 systemCall sysCalls[] = { 0, 0, 0,
         (systemCall) sys_read,
@@ -33,7 +34,6 @@ systemCall sysCalls[] = { 0, 0, 0,
         (systemCall) sys_clear,
 		(systemCall) sys_draw,
 		(systemCall) sys_time,
-		(systemCall) sys_exec,
 		(systemCall) sys_getPid,
 		(systemCall) sys_newProcess,
 		(systemCall) sys_freeProcess,
@@ -43,8 +43,8 @@ systemCall sysCalls[] = { 0, 0, 0,
 		(systemCall) sys_usedMem,
 		(systemCall) sys_freeMem,
 		(systemCall) sys_malloc,
-		(systemCall) sys_read_pipe,
-		(systemCall) sys_write_pipe,
+		(systemCall) sys_readPipe,
+		(systemCall) sys_writePipe,
 };
 
 int syscallHandler(unsigned long rdi, unsigned long rsi, unsigned long rdx, unsigned long rcx, unsigned long r8, unsigned long r9, unsigned long r10){
@@ -63,6 +63,7 @@ int sys_ticksPerSecond(int * ticks) {
 
 int sys_clear() {
 	clearAll();
+	return 0;
 }
 
 /*
@@ -106,9 +107,10 @@ int sys_write(uint64_t fd, char *buffer, uint64_t size){
 
 int sys_draw(uint64_t x, uint64_t y, unsigned char r, unsigned char g, unsigned char b) {
 	putPixel(x,y,r,g,b);
+	return 0;
 }
 
-int * sys_time(uint64_t * time) {
+int * sys_time(int * time) {
 	uint64_t hour = getHour();
 	uint64_t min = getMin();
 	uint64_t sec = getSec(); 
@@ -147,30 +149,21 @@ void sys_free(void * address, uint64_t pid){
 	pfree(address, pid);
 }
 
-uint64_t sys_read_pipe(t_pipeADT pipe, char *buffer, uint64_t size){
+int sys_readPipe(t_pipeADT pipe, char *buffer, uint64_t size){
 	return read(pipe, buffer, size);
 }
 
-uint64_t sys_write_pipe(t_pipeADT pipe, char *buffer, uint64_t size){
+int sys_writePipe(t_pipeADT pipe, char *buffer, uint64_t size){
 	return write(pipe, buffer, size);
 }
 void * sys_newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], void *trash){
-	// return newProcess(name, foo, ppid, argc, argv, priority, mode);
 	return newProcess(name, foo, ppid, argc, argv, S_P_LOW, S_M_FOREGROUND);
 }
 
 void sys_freeProcess(void * process){
-	// free(process);
+	freeProcess(process);
 }
 
 int sys_getPid(void * process){
 	return getProcessPid(process);
 }
-
-int sys_exec(void * process){
-	// return exec(process);
-}
-
-
-
-

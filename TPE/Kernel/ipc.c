@@ -1,12 +1,12 @@
-#include "memManager.h"
-#include "scheduler.h"
-#include "process.h"
-#include "string.h"
-#include "ipc.h"
+#include "include/memManager.h"
+#include "include/scheduler.h"
+#include "include/process.h"
+#include "include/lib.h"
+#include "include/ipc.h"
 
 typedef struct t_pipeCDT {
-	int readingPid;
-	int writingPid;
+	t_process readingProcess;
+	t_process writingProcess;
 	char buffer[_PIPE_BUFFER];
 	char *readingPointer;
 	char *writingPointer;
@@ -28,7 +28,7 @@ static t_pipeADT firstPipe = NULL;
 t_pipeADT getPreviousPipeWithName(const char *name);
 
 // PUBLIC
-t_pipeADT openPipe(const char *name, uint8_t mode, int pid) {
+t_pipeADT openPipe(const char *name, uint8_t mode, t_process process) {
 	if (name == NULL) return NULL;
 	t_pipeADT existingPipe = getPreviousPipeWithName(name);
 	t_pipeADT newPipe;
@@ -38,23 +38,23 @@ t_pipeADT openPipe(const char *name, uint8_t mode, int pid) {
 			newPipe = firstPipe = pmalloc(sizeof(t_pipeCDT), SYSTEM_PID);
 			if (newPipe == NULL) return NULL; // TODO: Error
 			
-			newPipe->name = name;
+			strcpy(newPipe->name,name);
 			newPipe->next = newPipe->previous = NULL;
 		} else {
 			return NULL;
 		}
 	} else {
 		if (strcmp(existingPipe->name, name) == 0) {
-			if (mode & _PIPE_CREATE || (mode & _PIPE_READ && existingPipe->readingPid >= 0) || (mode & _PIPE_WRITE && existingPipe->writingPid >= 0)) {
+			if (mode & _PIPE_CREATE || (mode & _PIPE_READ && existingPipe->readingProcess != NULL) || (mode & _PIPE_WRITE && existingPipe->writingProcess != 0)) {
 				return NULL;
 			}
 
 			if (mode & _PIPE_READ) {
 				existingPipe->readingPointer = existingPipe->buffer;
-				existingPipe->readingPid = pid;
+				existingPipe->readingProcess = process;
 			} else if (mode & _PIPE_WRITE) {
 				existingPipe->writingPointer = existingPipe->buffer;
-				existingPipe->writingPid = pid;
+				existingPipe->writingProcess = process;
 			}
 
 			return existingPipe;
@@ -62,7 +62,7 @@ t_pipeADT openPipe(const char *name, uint8_t mode, int pid) {
 			newPipe = pmalloc(sizeof(t_pipeCDT), SYSTEM_PID);
 			if (newPipe == NULL) return NULL; // TODO: Error
 
-			newPipe->name = name;
+			strcpy(newPipe->name, name);
 			newPipe->next = existingPipe->next;
 			newPipe->previous = existingPipe;
 			if (existingPipe->next != NULL) {
@@ -73,30 +73,30 @@ t_pipeADT openPipe(const char *name, uint8_t mode, int pid) {
 		}
 	}
 
-	newPipe->name = name;
+	strcpy(newPipe->name, name);
 	newPipe->readingPointer = newPipe->writingPointer = newPipe->buffer;
 	if (mode & _PIPE_READ) {
-		newPipe->readingPid = pid;
+		newPipe->readingProcess = process;
 	} else if (mode & _PIPE_WRITE) {
-		newPipe->writingPid = pid;
+		newPipe->writingProcess = process;
 	}
 
 	return newPipe;
 }
 
-void closePipe(t_pipeADT pipe, int pid) {
+void closePipe(t_pipeADT pipe, t_process process) {
 	if (pipe == NULL) return;
-	if (pid == pipe->readingPid) pipe->readingPid = -1;
-	if (pid == pipe->writingPid) pipe->writingPid = -1;
+	if (process == pipe->readingProcess) pipe->readingProcess = NULL;
+	if (process == pipe->writingProcess) pipe->writingProcess = NULL;
 
-	if (pipe->readingPid == -1 && pipe->writingPid == -1) {
+	if (pipe->readingProcess == NULL && pipe->writingProcess == NULL) {
 		pfree(pipe, SYSTEM_PID);
 	}
 }
 
 uint64_t read(t_pipeADT pipe, char *dst, uint64_t length){
 	if(pipe->readingPointer == pipe->writingPointer){ // no hay nada mas que leer
-		lockProcess(pipe->readingPid);
+		lockProcess(getProcessPid(pipe->readingProcess));
 	}
 	uint64_t i;
 	for (i = 0; i < length; i++)
@@ -109,15 +109,15 @@ uint64_t read(t_pipeADT pipe, char *dst, uint64_t length){
 		}
 	}
 	dst[i] = 0;
-	if( (getProcessState(pipe->writingPid) == LOCKED) && (length != 0)){ // genere espacio
-		unlockProcess(pipe->writingPid);
+	if( (getProcessState(pipe->writingProcess) == P_LOCKED) && (length != 0)){ // genere espacio
+		unlockProcess(getProcessPid(pipe->writingProcess));
 	}
 	return i;
 }
 
 uint64_t write(t_pipeADT pipe, char *src, uint64_t length){
 	if((pipe->readingPointer + 1 == pipe->writingPointer) || ((pipe->writingPointer == pipe->buffer + _PIPE_BUFFER - 1) && (pipe->readingPointer == pipe->buffer))){ // no hay espacio para escribir
-		lockProcess(pipe->writingPid);
+		lockProcess(getProcessPid(pipe->writingProcess));
 	}
 	uint64_t i;
 	for (i = 0; i < length; i++)
@@ -129,8 +129,8 @@ uint64_t write(t_pipeADT pipe, char *src, uint64_t length){
 			(pipe->writingPointer)++;
 		}
 	}
-	if((getProcessState(pipe->readingPid) == LOCKED) && (length != 0)){ // hay algo para leer
-		unlockProcess(pipe->readingPid);
+	if((getProcessState(pipe->readingProcess) == P_LOCKED) && (length != 0)){ // hay algo para leer
+		unlockProcess(getProcessPid(pipe->readingProcess));
 	}
 	return i;
 }
@@ -156,7 +156,7 @@ t_pipe_listADT createPipeList() {
 	pipeList->initialized = 0;
 	pipeList->length = 0;
 
-	t_pipeADT pipeListNode;
+	t_pipeADT pipeListNode = NULL;
 	t_pipeADT previousPipeListNode = NULL;
 	t_pipeADT pipe = firstPipe;
 	while (pipe != NULL) {
@@ -226,44 +226,3 @@ void freePipeList(t_pipe_listADT pipeList) {
 		pfree(pipeList, SYSTEM_PID);
 	}
 }
-
-uint64_t read(t_pipeADT pipe, char *dst, uint64_t length){
-	if(pipe->readingPointer == pipe->writingPointer){ // no hay nada mas que leer
-		blockProcess(pipe->readingPid);
-	}
-	uint64_t i;
-	for (i = 0; i < length; i++)
-	{
-		dst[i] = *(pipe->readingPointer);
-		if(pipe->readingPointer == pipe->buffer + _PIPE_BUFFER - 1)
-			pipe->readingPointer = pipe->buffer;
-		else{
-			(pipe->readingPointer)++;
-		}
-	}
-	dst[i] = 0;
-	if( (getState(pipe->writingPid) == BLOCKED) && (length != 0)){ // genere espacio
-		unlockProcess(pipe->writingPid);
-	}
-	return i;
-}
-
-uint64_t write(t_pipeADT pipe, char *src, uint64_t length){
-	if((pipe->readingPointer + 1 == pipe->writingPointer) || ((pipe->writingPointer == pipe->buffer + _PIPE_BUFFER - 1) && (pipe->readingPointer == pipe->buffer))){ // no hay espacio para escribir
-		blockProcess(pipe->writingPid);
-	}
-	uint64_t i;
-	for (i = 0; i < length; i++)
-	{
-		*(pipe->writingPointer) = src[i];
-		if(pipe->writingPointer == pipe->buffer + _PIPE_BUFFER - 1)
-			pipe->writingPointer = pipe->buffer;
-		else{
-			(pipe->writingPointer)++;
-		}
-	}
-	if((getState(pipe->readingPid) == BLOCKED) && (length != 0)){ // hay algo para leer
-		unlockProcess(pipe->readingPid);
-	}
-	return i;
-} 

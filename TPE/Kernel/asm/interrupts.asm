@@ -204,20 +204,6 @@ _syscallHandler:
   pop rax
 	iretq
 
-.syscallReadPipe:
-  mov rdi, rsi 	; re-ordering the arguments to send to sys_read
-  mov rsi, rdx
-  mov rdx, rcx
-  call sys_read_pipe
-  jmp .cont
-
-.syscallWritePipe:
-  mov rdi, rsi 	; re-ordering the arguments to send to sys_write
-  mov rsi, rdx
-  mov rdx, rcx
-  call sys_write_pipe
-  jmp .cont
-
 ;Zero Division Exception
 _exception0Handler:
 	exceptionHandler 0

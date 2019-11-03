@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "include/lib.h"
 
 void * memset(void * destination, int32_t c, uint64_t length)
 {
@@ -47,4 +48,31 @@ void * memcpy(void * destination, const void * source, uint64_t length)
 	}
 
 	return destination;
+}
+
+int strcmp(const char* str1, const char* str2) {		
+	int i = 0;
+	int length1 = strlen(str1);
+	int length2 = strlen(str2);
+	
+	while(i < length1 && i < length2 && str1[i] == str2[i]) {
+		i++;
+	}
+
+	return str1[i] - str2[i];
+}
+
+int strlen(const char* str){
+	int i = 0;
+	while (*(str + i) != 0){
+		i++;
+	}
+	return i;
+}
+
+void strcpy(char * dest, const char * src){
+	while(src){
+		*dest = *src;
+		src++;
+	}
 }

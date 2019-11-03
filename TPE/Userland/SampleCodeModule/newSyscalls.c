@@ -23,7 +23,7 @@ int sys_draw( int x, int y, int red, int green, int blue)
 }
 
 int * sys_time(){
-    return _systemCall(7,0,0,0,0,0,0);
+    return (int *)_systemCall(7,0,0,0,0,0,0);
 }
 
 int sys_exec(void * process)
@@ -38,17 +38,17 @@ int sys_getPid(void * process)
 
 void * sys_newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], void * returnPosition)
 {
-    return _systemCall(10,name,foo,ppid,argc,argv,returnPosition);
+    return (void *)_systemCall(10,name,foo,ppid,argc,argv,returnPosition);
 }
 
 void sys_freeProcess(void * process)
 {
-    return _systemCall(11,process,0,0,0,0,0);
+    _systemCall(11,process,0,0,0,0,0);
 }
 
 void sys_free(void * address, uint64_t size)
 {
-    return _systemCall(12,address,size,0,0,0,0);    
+    _systemCall(12,address,size,0,0,0,0);    
 }
 
 int sys_ticks(int * ticks)
@@ -63,23 +63,22 @@ int sys_ticksPerSecond(int * ticks)
 
 uint64_t sys_usedMem(void)
 {
-    return _systemCall(15,0,0,0,0,0,0);
+    return (uint64_t)_systemCall(15,0,0,0,0,0,0);
 }
 
 uint64_t sys_freeMem(void)
 {
-    return _systemCall(16,0,0,0,0,0,0);
+    return (uint64_t)_systemCall(16,0,0,0,0,0,0);
 }
 
 void * sys_malloc(uint64_t size, uint64_t pid)
 {
-    return _systemCall(17,size,pid,0,0,0,0);
+    return (void *)_systemCall(17,size,pid,0,0,0,0);
 }
 
-
-
-
-
-
-
-
+int sys_readPipe(void * pipe, char *buffer, uint64_t size){
+    return _systemCall(18, pipe, buffer, size, 0,0,0);
+}
+int sys_writePipe(void * pipe, char *buffer, uint64_t size){
+    return _systemCall(19, pipe, buffer, size, 0,0,0);
+}
