@@ -24,7 +24,6 @@ GLOBAL _syscall
 EXTERN irqDispatcher
 EXTERN exceptionDispatcher
 
-
 SECTION .text
 
 %macro pushState 0
@@ -106,8 +105,10 @@ SECTION .text
 %endmacro
 
 %macro exceptionHandler 1
-cli
-pushState
+  push rbp
+  mov rbp, rsp
+  cli
+  pushState
 
 	mov rdi, %1 ; first parameter
 	mov rsi, rsp ; second parameter
@@ -115,8 +116,10 @@ pushState
 	call exceptionDispatcher
 
 	popState
-	mov qword [rsp],0x400000
   sti
+  mov rsp, rbp
+  pop rbp
+  mov qword [rsp],reboot
 	iretq
 %endmacro
 

@@ -1,9 +1,12 @@
+section .text
+
 GLOBAL getSec
 GLOBAL getMin
 GLOBAL getHour
 GLOBAL getTime 
 
-section .text
+EXTERN pushcli
+EXTERN pushsti
 
 ;
 ; INFO extraida de: 
@@ -15,17 +18,22 @@ section .text
 ; Seteo el formato con la informacion 
 ; extraida de la pagina mencionada anteriormente
 ; 
-GLOBAL getHour
-GLOBAL getMin
-GLOBAL getSec
-section .text
 
 getTime:
+	push rax
+  	call pushcli
+	pop rax
 	out 70h, al
 	in al, 71h
+	push rax
+  	call pushsti
+	pop rax
 	ret
 
 getHour:
+	push rax
+  	call pushcli
+	pop rax
     push rbp
     mov rbp, rsp
     call configStatusRegisterB
@@ -34,9 +42,15 @@ getHour:
     call getTime
     mov rsp, rbp
     pop rbp
+	push rax
+  	call pushsti
+	pop rax
     ret
 
 getMin:
+	push rax
+  	call pushcli
+	pop rax
 	push rbp
   	mov rbp, rsp
   	call configStatusRegisterB
@@ -45,9 +59,15 @@ getMin:
 	call getTime
 	mov rsp, rbp
 	pop rbp
+	push rax
+  	call pushsti
+	pop rax
 	ret
 
 getSec:
+	push rax
+  	call pushcli
+	pop rax
  	push rbp
   	mov rbp, rsp
   	call configStatusRegisterB
@@ -55,9 +75,15 @@ getSec:
 	call getTime
 	mov rsp, rbp
   	pop rbp
+	push rax
+  	call pushsti
+	pop rax
 	ret
 
 configStatusRegisterB:
+	push rax
+  	call pushcli
+	pop rax
 	push rbp
   	mov rbp, rsp
 	mov al,0x0B ; RTC Status Register B
@@ -67,5 +93,8 @@ configStatusRegisterB:
 	out 71h, al
 	mov rsp, rbp
   	pop rbp
+	push rax
+  	call pushsti
+	pop rax
 	ret
 
