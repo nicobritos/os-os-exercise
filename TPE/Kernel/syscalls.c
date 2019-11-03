@@ -107,7 +107,7 @@ void syscallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint
 	if (rdi < sizeof(sysCalls) / sizeof(*sysCalls)) returnValue = sysCalls[rdi](rsi, rdx, rcx, r8, stackFrame);
 	else returnValue = sys_not_implemented();
 
-	updateProcessStackRegister(stackFrame, returnValue, REGISTER_RAX);
+	updateProcessStackRegister(stackFrame, REGISTER_RAX, returnValue);
 }
 
 uint64_t sys_not_implemented() {
