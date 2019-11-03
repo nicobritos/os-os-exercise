@@ -5,8 +5,8 @@
 #define true 1
 #define false 0
 
-typedef int boolean;
-
 #define BUFFER_LENGTH 1000
+
+typedef int boolean;
 
 #endif /* DEFINES_H_ */

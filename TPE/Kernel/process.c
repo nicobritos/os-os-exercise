@@ -1,3 +1,4 @@
+#include "videoDriver.h"
 #include "memManager.h"
 #include "process.h"
 
@@ -127,6 +128,57 @@ void updateProcessStack(t_stack dst, t_stack src) {
     dst->ss = src->ss;
 }
 
+void updateProcessStackRegister(t_stack stackFrame, uint64_t value, t_process_register processRegister) {
+    switch (processRegister) {
+        case REGISTER_RAX:
+            stackFrame->rax = value;
+            break;
+        case REGISTER_RBX:
+            stackFrame->rbx = value;
+            break;
+        case REGISTER_RCX:
+            stackFrame->rcx = value;
+            break;
+        case REGISTER_RDX:
+            stackFrame->rdx = value;
+            break;
+
+        case REGISTER_RSI:
+            stackFrame->rsi = value;
+            break;
+        case REGISTER_RDI:
+            stackFrame->rdi = value;
+            break;
+
+        case REGISTER_R8:
+            stackFrame->r8 = value;
+            break;
+        case REGISTER_R9:
+            stackFrame->r9 = value;
+            break;
+        case REGISTER_R10:
+            stackFrame->r10 = value;
+            break;
+        case REGISTER_R11:
+            stackFrame->r11 = value;
+            break;
+        case REGISTER_R12:
+            stackFrame->r12 = value;
+            break;
+        case REGISTER_R13:
+            stackFrame->r13 = value;
+            break;
+        case REGISTER_R14:
+            stackFrame->r14 = value;
+            break;
+        case REGISTER_R15:
+            stackFrame->r15 = value;
+            break;
+
+        default: break;
+    }
+}
+
 void setProcessState(t_process process, t_state state) {
     process->state = state;
 }
@@ -141,6 +193,10 @@ t_stack getProcessStackFrame(t_process process) {
 
 pid_t getProcessPid(t_process process) {
     return process->pid;
+}
+
+pid_t getProcessPPid(t_process process) {
+    return process->pPid;
 }
 
 void execve(t_process process, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {

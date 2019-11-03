@@ -12,6 +12,25 @@ typedef int64_t pid_t;
 
 typedef enum {P_RUNNING, P_READY, P_WAITING, P_DEAD, P_LOCKED, P_INVALID} t_state;
 
+typedef enum {
+	REGISTER_RAX,
+	REGISTER_RBX,
+	REGISTER_RCX,
+	REGISTER_RDX,
+	
+	REGISTER_RSI,
+	REGISTER_RDI,
+
+	REGISTER_R8,
+	REGISTER_R9, 
+	REGISTER_R10,
+	REGISTER_R11,
+	REGISTER_R12,
+	REGISTER_R13,
+	REGISTER_R14,
+	REGISTER_R15 
+} t_process_register;
+
 typedef struct t_processCDT *t_process;
 typedef struct t_stackCDT *t_stack;
 
@@ -23,11 +42,15 @@ void setProcessState(t_process process, t_state state);
 
 void updateProcessStack(t_stack dst, t_stack src);
 
+void updateProcessStackRegister(t_stack stackFrame, uint64_t value, t_process_register processRegister);
+
 t_state getProcessState(t_process process);
 
 t_stack getProcessStackFrame(t_process process);
 
 pid_t getProcessPid(t_process process);
+
+pid_t getProcessPPid(t_process process);
 
 void execve(t_process process, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), int argc, char * argv[], int(* startingPoint)(int argc, char** argv));
 

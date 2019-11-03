@@ -138,13 +138,11 @@ int atox(char * s){
 }
 
 void * malloc(uint64_t size){
-	// return os_malloc(size, 0); CAMBIAR 0 POR GETPID
-	return sys_malloc(size, 0);
+	return sys_malloc(size);
 }
 
 void free(void * address){
-	//os_free(address, 0); CAMBIAR 0 POR GETPID
-	sys_free(address,0);
+	sys_free(address);
 }
 
 unsigned int lineCount(char * input){

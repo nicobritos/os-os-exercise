@@ -113,7 +113,6 @@ SECTION .text
   call pushcli
   pop rax
 
-
   mov rdi, %1 ; first parameter
   mov rsi, rsp ; second parameter
 
@@ -198,12 +197,14 @@ _irq04Handler:
 _irq05Handler:
   irqHandlerMaster 5
 
-
-
 _syscallHandler:
+  pushState
+
   push rax
   call pushcli
 	pop rax
+
+  mov r9, rsp; pasaje de parametro del puntero a los registros
 
   push rbp
 	mov rbp, rsp
@@ -213,9 +214,13 @@ _syscallHandler:
 	mov rsp, rbp
 	pop rbp
 
+
   push rax
   call pushsti
   pop rax
+
+  popState
+
 	iretq
 
 ;Zero Division Exception
