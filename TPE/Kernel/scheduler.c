@@ -29,20 +29,46 @@ static void (*onProcessKill) (t_process process) = NULL;
 
 void idleFunction();
 
+
+void runSchedulerForce(t_stack currentProcessStack, uint8_t force);
+
 void loadNextProcess(t_stack currentProcessStack);
+
 nodeListADT fetchNextNode();
+
 void dispatchProcess(t_process process, t_stack currentProcessStack);
+
+nodeListADT getNodePid(pid_t pid);
+
 nodeListADT getNode(pid_t pid, listADT queue);
+
 nodeListADT getNodeReadyQueue(pid_t pid);
+
 nodeListADT getNodeWaitingQueue(pid_t pid);
+
+t_priority getProcessNodePriority(nodeListADT node);
+
+void setProcessNodePriority(nodeListADT node, t_priority priority);
+
+void setProcessNodeMode(nodeListADT node, t_mode mode);
+
 void removeProcess(nodeListADT processNode, listADT queue);
+
 void moveNode(nodeListADT processNode, listADT fromQueue, listADT toQueue);
+
 processNodeADT getProcessNodeFromNode(nodeListADT node);
+
 t_process getProcessFromNode(nodeListADT node);
+
 void *duplicateProcessNode(void *_processNode);
+
 void freeProcessNodeReadOnly(void *_processNode);
+
 uint8_t equalsPid(void *_process, void *_pid);
+
 void freeProcessNodeReadOnly(void *_processNode);
+
+t_mode getProcessNodeMode(nodeListADT node);
 
 // Public
 void initializeScheduler() {
@@ -55,20 +81,7 @@ void initializeScheduler() {
 }
 
 void runScheduler(t_stack currentProcessStack) {
-	if (!initialized || getSizeList(readyQueue) == 0) {
-		return;
-	}
-
-	if (currentProcessNode != NULL) {
-		processNodeADT myCurrentProcessNode = getProcessNodeFromNode(currentProcessNode);
-
-		if (getProcessState(myCurrentProcessNode->process) == P_RUNNING && 
-				ticks_elapsed() - myCurrentProcessNode->executedOnTicks < quantumSlice[myCurrentProcessNode->priority]) {
-			return;
-		}
-	}
-
-	loadNextProcess(currentProcessStack);
+	runSchedulerForce(currentProcessStack, 0);
 }
 
 uint8_t addProcess(t_process process, t_priority priority, t_mode mode) {
@@ -91,7 +104,7 @@ uint8_t addProcess(t_process process, t_priority priority, t_mode mode) {
 	return 1;
 }
 
-void killProcess(pid_t pid) {
+void killProcess(pid_t pid, t_stack stackFrame) {
 	nodeListADT processNode = getNodeReadyQueue(pid);
 	if (processNode == NULL) {
 		processNode = getNodeWaitingQueue(pid);
@@ -103,9 +116,14 @@ void killProcess(pid_t pid) {
 
 	if (processNode == currentProcessNode) {
 		setProcessState(getProcessFromNode(processNode), P_DEAD);
-	} else {
-		removeProcess(processNode, readyQueue);
+		currentProcessNode = fetchNextNode();
+		if (currentProcessNode != NULL)
+			dispatchProcess(getProcessFromNode(currentProcessNode), stackFrame);
+		else
+			dispatchProcess(idleProcess, stackFrame);
 	}
+
+	removeProcess(processNode, readyQueue);
 }
 
 t_process getCurrentProcess() {
@@ -113,17 +131,32 @@ t_process getCurrentProcess() {
 	return idleProcess;
 }
 
-void lockProcess(pid_t pid) {
+t_priority getCurrentProcessPriority() {
+	return getProcessNodePriority(currentProcessNode);
+}
+
+t_priority getProcessPriority(pid_t pid) {
+	return getProcessNodePriority(getNodePid(pid));
+}
+
+void lockProcess(pid_t pid, t_stack stackFrame) {
 	nodeListADT processNode = getNodeReadyQueue(pid);
 	if (processNode == NULL) return;
 	setProcessState(getProcessFromNode(processNode), P_LOCKED);
 	
-	if (processNode != currentProcessNode) {
-		moveNode(processNode, readyQueue, waitingQueue);
+	if (processNode == currentProcessNode) {
+		currentProcessNode = fetchNextNode();
 	}
+
+	moveNode(processNode, readyQueue, waitingQueue);
+	currentProcessNode = fetchNextNode();
+	if (currentProcessNode != NULL)
+		dispatchProcess(getProcessFromNode(currentProcessNode), stackFrame);
+	else
+		dispatchProcess(idleProcess, stackFrame);
 }
 
-void unlockProcess(pid_t pid) {
+void unlockProcess(pid_t pid, t_stack stackFrame) {
 	nodeListADT processNode = getNodeWaitingQueue(pid);
 	if (processNode == NULL) return;
 	setProcessState(getProcessFromNode(processNode), P_READY);
@@ -131,14 +164,17 @@ void unlockProcess(pid_t pid) {
 	moveNode(processNode, waitingQueue, readyQueue);
 }
 
-t_priority getCurrentProcessPriority() {
-	if (currentProcessNode == NULL) return S_P_INVALID;
-	return getProcessNodeFromNode(currentProcessNode)->priority;
+void setCurrentProcessPriority(t_priority priority) {
+	setProcessNodePriority(currentProcessNode, priority);
 }
 
-void setCurrentProcessPriority(t_priority priority) {
-	if (currentProcessNode == NULL) return;
-	getProcessNodeFromNode(currentProcessNode)->priority = priority;
+void setProcessPriority(pid_t pid, t_priority priority) {
+	setProcessNodePriority(getNodePid(pid), priority);
+}
+
+void setProcessNodePriority(nodeListADT node, t_priority priority) {
+	if (node == NULL) return;
+	getProcessNodeFromNode(node)->priority = priority;
 }
 
 t_state getCurrentProcessState() {
@@ -147,6 +183,14 @@ t_state getCurrentProcessState() {
 }
 
 void setCurrentProcessMode(t_mode mode) {
+	setProcessNodeMode(currentProcessNode, mode);
+}
+
+void setProcessMode(pid_t pid, t_mode mode) {
+	setProcessNodeMode(getNodePid(pid), mode);
+}
+
+void setProcessNodeMode(nodeListADT node, t_mode mode) {
 	if (currentProcessNode == NULL) return;
 	processNodeADT processNode = getProcessNodeFromNode(currentProcessNode);
 	if (processNode->mode == mode) return;
@@ -162,12 +206,19 @@ void setCurrentProcessMode(t_mode mode) {
 }
 
 t_mode getCurrentProcessMode() {
-	if (currentProcessNode == NULL) return S_M_INVALID;
-	return getProcessNodeFromNode(currentProcessNode)->mode;
+	return getProcessNodeMode(currentProcessNode);
+}
+
+t_mode getProcessMode(pid_t pid) {
+	return getProcessNodeMode(getNodePid(pid));
 }
 
 void setOnProcessKillScheduler(void(_onProcessKill) (t_process process)) {
 	onProcessKill = _onProcessKill;
+}
+
+void yieldScheduler(t_stack stackFrame) {
+	runSchedulerForce(stackFrame, 1);
 }
 
 // Iterator
@@ -198,6 +249,23 @@ void freeProcessesList(listADT list) {
 }
 
 // Private
+void runSchedulerForce(t_stack currentProcessStack, uint8_t force) {
+	if (!initialized || getSizeList(readyQueue) == 0) {
+		return;
+	}
+
+	if (currentProcessNode != NULL) {
+		processNodeADT myCurrentProcessNode = getProcessNodeFromNode(currentProcessNode);
+
+		if (!force && getProcessState(myCurrentProcessNode->process) == P_RUNNING && 
+				ticks_elapsed() - myCurrentProcessNode->executedOnTicks < quantumSlice[myCurrentProcessNode->priority]) {
+			return;
+		}
+	}
+
+	loadNextProcess(currentProcessStack);
+}
+
 void loadNextProcess(t_stack currentProcessStack) {
 	nodeListADT nextProcessNode = fetchNextNode();
 	if (nextProcessNode == NULL) {		
@@ -236,9 +304,7 @@ nodeListADT fetchNextNode() {
 		if (currentNode == NULL) {
 			currentNode = getNodeAtIndexList(readyQueue, 0);
 		} else {
-			if (getProcessState(getProcessFromNode(currentNode)) == P_DEAD) {
-				removeProcess(currentNode, readyQueue);
-			} else if (getProcessState(getProcessFromNode(currentNode)) == P_READY) {
+			if (getProcessState(getProcessFromNode(currentNode)) == P_READY) {
 				break;
 			} else if (getProcessState(getProcessFromNode(currentNode)) == P_LOCKED) {
 				moveNode(currentNode, readyQueue, waitingQueue);
@@ -322,4 +388,21 @@ uint8_t equalsPid(void *_process, void *_pid) {
 	t_process process = (t_process ) process;
 	pid_t pid = (pid_t) _pid;
 	return getProcessPid(process) == pid;
+}
+
+nodeListADT getNodePid(pid_t pid) {
+	nodeListADT node = getNodeReadyQueue(pid);
+	if (node == NULL)
+		return getNodeWaitingQueue(pid);
+	return NULL;
+}
+
+t_priority getProcessNodePriority(nodeListADT node) {
+	if (node == NULL) return S_P_INVALID;
+	return getProcessNodeFromNode(node)->priority;
+}
+
+t_mode getProcessNodeMode(nodeListADT node) {
+	if (currentProcessNode == NULL) return S_M_INVALID;
+	return getProcessNodeFromNode(currentProcessNode)->mode;
 }

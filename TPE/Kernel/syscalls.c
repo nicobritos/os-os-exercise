@@ -1,81 +1,130 @@
 #include <stdint.h>
 #include "include/keyboard-Driver.h"
 #include "include/videoDriver.h"
-#include "include/time.h"
+#include "time.h"
 #include "include/memManager.h"
 #include "include/processHandler.h"
 #include "include/interrupts.h"
-#include "include/scheduler.h"
+#include "scheduler.h"
+#include "process.h"
 #include "include/ipc.h"
 #include "include/semaphore.h"
 
-
 typedef uint64_t(*systemCall)();
 
-int sys_ticks(int * ticks);
-int sys_ticksPerSecond(int * ticks);
-int sys_clear();
-int sys_read(uint64_t fd, char *buffer, uint64_t size);
-int sys_write(uint64_t fd, char *buffer, uint64_t size);
-int sys_draw(uint64_t x, uint64_t y, unsigned char r, unsigned char g, unsigned char b);
-int * sys_time(int * time);
+uint64_t sys_not_implemented();
+
+uint64_t sys_ticks(int * ticks);
+
+uint64_t sys_ticksPerSecond(int * ticks);
+
+uint64_t sys_clear();
+
+uint64_t sys_read(uint64_t fd, char *buffer, uint64_t size);
+
+uint64_t sys_write(uint64_t fd, char *buffer, uint64_t size);
+
+uint64_t sys_draw(uint64_t x, uint64_t y, unsigned char r, unsigned char g, unsigned char b);
+
+uint64_t *sys_time(uint64_t * time);
+
 uint64_t sys_usedMem();
-uint64_t sys_freeMem(void);
-void * sys_malloc(uint64_t size, uint64_t pid);
-void sys_free(void * address, uint64_t pid);
-void * sys_newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], void * returnPosition);
-void sys_freeProcess(void * process);
-int sys_getPid(void * process);
+
+uint64_t sys_freeMem();
+
+void *sys_malloc(uint64_t size);
+
+void sys_free(void * address);
+
+pid_t sys_new_process(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[]);
+
+void sys_free_process(pid_t pid, t_stack stackFrame);
+
+pid_t sys_get_pid();
+
+void sys_yield(t_stack stackFrame);
+
+t_mode sys_get_process_mode(pid_t pid);
+
+void sys_set_process_mode(pid_t pid, t_mode mode);
+
+t_priority sys_get_process_priority(pid_t pid);
+
+void sys_set_process_priority(pid_t pid, t_priority priority);
+
+t_state sys_get_process_state(pid_t pid);
+
 int sys_readPipe(t_pipeADT pipe, char *buffer, uint64_t size);
+
 int sys_writePipe(t_pipeADT pipe, char *buffer, uint64_t size);
+
 t_sem * sys_createSem(char *name);
+
 t_sem * sys_openSem(char *name);
+
 void sys_closeSem(t_sem * sem);
+
 void sys_wait(t_sem * sem, uint64_t pid);
+
 void sys_post(t_sem * sem);
+
 void sys_printSems();
 
-
-systemCall sysCalls[] = { 0, 0, 0,
-        (systemCall) sys_read, 				// 3
-		(systemCall) sys_write, 			// 4
-        (systemCall) sys_clear,				// 5
-		(systemCall) sys_draw,				// 6
-		(systemCall) sys_time,				// 7
-		(systemCall) sys_getPid,			// 8
-		(systemCall) sys_newProcess,		// 9
-		(systemCall) sys_freeProcess,		// 10
-		(systemCall) sys_free,				// 11
-		(systemCall) sys_ticks,				// 12
-		(systemCall) sys_ticksPerSecond,	// 13
-		(systemCall) sys_usedMem,			// 14
-		(systemCall) sys_freeMem,			// 15
-		(systemCall) sys_malloc,			// 16
-		(systemCall) sys_readPipe,			// 17
-		(systemCall) sys_writePipe,			// 18
-		(systemCall) sys_createSem,			// 19
-		(systemCall) sys_openSem,			// 20
-		(systemCall) sys_closeSem,			// 21
-		(systemCall) sys_wait,				// 22
-		(systemCall) sys_post,				// 23
-		(systemCall) sys_printSems,			// 24
+systemCall sysCalls[] = { 
+  (systemCall) sys_read,
+	(systemCall) sys_write,
+  (systemCall) sys_clear,
+	(systemCall) sys_draw,
+	(systemCall) sys_time,
+	(systemCall) sys_get_pid,
+	(systemCall) sys_new_process,
+	(systemCall) sys_free_process,
+	(systemCall) sys_free,
+	(systemCall) sys_ticks,
+	(systemCall) sys_ticksPerSecond,
+	(systemCall) sys_usedMem,
+	(systemCall) sys_freeMem,
+	(systemCall) sys_malloc,
+	(systemCall) sys_yield,
+	(systemCall) sys_get_process_mode,
+	(systemCall) sys_set_process_mode,
+	(systemCall) sys_get_process_priority,
+	(systemCall) sys_set_process_priority,
+	(systemCall) sys_get_process_state,
+  (systemCall) sys_readPipe,
+  (systemCall) sys_writePipe,
+  (systemCall) sys_createSem,
+  (systemCall) sys_openSem,
+  (systemCall) sys_closeSem,
+  (systemCall) sys_wait,
+  (systemCall) sys_post,
+  (systemCall) sys_printSems
 };
 
-int syscallHandler(unsigned long rdi, unsigned long rsi, unsigned long rdx, unsigned long rcx, unsigned long r8, unsigned long r9, unsigned long r10){
-	return sysCalls[rdi](rsi, rdx, rcx, r8, r9, r10);
+void syscallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack stackFrame){
+	uint64_t returnValue;
+
+	if (rdi < sizeof(sysCalls) / sizeof(*sysCalls)) returnValue = sysCalls[rdi](rsi, rdx, rcx, r8, stackFrame);
+	else returnValue = sys_not_implemented();
+
+	updateProcessStackRegister(stackFrame, returnValue, REGISTER_RAX);
 }
 
-int sys_ticks(int * ticks) {
+uint64_t sys_not_implemented() {
+	return 0;
+}
+
+uint64_t sys_ticks(int * ticks) {
 	*ticks = ticks_elapsed();
 	return *ticks;
 }
 
-int sys_ticksPerSecond(int * ticks) {
+uint64_t sys_ticksPerSecond(int * ticks) {
 	*ticks = seconds_elapsed();
 	return *ticks;
 }
 
-int sys_clear() {
+uint64_t sys_clear() {
 	clearAll();
 	return 0;
 }
@@ -119,12 +168,12 @@ int sys_write(uint64_t fd, char *buffer, uint64_t size){
 }
 
 
-int sys_draw(uint64_t x, uint64_t y, unsigned char r, unsigned char g, unsigned char b) {
+uint64_t sys_draw(uint64_t x, uint64_t y, unsigned char r, unsigned char g, unsigned char b) {
 	putPixel(x,y,r,g,b);
 	return 0;
 }
 
-int * sys_time(int * time) {
+uint64_t *sys_time(uint64_t * time) {
 	uint64_t hour = getHour();
 	uint64_t min = getMin();
 	uint64_t sec = getSec(); 
@@ -152,16 +201,51 @@ uint64_t sys_usedMem(){
 	return usedMemory();
 }
 
-uint64_t sys_freeMem(void){
+uint64_t sys_freeMem(){
 	return freeMemoryLeft();
 }
 
-void * sys_malloc(uint64_t size, uint64_t pid){
-	return pmalloc(size, pid);
+void *sys_malloc(uint64_t size){
+	return pmalloc(size, getProcessPid(getCurrentProcess()));
 }
-void sys_free(void * address, uint64_t pid){
-	pfree(address, pid);
+void sys_free(void * address){
+	pfree(address, getProcessPid(getCurrentProcess()));
 }
+
+pid_t sys_new_process(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[]){
+	return getProcessPid(newProcess(name, foo, getProcessPPid(getCurrentProcess()), argc, argv, S_P_LOW, S_M_FOREGROUND));
+}
+
+void sys_free_process(pid_t pid, t_stack stackFrame){
+	killProcess(pid, stackFrame);
+}
+
+pid_t sys_get_pid(){
+	return getProcessPid(getCurrentProcess());
+}
+
+void sys_yield(t_stack stackFrame) {
+	yieldScheduler(stackFrame);
+}
+
+t_mode sys_get_process_mode(pid_t pid) {
+	return getProcessMode(pid);
+}
+
+void sys_set_process_mode(pid_t pid, t_mode mode) {
+	setProcessMode(pid, mode);
+}
+
+t_priority sys_get_process_priority(pid_t pid) {
+	return getProcessPriority(pid);
+}
+
+void sys_set_process_priority(pid_t pid, t_priority priority) {
+	setProcessPriority(pid, priority);
+}
+
+t_state sys_get_process_state(pid_t pid) {
+	return getProcessStatePid(pid);
 
 int sys_readPipe(t_pipeADT pipe, char *buffer, uint64_t size){
 	return read(pipe, buffer, size);

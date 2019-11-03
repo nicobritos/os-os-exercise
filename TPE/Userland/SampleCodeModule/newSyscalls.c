@@ -1,74 +1,98 @@
 #include "includes/newSyscalls.h"
 
-int64_t _systemCall();
+uint64_t _systemCall();
 
-int sys_read( int fileDescriptor, char * buff, int length)
+uint64_t sys_read( int fileDescriptor, void * buff, int length)
 {
-    return _systemCall(3, fileDescriptor, (void *)buff, length,0,0,0);
+    return _systemCall(__SYSTEM_CALL_READ, fileDescriptor, buff, length);
 }
 
-int sys_write(int fileDescriptor, char * buff, int length)
+uint64_t sys_write(int fileDescriptor, void * buff, int length)
 {
-    return _systemCall(4, fileDescriptor, (void *)buff, length, 0, 0,0);
+    return _systemCall(__SYSTEM_CALL_WRITE, fileDescriptor, buff, length);
 }
 
-int sys_clear()
+uint64_t sys_clear()
 {
-    return _systemCall(5,0,0,0,0,0,0);
+    return _systemCall(__SYSTEM_CALL_CLEAR);
 }
 
-int sys_draw( int x, int y, unsigned char red, unsigned char green, unsigned char blue)
+uint64_t sys_draw( int x, int y, int red, int green, int blue)
 {
-    return _systemCall(6, x, y, (int)red, (int)green, (int)blue,0);
+    return _systemCall(__SYSTEM_CALL_DRAW, x, y, red, green, blue);
 }
 
-int * sys_time(int * dest){
-    return (int *)_systemCall(7,dest,0,0,0,0,0);
+uint64_t *sys_time(){
+    return (uint64_t*)_systemCall(__SYSTEM_CALL_TIME);
 }
 
-int sys_getPid(void * process)
+pid_t sys_getPid()
 {
-    return _systemCall(8,process,0,0,0,0,0);
+    return (pid_t)_systemCall(__SYSTEM_CALL_GET_PID);
 }
 
-void * sys_newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], void * returnPosition)
+pid_t sys_newProcess(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[])
 {
-    return (void *)_systemCall(9, name,foo,ppid,argc,argv,returnPosition);
+    return (pid_t)_systemCall(__SYSTEM_CALL_NEW_PROCESS,name,foo,argc,argv);
 }
 
-void sys_freeProcess(void * process)
+void sys_freeProcess(pid_t pid)
 {
-    _systemCall(10, process,0,0,0,0,0);
+    _systemCall(__SYSTEM_CALL_FREE_PROCESS, pid);
 }
 
-void sys_free(void * address, uint64_t size)
+void sys_free(void * address)
 {
-    _systemCall(11,address,size,0,0,0,0);    
+    _systemCall(__SYSTEM_CALL_FREE,address);    
 }
 
-int sys_ticks(int * ticks)
+uint64_t sys_ticks(int * ticks)
 {
-    return _systemCall(12,ticks,0,0,0,0,0);
+    return _systemCall(__SYSTEM_CALL_TICKS,ticks);
 }
 
-int sys_ticksPerSecond(int * ticks)
+uint64_t sys_ticksPerSecond(int * ticks)
 {
-    return _systemCall(13,ticks,0,0,0,0,0);
+    return _systemCall(__SYSTEM_CALL_TICKS_PER_SECOND,ticks);
 }
 
-uint64_t sys_usedMem(void)
+uint64_t sys_usedMem()
 {
-    return (uint64_t)_systemCall(14,0,0,0,0,0,0);
+    return _systemCall(__SYSTEM_CALL_USED_MEM);
 }
 
-uint64_t sys_freeMem(void)
+uint64_t sys_freeMem()
 {
-    return (uint64_t)_systemCall(15,0,0,0,0,0,0);
+    return _systemCall(__SYSTEM_CALL_FREE_MEM);
 }
 
-void * sys_malloc(uint64_t size, uint64_t pid)
+void *sys_malloc(uint64_t size)
 {
-    return (void *)_systemCall(16,size,pid,0,0,0,0);
+    return (void*)_systemCall(__SYSTEM_CALL_MALLOC,size);
+}
+
+void sys_yield() {
+    _systemCall(__SYSTEM_CALL_YIELD);
+}
+
+t_mode sys_get_process_mode(pid_t pid) {
+    return (t_mode) _systemCall(__SYSTEM_CALL_GET_PROCESS_MODE, pid);
+}
+
+void sys_set_process_mode(pid_t pid, t_mode mode) {
+    _systemCall(__SYSTEM_CALL_SET_PROCESS_MODE, pid, mode);
+}
+
+t_priority sys_get_process_priority(pid_t pid) {
+    return (t_priority) _systemCall(__SYSTEM_CALL_GET_PROCESS_PRIORITY, pid);
+}
+
+void sys_set_process_priority(pid_t pid, t_priority priority) {
+    _systemCall(__SYSTEM_CALL_SET_PROCESS_PRIORITY, pid, priority);
+}
+
+t_state sys_get_process_state(pid_t pid) {
+    return (t_state) _systemCall(__SYSTEM_CALL_GET_PROCESS_STATE, pid);
 }
 
 int sys_readPipe(void * pipe, char *buffer, uint64_t size){

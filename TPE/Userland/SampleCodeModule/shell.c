@@ -85,7 +85,7 @@ int parse(char* input){
 
 
 void shell(){
-    char buffer[BUFFER_LENGTH] ;
+    char buffer[BUFFER_LENGTH];
     int flag = 0;
     printHelp();
 

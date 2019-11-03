@@ -1,5 +1,6 @@
 GLOBAL _cli
 GLOBAL _sti
+GLOBAL _killProcessSyscallKernel
 GLOBAL picMasterMask
 GLOBAL picSlaveMask
 GLOBAL haltcpu
@@ -21,8 +22,11 @@ EXTERN syscallHandler
 GLOBAL _exception0Handler
 GLOBAL _exceptionInvalidOpcodeHandler
 GLOBAL _syscall
+
 EXTERN irqDispatcher
 EXTERN exceptionDispatcher
+EXTERN getCurrentProcess
+EXTERN getProcessPid
 
 SECTION .text
 
@@ -105,24 +109,31 @@ SECTION .text
 %endmacro
 
 %macro exceptionHandler 1
-  push rbp
-  mov rbp, rsp
-  cli
   pushState
 
-	mov rdi, %1 ; first parameter
-	mov rsi, rsp ; second parameter
+  push rax
+  call pushcli
+  pop rax
 
+  mov rdi, %1 ; first parameter
+  mov rsi, rsp ; second parameter
+
+  push rbp
+  mov rbp, rsp
+  
 	call exceptionDispatcher
 
-	popState
-  sti
   mov rsp, rbp
   pop rbp
-  mov qword [rsp],reboot
+
+  push rax
+  call pushsti
+  pop rax
+
+  popState
+
 	iretq
 %endmacro
-
 
 _hlt:
 	sti
@@ -187,12 +198,34 @@ _irq04Handler:
 _irq05Handler:
   irqHandlerMaster 5
 
+_killProcessSyscallKernel:
+  push rbp
+  mov rbp, rsp
 
+  xor rax, rax
+  call getCurrentProcess
+  mov rdi, rax
+
+  xor rax, rax
+  call getProcessPid
+  mov rdi, 7 ; freeProcess (see syscalls.c)
+  mov rsi, rax
+
+  int 80h
+
+  mov rsp, rbp
+  pop rbp
+
+  ret
 
 _syscallHandler:
+  pushState
+
   push rax
   call pushcli
 	pop rax
+
+  mov r9, rsp; pasaje de parametro del puntero a los registros
 
   push rbp
 	mov rbp, rsp
@@ -201,10 +234,13 @@ _syscallHandler:
 
 	mov rsp, rbp
 	pop rbp
-
+  
   push rax
   call pushsti
   pop rax
+  
+  popState
+
 	iretq
 
 ;Zero Division Exception

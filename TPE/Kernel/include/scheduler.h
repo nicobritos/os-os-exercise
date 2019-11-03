@@ -9,21 +9,40 @@
 	typedef enum {S_M_FOREGROUND = 0, S_M_BACKGROUND, S_M_INVALID} t_mode;
 
 	void initializeScheduler();
-	void runScheduler(t_stack currentProcessStack);
-	uint8_t addProcess(t_process process, t_priority priority, t_mode mode);
 
-	void killProcess(pid_t pid);
+	void runScheduler(t_stack currentProcessStack);
+	
+	uint8_t addProcess(t_process process, t_priority priority, t_mode mode);
+	
+	void killProcess(pid_t pid, t_stack stackFrame);
+	
 	t_process getCurrentProcess();
-	void lockProcess(pid_t pid);
-	void unlockProcess(pid_t pid);
+	
 	t_priority getCurrentProcessPriority();
-	void setCurrentProcessPriority(t_priority priority);
+	
+	t_priority getProcessPriority(pid_t pid);
+
 	t_state getCurrentProcessState();
-	void setCurrentProcessMode(t_mode mode);
+
 	t_mode getCurrentProcessMode();
+
+	t_mode getProcessMode(pid_t pid);
+
+	void setCurrentProcessPriority(t_priority priority);
+
+	void setProcessPriority(pid_t pid, t_priority priority);
+
+	void setCurrentProcessMode(t_mode mode);
+	
+	void setProcessMode(pid_t pid, t_mode mode);
+	
+	void lockProcess(pid_t pid, t_stack stackFrame);
+	
+	void unlockProcess(pid_t pid, t_stack stackFrame);
 
 	void setOnProcessKillScheduler(void(_onProcessKill) (t_process process));
 
+	void yieldScheduler(t_stack stackFrame);
 
 	// Process iterator
 	listADT createProcessList();
