@@ -28,7 +28,7 @@ static t_pipeADT firstPipe = NULL;
 t_pipeADT getPreviousPipeWithName(const char *name);
 
 // PUBLIC
-t_pipeADT openPipe(const char *name, uint8_t mode, t_process process) {
+t_pipeADT _openPipe(const char *name, uint8_t mode, t_process process) {
 	if (name == NULL) return NULL;
 	t_pipeADT existingPipe = getPreviousPipeWithName(name);
 	t_pipeADT newPipe;
@@ -84,7 +84,7 @@ t_pipeADT openPipe(const char *name, uint8_t mode, t_process process) {
 	return newPipe;
 }
 
-void closePipe(t_pipeADT pipe, t_process process) {
+void _closePipe(t_pipeADT pipe, t_process process) {
 	if (pipe == NULL) return;
 	if (process == pipe->readingProcess) pipe->readingProcess = NULL;
 	if (process == pipe->writingProcess) pipe->writingProcess = NULL;
