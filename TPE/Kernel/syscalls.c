@@ -36,13 +36,13 @@ void *sys_malloc(uint64_t size);
 
 void sys_free(void * address);
 
-pid_t sys_new_process(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[], t_mode mode);
+pid_t sys_new_process(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[]);
 
-void sys_free_process(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack stackFrame);
+void sys_free_process(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, t_stack stackFrame);
 
 pid_t sys_get_pid();
 
-void sys_yield(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack stackFrame);
+void sys_yield(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, t_stack stackFrame);
 
 t_mode sys_get_process_mode(pid_t pid);
 
@@ -54,9 +54,9 @@ void sys_set_process_priority(pid_t pid, t_priority priority);
 
 t_state sys_get_process_state(pid_t pid);
 
-int sys_readPipe(t_pipeADT pipe, char *buffer, uint64_t size, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame);
+int sys_readPipe(t_pipeADT pipe, char *buffer, uint64_t size, uint64_t rcx, t_stack currentProcessStackFrame);
 
-int sys_writePipe(t_pipeADT pipe, char *buffer, uint64_t size, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame);
+int sys_writePipe(t_pipeADT pipe, char *buffer, uint64_t size, uint64_t rcx, t_stack currentProcessStackFrame);
 
 t_sem * sys_createSem(char *name);
 
@@ -64,13 +64,17 @@ t_sem * sys_openSem(char *name);
 
 void sys_closeSem(t_sem * sem);
 
-void sys_wait_semaphore(t_sem * sem, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame);
+void sys_wait_semaphore(t_sem * sem, uint64_t pid, uint64_t rdx, uint64_t rcx, t_stack currentProcessStackFrame);
 
 void sys_post_semaphore(t_sem * sem);
 
 void sys_printSems();
 
-void sys_wait_pid(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame);
+void sys_wait_pid(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, t_stack currentProcessStackFrame);
+
+void sys_printProcesses();
+
+t_state sys_toggle_process_lock(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, t_stack currentProcessStackFrame);
 
 void sys_sleep(uint64_t ms, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame);
 
@@ -104,6 +108,8 @@ systemCall sysCalls[] = {
 	(systemCall) sys_post_semaphore,
 	(systemCall) sys_printSems,
 	(systemCall) sys_wait_pid,
+	(systemCall) sys_printProcesses,
+	(systemCall) sys_toggle_process_lock,
 	(systemCall) sys_sleep
 };
 
@@ -173,7 +179,6 @@ uint64_t sys_write(uint64_t fd, char *buffer, uint64_t size){
 	return i;
 }
 
-
 uint64_t sys_draw(uint64_t x, uint64_t y, unsigned char r, unsigned char g, unsigned char b) {
 	putPixel(x,y,r,g,b);
 	return 0;
@@ -218,11 +223,12 @@ void sys_free(void * address){
 	pfree(address, getProcessPid(getCurrentProcess()));
 }
 
-pid_t sys_new_process(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[], t_mode mode){
-	return getProcessPid(newProcess(name, foo, getProcessPPid(getCurrentProcess()), argc, argv, S_P_LOW, mode));
+pid_t sys_new_process(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[]){
+	return getProcessPid(newProcess(name, foo, getProcessPPid(getCurrentProcess()), argc, argv, S_P_LOW, S_M_BACKGROUND));
 }
 
-void sys_free_process(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack stackFrame) {
+void sys_free_process(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, t_stack stackFrame) {
+	printProcessesScheduler();
 	killProcessHandler(pid, stackFrame);
 }
 
@@ -230,7 +236,7 @@ pid_t sys_get_pid(){
 	return getProcessPid(getCurrentProcess());
 }
 
-void sys_yield(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack stackFrame) {
+void sys_yield(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, t_stack stackFrame) {
 	yieldScheduler(stackFrame);
 }
 
@@ -254,16 +260,12 @@ t_state sys_get_process_state(pid_t pid) {
 	return getProcessStatePid(pid);
 }
 
-int sys_readPipe(t_pipeADT pipe, char *buffer, uint64_t size, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame){
+int sys_readPipe(t_pipeADT pipe, char *buffer, uint64_t size, uint64_t rcx, t_stack currentProcessStackFrame){
 	return readPipe(pipe, buffer, size, currentProcessStackFrame);
 }
 
-int sys_writePipe(t_pipeADT pipe, char *buffer, uint64_t size, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame){
+int sys_writePipe(t_pipeADT pipe, char *buffer, uint64_t size, uint64_t rcx, t_stack currentProcessStackFrame){
 	return writePipe(pipe, buffer, size, currentProcessStackFrame);
-}
-
-int sys_getPid(void * process){
-	return getProcessPid(process);
 }
 
 t_sem * sys_createSem(char *name){
@@ -278,7 +280,7 @@ void sys_closeSem(t_sem * sem){
 	return closeSem(sem);
 }
 
-void sys_wait_semaphore(t_sem * sem, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame) {
+void sys_wait_semaphore(t_sem * sem, uint64_t pid, uint64_t rdx, uint64_t rcx, t_stack currentProcessStackFrame) {
 	waitSemaphore(sem, getProcessPid(getCurrentProcess()), currentProcessStackFrame);
 }
 
@@ -292,9 +294,18 @@ void sys_printSems(){
 	pfree(str, 0);
 }
 
-void sys_wait_pid(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame) {
+void sys_wait_pid(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, t_stack currentProcessStackFrame) {
 	waitpid(pid, currentProcessStackFrame);
 }
+
+void sys_printProcesses() {
+	printProcessesScheduler();
+}
+
+t_state sys_toggle_process_lock(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, t_stack currentProcessStackFrame) {
+	toggleProcessLock(pid, currentProcessStackFrame);
+}
+
 
 void sys_sleep(uint64_t ms, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame) {
 	sleepScheduler(ms, currentProcessStackFrame);

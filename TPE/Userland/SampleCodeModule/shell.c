@@ -8,6 +8,7 @@
 #include "apps.h"
 #include "phylo.h"
 
+
 #define MAX_ARGS 10
 
 int parse(char *input, t_mode mode);
@@ -59,11 +60,11 @@ void parseWithPipe(char *p1, char *p2) {
 }
 
 int parse(char* input, t_mode mode) {
-    char * argv[MAX_ARGS] = {0};
+    //char * argv[MAX_ARGS] = {0};
     pid_t pid = 0;
 
     if (strcmp(input, "help") == 0) {
-        pid = newProcess("help", help, mode);
+        pid = newProcess("help", help);
     } else if(strcmp(input, "phylo") == 0){
         argv[0] = 2;
         pid = newProcessArgs("help", phyloProblem, 1, argv, mode);
@@ -78,15 +79,18 @@ int parse(char* input, t_mode mode) {
     // // } else if (strncmp(input, "loop ", 5) == 0) {
     //     // argv[0] = {input + 5};
     //     // pid = newProcessArgs("loop", loop, mode, 1, argv);
-    // } else if (strncmp(input, "kill ", 5) == 0) {
-    //     argv[0] = {input + 5};
-    //     pid = newProcessArgs("kill", kill, mode, 1, argv);
-    // } else if (strcmp(input, "nice ", 5) == 0) {
-    //     uint64_t argc = tokenArgs(argv, input, MAX_ARGS);
-    //     pid = newProcessArgs("nice", nice, mode, argc, argv);
-    // } else if (strncmp(input, "block ", 6) == 0) {
-    //     argv[0] = {input + 6};
-    //     pid = newProcessArgs("block", block, mode, 1, argv);
+    } else if (strncmp(input, "kill ", 5) == 0) {
+        char * argv[MAX_ARGS] = {0};
+        argv[0] = input+5;
+        pid = newProcessArgs("kill", kill,1, argv);
+    } else if (strncmp(input, "nice ", 5) == 0) {
+        char * argv[MAX_ARGS] = {0};
+        argv[0] = input+5;
+        pid = newProcessArgs("nice", nice, 2, argv);
+    } else if (strncmp(input, "block ", 6) == 0) {
+        char * argv[MAX_ARGS] = {0};
+        argv[0] = input+6;
+        pid = newProcessArgs("block", block, 1, argv);
     // } else if (strncmp(input, "cat ", 4) == 0) {
     //     argv[0] = {input + 4};
     //     pid = newProcessArgs("cat", cat, mode, 1, argv);
@@ -183,8 +187,13 @@ int parse(char* input, t_mode mode) {
 
 
 
-    if (pid > 0 && mode == S_M_FOREGROUND) {
-        waitpid(pid);
+    if (pid > 0) {
+        if (mode == S_M_FOREGROUND) {
+            setProcessMode(pid, S_M_FOREGROUND);
+            waitpid(pid);
+        } else {
+            setProcessMode(pid, S_M_BACKGROUND);
+        }
     }
     return 0;
 }

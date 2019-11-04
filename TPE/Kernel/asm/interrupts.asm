@@ -225,6 +225,9 @@ _syscallHandler:
   call pushcli
 	pop rax
 
+  popState  ; restore regs lost by pushcli
+  pushState
+
   mov r9, rsp; pasaje de parametro del puntero a los registros
 
   push rbp

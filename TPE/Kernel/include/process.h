@@ -72,4 +72,8 @@ void freeProcessReadOnly(t_process process);
 
 void printStackFrame(t_stack stackFrame);
 
+void printProcess(t_process process);
+
+void printProcessHeader();
+
 #endif

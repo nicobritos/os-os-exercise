@@ -34,7 +34,9 @@ typedef enum {
 	__SYSTEM_CALL_POST = 26,
 	__SYSTEM_CALL_PRINT_SEMS = 27,
 	__SYSTEM_CALL_WAIT_PID = 28,
-	__SYSTEM_CALL_SLEEP = 29
+	__SYSTEM_CALL_PRINT_PROCESSES = 29,
+	__SYSTEM_CALL_TOGGLE_PROCESS_LOCK = 30,
+	__SYSTEM_CALL_SLEEP = 31
 } t_system_call;
 
 uint64_t sys_read(int fileDescriptor, void * buff, int length);
@@ -49,7 +51,7 @@ uint64_t * sys_time(uint64_t * dest);
 
 pid_t sys_getPid();
 
-pid_t sys_newProcess(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[], t_mode mode);
+pid_t sys_newProcess(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[]);
 
 void sys_freeProcess(pid_t pid);
 
@@ -77,6 +79,8 @@ void sys_set_process_priority(pid_t pid, t_priority priority);
 
 t_state sys_get_process_state(pid_t pid);
 
+t_state sys_toggle_process_lock(pid_t pid);
+
 int sys_readPipe(void * pipe, char *buffer, uint64_t size);
 
 int sys_writePipe(void * pipe, char *buffer, uint64_t size);
@@ -94,6 +98,8 @@ void sys_post_semaphore(void * sem);
 void sys_printSems();
 
 int sys_wait_pid(pid_t pid);
+
+void sys_printProcesses();
 
 void sys_sleep(uint64_t ms);
 
