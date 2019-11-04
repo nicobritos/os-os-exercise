@@ -77,11 +77,12 @@ int parse(char* input, t_mode mode) {
         pid = newProcessArgs("kill", kill,1, argv);
     } else if (strncmp(input, "nice ", 5) == 0) {
         char * argv[MAX_ARGS] = {0};
-        uint64_t argc = tokenArgs(argv, input+5, MAX_ARGS);
-        pid = newProcessArgs("nice", nice, argc, argv);
-    // } else if (strncmp(input, "block ", 6) == 0) {
-    //     argv[0] = {input + 6};
-    //     pid = newProcessArgs("block", block, mode, 1, argv);
+        argv[0] = input+5;
+        pid = newProcessArgs("nice", nice, 2, argv);
+    } else if (strncmp(input, "block ", 6) == 0) {
+        char * argv[MAX_ARGS] = {0};
+        argv[0] = input+6;
+        pid = newProcessArgs("block", block, 1, argv);
     // } else if (strncmp(input, "cat ", 4) == 0) {
     //     argv[0] = {input + 4};
     //     pid = newProcessArgs("cat", cat, mode, 1, argv);

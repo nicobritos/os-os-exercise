@@ -10,5 +10,6 @@ int getPid();
 int waitpid();
 void killProcess(pid_t pid);
 void setProcessMode(pid_t pid, t_mode mode);
+t_state toogleProcessLock(pid_t pid);
 
 #endif

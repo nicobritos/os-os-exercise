@@ -26,4 +26,6 @@ char *trim(char *input);
 
 uint64_t replaceChars(char *input, char target, char newChar);
 
+uint64_t tokenArgs(char ** argv, char * input, uint64_t max);
+
 #endif /* STDLIB_H_ */

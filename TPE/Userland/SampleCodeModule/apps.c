@@ -1,6 +1,9 @@
 #include "apps.h"
 #include "stdio.h"
 #include "unistd.h"
+#include "stdlib.h"
+#include "process.h"
+
 
 int help(int argc, char **argv) {
     printf("\nhelp - display available commands \n");
@@ -19,22 +22,79 @@ int help(int argc, char **argv) {
 
 int kill(int argc, char **argv){
     printf("\n");
-    int pid = atoi(argv[argc-1]);
-    if(pid == -1)
+    pid_t pid = atoi(argv[0]);
+    if(pid == -1){
         printf("Please enter a number");
+        return 0;
+        }
     else{
-        printf("\n%d\n",pid);
         killProcess(pid);
+        printf("Process killed\n");
     }
     return 1;
 }
-int nice(int argc, char **argv){
+int nice(int argc, char ** input){
     printf("\n");
-    printf("%d\n",argc);
-    return 1;
+    char ** argv = malloc(100 * sizeof(char*));
+    uint64_t cant_argc = tokenArgs(argv, input[0], 100);
+    if (cant_argc == (uint64_t)argc)
+    {
+        t_priority priority;
+        pid_t pid = atoi(argv[0]);
+        if(pid == -1){
+            printf("Please enter a number\n");
+            return 0;
+            }
+        else{
+            if(strcmp(argv[1], "high") == 0) {
+                priority = S_P_HIGH;
+                //printf("high\n");
+
+            }
+            else if(strcmp(argv[1], "low") == 0){
+                priority = S_P_LOW;
+                //printf("low\n");
+            }
+            else{
+                printf("Please enter a valid priority\n");
+                return 0;
+            }
+        }
+        setProcessPriority(pid,priority);
+        printf("Priority set\n");
+        return 1;
+    }
+    else
+    {
+        printf("Missing arguments\n");
+        return 0;
+    }
+    
+    
+    
 }
 int block(int argc, char **argv){
-    printf("%d\n",argc);
-    printf("%d\n",argv[0]);
+    printf("\n");
+    pid_t pid = atoi(argv[0]);
+
+    if(pid == -1){
+        printf("Please enter a number");
+        return 0;
+        }
+    else{
+        int state = (int)toogleProcessLock(pid);
+        if (state == 1)
+        {
+            printf("Process Ready\n");
+        }
+        else if( state == 3)
+        {
+            printf("Process Locked\n");
+        }
+        else
+        {
+            printf("Proceso no lockeado ni listo");
+        }
+    }
     return 1;
 }
