@@ -1,6 +1,6 @@
 #include <stdint.h>
-#include "naiveConsole.h"
-#include "include/lib.h"
+#include "stdlib.h"
+#include "lib.h"
 
 /*
  * Prototipos
@@ -17,9 +17,6 @@ void printChar(unsigned char myChar, unsigned char r, unsigned char g, unsigned 
 void printExceptions(char * str);
 void clear();
 void shiftUp();
-
-
-
 
 /*
  * https://wiki.osdev.org/VESA_Video_Modes
@@ -344,8 +341,17 @@ void shiftUp() {
 
 }
 
+void printHexa(uint64_t num, uint8_t r, uint8_t g, uint8_t b){
+  static char buffer[64] = { '0' };
+  uintToBase(num,buffer,16);
+  printString(buffer, r, g, b);
+}
 
-
+void printDec(uint64_t num, uint8_t r, uint8_t g, uint8_t b){
+  static char buffer[64] = { '0' };
+  uintToBase(num,buffer,10);
+  printString(buffer, r, g, b);
+}
 
 void clearFromCoords(int x, int y) {
   fillRect(x,y, (infoBlock->Xres - x), (infoBlock->Yres - y), 0,0,0);
@@ -360,9 +366,3 @@ void clearAll() {
 void printExceptions(char * str){
   printString(str, 255, 255, 255);
 }
-
-/*
-void printHexa(uint64_t value){
-  ncPrintBase(value,16);
-}
-*/

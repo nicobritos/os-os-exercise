@@ -24,7 +24,7 @@ int kill(int argc, char **argv){
         printf("Please enter a number");
     else{
         printf("\n%d\n",pid);
-        //killProcess(pid);
+        killProcess(pid);
     }
     return 1;
 }

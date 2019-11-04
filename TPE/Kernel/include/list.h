@@ -32,6 +32,8 @@
 	listADT duplicateAndConcatList(listADT destination, listADT source, void *(duplicateElement) (void * element));
 
 	void freeList(listADT list, void(freeElement) (void * element));
+	
+	void printList(listADT list, void(printElement) (void * element));
 
 	// Iterator
 	void prepareListIterator(listADT list);

@@ -2,6 +2,8 @@
 #define VIDEODRIVER_H_
 
 #include <stdint.h>
+#include "naiveConsole.h"
+
 void putPixel(uint64_t x,uint64_t y, unsigned char r, unsigned char g, unsigned char b);
 
 void clearAll();
@@ -15,9 +17,11 @@ void printChar(unsigned char myChar, unsigned char r, unsigned char g, unsigned 
 
 void printString(char *str, unsigned char r, unsigned char g, unsigned char b);
 
-void printExceptions(char * str);
+void printDec(uint64_t num, uint8_t r, uint8_t g, uint8_t b);
 
-void printHexa(uint64_t value);
+void printHexa(uint64_t num, uint8_t r, uint8_t g, uint8_t b);
+
+void printExceptions(char * str);
 
 void backspace();
 

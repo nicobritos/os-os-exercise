@@ -42,6 +42,7 @@ typedef struct t_stackCDT {
 } t_stackCDT;
 
 void initializeStack(t_stack stackFrame, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), int argc, char * argv[], int(* startingPoint)(int argc, char** argv));
+char *getProcessStateString(t_state state);
 
 t_process createProcess(char * name, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), pid_t pid, pid_t pPid, int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
     t_process newProcess = pmalloc(sizeof(t_processCDT), pid);
@@ -261,7 +262,31 @@ void printStackFrame(t_stack stackFrame) {
     for (int i = 0; i < sizeof(*stackFrame) / sizeof(uint64_t); i++){
         newLine();
         printString(regs[i],255,255,255);
-        printHexa(((uint64_t*)stackFrame)[i]);
+        printHexa(((uint64_t*)stackFrame)[i], 0, 255, 0);
     }
     newLine();
+}
+
+void printProcess(t_process process) {
+    printString(process->name, 0, 255, 0);
+    printString(" | ", 0, 255, 0);
+    printDec(process->pid, 0, 255, 0);
+    printString(" | ", 0, 255, 0);
+    printDec(process->pPid, 0, 255, 0);
+    printString(" | ", 0, 255, 0);
+    printString(getProcessStateString(process->state), 0, 255, 0);
+}
+
+void printProcessHeader() {
+    printString("NAME | PID | PPID | STATE", 0, 255, 0);
+}
+
+char *getProcessStateString(t_state state) {
+    switch (state) {
+        case P_RUNNING: return "RUNNING";
+        case P_READY: return "READY";
+        case P_DEAD: return "DEAD";
+        case P_LOCKED: return "LOCKED";
+        default: return "INVALID";
+    }
 }

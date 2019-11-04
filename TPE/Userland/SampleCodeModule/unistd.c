@@ -2,12 +2,12 @@
 #include "unistd.h"
 #include "defines.h"
 
-pid_t newProcessArgs(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[], t_mode mode){
-    return sys_newProcess(name, foo, argc, argv, mode);
+pid_t newProcessArgs(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[]){
+    return sys_newProcess(name, foo, argc, argv);
 }
 
-pid_t newProcess(char * name, int(* foo)(int argc, char** argv), t_mode mode) {
-	return newProcessArgs(name, foo, 0, NULL, mode);
+pid_t newProcess(char * name, int(* foo)(int argc, char** argv)) {
+	return newProcessArgs(name, foo, 0, NULL);
 }
 
 void freeProcess(pid_t pid){
@@ -26,15 +26,6 @@ void killProcess(pid_t pid) {
 	sys_freeProcess(pid);
 }
 
-void changeProcessState(pid_t pid){
-    t_state state = sys_get_process_state(pid);
-    if (state == P_READY)
-    {
-       //cambiar a P_LOCKED 
-    }
-    else if(state == P_LOCKED){
-        // cambiar a P_READY
-    }
-    
+void setProcessMode(pid_t pid, t_mode mode) {   
+    sys_set_process_mode(pid, mode);
 }
-

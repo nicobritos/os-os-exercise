@@ -63,7 +63,7 @@ int parse(char* input, t_mode mode) {
     pid_t pid = 0;
 
     if (strcmp(input, "help") == 0) {
-        pid = newProcess("help", help, mode);
+        pid = newProcess("help", help);
     // } else if (strcmp(input, "mem") == 0) {
     //     pid = newProcess("mem", mem, mode);
     // } else if (strcmp(input, "ps") == 0) {
@@ -74,11 +74,11 @@ int parse(char* input, t_mode mode) {
     } else if (strncmp(input, "kill ", 5) == 0) {
         char * argv[MAX_ARGS] = {0};
         argv[0] = input+5;
-        pid = newProcessArgs("kill", kill,1, argv, mode);
+        pid = newProcessArgs("kill", kill,1, argv);
     } else if (strncmp(input, "nice ", 5) == 0) {
         char * argv[MAX_ARGS] = {0};
         uint64_t argc = tokenArgs(argv, input+5, MAX_ARGS);
-        pid = newProcessArgs("nice", nice, argc, argv, mode);
+        pid = newProcessArgs("nice", nice, argc, argv);
     // } else if (strncmp(input, "block ", 6) == 0) {
     //     argv[0] = {input + 6};
     //     pid = newProcessArgs("block", block, mode, 1, argv);
@@ -178,8 +178,13 @@ int parse(char* input, t_mode mode) {
 
 
 
-    if (pid > 0 && mode == S_M_FOREGROUND) {
-        waitpid(pid);
+    if (pid > 0) {
+        if (mode == S_M_FOREGROUND) {
+            setProcessMode(pid, S_M_FOREGROUND);
+            waitpid(pid);
+        } else {
+            setProcessMode(pid, S_M_BACKGROUND);
+        }
     }
     return 0;
 }

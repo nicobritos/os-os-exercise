@@ -1,4 +1,5 @@
 #include "processHandler.h"
+#include "videoDriver.h"
 #include "memManager.h"
 #include "scheduler.h"
 #include "semaphore.h"
@@ -72,6 +73,16 @@ uint8_t equalsPid(void *_process, void *_pid);
 void freeProcessNodeReadOnly(void *_processNode);
 
 t_mode getProcessNodeMode(nodeListADT node);
+
+void printQueue(listADT queue, char *title, uint64_t totalProcesses);
+
+void printProcessNode(void *_processNode);
+
+void printProcessHeaderScheduler();
+
+char *getProcessPriorityString(t_priority priority);
+
+char *getProcessModeString(t_mode mode);
 
 // Public
 void initializeScheduler() {
@@ -169,6 +180,18 @@ void unlockProcess(pid_t pid) {
 	moveNode(processNode, waitingQueue, readyQueue);
 }
 
+t_state toggleProcessLock(pid_t pid, t_stack stackFrame) {
+	t_state state = getProcessStatePid(pid);
+	if (state == P_LOCKED) {
+		unlockProcess(pid);
+		state = P_READY;
+	} else if (state != P_DEAD && state != P_INVALID) {
+		lockProcess(pid, stackFrame);
+		state = P_LOCKED;
+	}
+	return state;
+}
+
 void setCurrentProcessPriority(t_priority priority) {
 	setProcessNodePriority(currentProcessNode, priority);
 }
@@ -235,32 +258,43 @@ void waitpid(pid_t pid, t_stack currentProcessStack) {
 	}
 }
 
+void printProcessesScheduler() {
+	uint64_t total = getSizeList(readyQueue) + getSizeList(waitingQueue);
+	newLine();
+	printString("Processes:", 0, 255, 0);
+	newLine();
+	printQueue(readyQueue, "Ready queue: ", total);
+	newLine();
+	printQueue(waitingQueue, "Waiting queue: ", total);
+	newLine();
+}
+
 // Iterator
-listADT createProcessList() {
-	listADT newList = duplicateList(readyQueue, duplicateProcessNode);
-	return duplicateAndConcatList(newList, waitingQueue, duplicateProcessNode);
-}
+// listADT createProcessList() {
+// 	listADT newList = duplicateList(readyQueue, duplicateProcessNode);
+// 	return duplicateAndConcatList(newList, waitingQueue, duplicateProcessNode);
+// }
 
-uint8_t hasNextProcess(listADT list) {
-	return hasNextListIterator(list);
-}
+// uint8_t hasNextProcess(listADT list) {
+// 	return hasNextListIterator(list);
+// }
 
-uint64_t getProcessListLength(listADT list) {
-	return getSizeList(list);
-}
+// uint64_t getProcessListLength(listADT list) {
+// 	return getSizeList(list);
+// }
 
-t_process getNextProcess(listADT list) {
-	if (!hasNextProcess(list)) return NULL;
-	nodeListADT processNode = getNextNodeListIterator(list);
-	if (processNode != NULL) {
-		return getProcessFromNode(processNode);
-	}
-	return NULL;
-}
+// t_process getNextProcess(listADT list) {
+// 	if (!hasNextProcess(list)) return NULL;
+// 	nodeListADT processNode = getNextNodeListIterator(list);
+// 	if (processNode != NULL) {
+// 		return getProcessFromNode(processNode);
+// 	}
+// 	return NULL;
+// }
 
-void freeProcessesList(listADT list) {
-	freeList(list, freeProcessNodeReadOnly);
-}
+// void freeProcessesList(listADT list) {
+// 	freeList(list, freeProcessNodeReadOnly);
+// }
 
 // Private
 void runSchedulerForce(t_stack currentProcessStack, uint8_t force) {
@@ -426,4 +460,51 @@ t_priority getProcessNodePriority(nodeListADT node) {
 t_mode getProcessNodeMode(nodeListADT node) {
 	if (currentProcessNode == NULL) return S_M_INVALID;
 	return getProcessNodeFromNode(currentProcessNode)->mode;
+}
+
+void printQueue(listADT queue, char *title, uint64_t totalProcesses) {
+	printString(title, 0, 255, 0);
+	printDec(getSizeList(queue), 0, 255, 0);
+	printString("/", 0, 255, 0);
+	printDec(totalProcesses, 0, 255, 0);
+	printString(")", 0, 255, 0);
+	newLine();
+	printProcessHeaderScheduler();
+	newLine();
+	printList(queue, printProcessNode);
+}
+
+void printProcessNode(void *_processNode) {
+	processNodeADT processNode = (processNodeADT)_processNode;
+	printProcess(processNode->process);
+	printString(" | ", 0, 255, 0);
+	printString(getProcessModeString(processNode->mode), 0, 255, 0);
+	printString(" | ", 0, 255, 0);
+	printString(getProcessPriorityString(processNode->priority), 0, 255, 0);
+	newLine();
+}
+
+void printProcessHeaderScheduler() {
+	printProcessHeader();
+	printString(" | MODE | PRIORITY", 0, 255, 0);
+}
+
+char *getProcessPriorityString(t_priority priority) {
+	switch (priority) {
+		case S_P_HIGH: return "HIGH";
+		case S_P_LOW: return "LOW";
+		default: return "INVALID";
+	}
+}
+
+char *getProcessModeString(t_mode mode) {
+	switch (mode) {
+		case S_M_FOREGROUND: return "FOREGROUND";
+		case S_M_BACKGROUND: return "BACKGROUND";
+		default: {
+			printHexa(mode, 0, 255, 255);
+			return "INVALID";
+
+		}
+	}
 }
