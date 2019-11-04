@@ -555,6 +555,6 @@ void wakeProcesses() {
 			}
 		}
 
-		processNode = nextNode;
+		node = nextNode;
 	}
 }

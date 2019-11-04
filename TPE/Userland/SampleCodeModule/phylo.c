@@ -100,6 +100,8 @@ void createPhylo(){
 }
 
 void removePhylo(){
+    if(currentQty == 0)
+        return;
     currentQty--;
     sys_closeSem(forks[currentQty].fork);
     if(forks[0].usedBy == phylosIds[currentQty]){
@@ -119,14 +121,20 @@ int phylo(int argc, char * argv[]){
     t_fork * rightFork = (t_fork *)argv[1];
     t_fork * leftFork = (t_fork *)argv[2];
     while(1){
+        printf("%d thinking...\n", id);
         sleep(5000);
+        printf("Wake\n");
         sys_wait_semaphore(rightFork->fork);
         rightFork->usedBy = id;
+        printf("%d took right fork\n", id);
         sys_wait_semaphore(leftFork->fork);
         leftFork->usedBy = id;
+        printf("%d took right fork\n", id);
+        printf("Eating...");
         sleep(5000);
         rightFork->usedBy = -1;
         leftFork->usedBy = -1;
+        printf("Finshed eating");
         sys_post_semaphore(rightFork->fork);
     }
     return 0;
