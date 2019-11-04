@@ -115,8 +115,8 @@ void sys_closeSem(void * sem){
     _systemCall(__SYSTEM_CALL_CLOSE_SEM, sem);
 }
 
-void sys_wait_semaphore(void * sem, uint64_t pid){
-    _systemCall(__SYSTEM_CALL_WAIT, sem, pid);
+void sys_wait_semaphore(void * sem){
+    _systemCall(__SYSTEM_CALL_WAIT, sem);
 }
 
 void sys_post_semaphore(void * sem){

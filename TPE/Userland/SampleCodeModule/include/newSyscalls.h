@@ -44,7 +44,7 @@ uint64_t sys_clear();
 
 uint64_t sys_draw( int x, int y, int red, int green, int blue);
 
-int *sys_time(int * dest);
+uint64_t *sys_time(int * dest);
 
 pid_t sys_getPid();
 
@@ -86,7 +86,7 @@ void * sys_openSem(char *name);
 
 void sys_closeSem(void * sem);
 
-void sys_wait_semaphore(void * sem, uint64_t pid);
+void sys_wait_semaphore(void * sem);
 
 void sys_post_semaphore(void * sem);
 
