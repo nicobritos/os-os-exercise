@@ -7,11 +7,12 @@
 #include "mutex.h"
 #include "time.h"
 
-#define QUANTUM 4
+#define QUANTUM 2
 
 typedef struct processNodeCDT *processNodeADT;
 
 typedef struct processNodeCDT {
+    uint64_t activateOnTicks;
     uint64_t executedOnTicks;
     t_mutexADT waitpidMutex;
 	t_priority priority;
@@ -30,6 +31,7 @@ static uint64_t foregroundProcesses = 0;
 
 static t_process idleProcess = NULL;
 static void (*onProcessKill) (t_process process) = NULL;
+static uint64_t nextProcessActivateOnTicks = 0;
 
 void idleFunction();
 
@@ -83,6 +85,8 @@ void printProcessHeaderScheduler();
 char *getProcessPriorityString(t_priority priority);
 
 char *getProcessModeString(t_mode mode);
+
+void wakeProcesses();
 
 // Public
 void initializeScheduler() {
@@ -159,22 +163,24 @@ void lockProcess(pid_t pid, t_stack stackFrame) {
 	nodeListADT processNode = getNodeReadyQueue(pid);
 	if (processNode == NULL) return;
 	setProcessState(getProcessFromNode(processNode), P_LOCKED);
-	
+	moveNode(processNode, readyQueue, waitingQueue);
+
 	if (processNode == currentProcessNode) {
 		currentProcessNode = fetchNextNode();
 	}
-
-	moveNode(processNode, readyQueue, waitingQueue);
-	currentProcessNode = fetchNextNode();
 	if (currentProcessNode != NULL)
 		dispatchProcess(getProcessFromNode(currentProcessNode), stackFrame);
 	else
 		dispatchProcess(idleProcess, stackFrame);
+
 }
 
 void unlockProcess(pid_t pid) {
 	nodeListADT processNode = getNodeWaitingQueue(pid);
-	if (processNode == NULL) return;
+	if (processNode == NULL) {
+		return;
+
+	}
 	setProcessState(getProcessFromNode(processNode), P_READY);
 	
 	moveNode(processNode, waitingQueue, readyQueue);
@@ -269,6 +275,24 @@ void printProcessesScheduler() {
 	newLine();
 }
 
+void sleepScheduler(uint64_t ms, t_stack currentProcessStack) {
+	processNodeADT processNode = getProcessNodeFromNode(currentProcessNode);
+	processNode->activateOnTicks = msToTicks(ms);
+	if (processNode->activateOnTicks == 0) {
+		if (ms > 0)
+			processNode->activateOnTicks = 1;
+		else
+			return;
+	}
+	
+	processNode->activateOnTicks = processNode->activateOnTicks + ticks_elapsed();
+	if (nextProcessActivateOnTicks > processNode->activateOnTicks || nextProcessActivateOnTicks == 0) {
+		nextProcessActivateOnTicks = processNode->activateOnTicks;
+	}
+	
+	lockProcess(getProcessPid(processNode->process), currentProcessStack);
+}
+
 // Iterator
 // listADT createProcessList() {
 // 	listADT newList = duplicateList(readyQueue, duplicateProcessNode);
@@ -298,10 +322,13 @@ void printProcessesScheduler() {
 
 // Private
 void runSchedulerForce(t_stack currentProcessStack, uint8_t force) {
-	if (!initialized || getSizeList(readyQueue) == 0) {
+	if (!initialized) {
 		return;
 	}
 
+	if (nextProcessActivateOnTicks > 0 && ticks_elapsed() >= nextProcessActivateOnTicks) {
+		wakeProcesses();
+	}
 	if (currentProcessNode != NULL) {
 		processNodeADT myCurrentProcessNode = getProcessNodeFromNode(currentProcessNode);
 
@@ -506,5 +533,27 @@ char *getProcessModeString(t_mode mode) {
 			return "INVALID";
 
 		}
+  }
+}
+
+void wakeProcesses() {
+	nodeListADT node = getNodeAtIndexList(waitingQueue, 0);
+	processNodeADT processNode;
+	uint64_t ticks = ticks_elapsed();
+	nextProcessActivateOnTicks = 0;
+
+	while (node != NULL) {
+		processNode = getProcessNodeFromNode(node);
+
+		if (processNode->activateOnTicks > 0) {
+			if (processNode->activateOnTicks <= ticks) {
+				processNode->activateOnTicks = 0;
+				unlockProcess(getProcessPid(processNode->process));
+			} else if (nextProcessActivateOnTicks == 0 || processNode->activateOnTicks < nextProcessActivateOnTicks) {
+				nextProcessActivateOnTicks = processNode->activateOnTicks;
+			}
+		}
+
+		node = getNextNodeList(node);
 	}
 }

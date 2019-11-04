@@ -6,7 +6,7 @@
 #define false 0
 
 #define BUFFER_LENGTH 4096
-#define NULL (void*) 0
+#define NULL ((void*) 0) 
 
 typedef int boolean;
 

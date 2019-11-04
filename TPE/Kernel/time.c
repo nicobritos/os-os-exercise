@@ -1,15 +1,22 @@
 #include <time.h>
 
-static unsigned long ticks = 0;
+#define TICK_MS 55.0
+#define TICK_SECONDS 18.1818181818 
+
+static uint64_t ticks = 0;
 
 void timer_handler() {
 	ticks++;
 }
 
-int ticks_elapsed() {
+uint64_t ticks_elapsed() {
 	return ticks;
 }
 
-int seconds_elapsed() {
-	return ticks / 18;
+uint64_t seconds_elapsed() {
+	return (uint64_t)(ticks / TICK_SECONDS);
+}
+
+uint64_t msToTicks(uint64_t ms) {
+	return (uint64_t) (ms / TICK_MS);
 }

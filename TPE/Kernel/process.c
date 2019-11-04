@@ -51,10 +51,12 @@ t_process createProcess(char * name, int(* wrapper)(int argc, char** argv, int(*
     }
     newProcess->pid = pid;
     newProcess->pPid = pPid;
-    newProcess->name = name;
+    newProcess->name = pmalloc(strlen(name) + 1, pid);
+    strcpy(newProcess->name, name);
     newProcess->processMemoryLowerAddress = pmalloc(PROC_SIZE, pid);
     if (newProcess->processMemoryLowerAddress == NULL) {
         pfree(newProcess, pid);
+        pfree(newProcess->name, pid);
         return NULL;
     }
     void * processMemoryUpperAddress = newProcess->processMemoryLowerAddress + PROC_SIZE - 1;
@@ -97,6 +99,7 @@ void initializeStack(t_stack stackFrame, int(* wrapper)(int argc, char** argv, i
 
 void freeProcess(t_process process) {
     pfree(process->processMemoryLowerAddress, process->pid);
+    pfree(process->name, process->pid);
     pfree(process, process->pid);
 }
 
@@ -253,6 +256,7 @@ t_process duplicateProcessReadOnly(t_process source) {
 
 void freeProcessReadOnly(t_process process) {
     pfree(process->stackPointer, SYSTEM_PID);
+    pfree(process->name, SYSTEM_PID);
     pfree(process, SYSTEM_PID);
 }
 

@@ -39,3 +39,7 @@ void setProcessPriority(pid_t pid, t_priority priority){
 t_state toogleProcessLock(pid_t pid){
     return sys_toggle_process_lock(pid);
 }
+
+void sleep(uint64_t ms) {
+	sys_sleep(ms);
+}
