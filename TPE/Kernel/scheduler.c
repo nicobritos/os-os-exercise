@@ -152,22 +152,24 @@ void lockProcess(pid_t pid, t_stack stackFrame) {
 	nodeListADT processNode = getNodeReadyQueue(pid);
 	if (processNode == NULL) return;
 	setProcessState(getProcessFromNode(processNode), P_LOCKED);
-	
+	moveNode(processNode, readyQueue, waitingQueue);
+
 	if (processNode == currentProcessNode) {
 		currentProcessNode = fetchNextNode();
 	}
-
-	moveNode(processNode, readyQueue, waitingQueue);
-	currentProcessNode = fetchNextNode();
 	if (currentProcessNode != NULL)
 		dispatchProcess(getProcessFromNode(currentProcessNode), stackFrame);
 	else
 		dispatchProcess(idleProcess, stackFrame);
+
 }
 
 void unlockProcess(pid_t pid) {
 	nodeListADT processNode = getNodeWaitingQueue(pid);
-	if (processNode == NULL) return;
+	if (processNode == NULL) {
+		return;
+
+	}
 	setProcessState(getProcessFromNode(processNode), P_READY);
 	
 	moveNode(processNode, waitingQueue, readyQueue);
@@ -286,11 +288,11 @@ void freeProcessesList(listADT list) {
 
 // Private
 void runSchedulerForce(t_stack currentProcessStack, uint8_t force) {
-	if (!initialized || getSizeList(readyQueue) == 0) {
+	if (!initialized) {
 		return;
 	}
 
-	if (ticks_elapsed() >= nextProcessActivateOnTicks) {
+	if (nextProcessActivateOnTicks > 0 && ticks_elapsed() >= nextProcessActivateOnTicks) {
 		wakeProcesses();
 	}
 	if (currentProcessNode != NULL) {

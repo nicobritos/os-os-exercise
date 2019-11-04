@@ -1,9 +1,9 @@
 #include "include/phylo.h"
 #include "include/newSyscalls.h"
 #include "include/stdlib.h"
-#include "include/time.h"
 #include "include/process.h"
 #include "include/stdio.h"
+#include "include/unistd.h"
 
 #define MAX_PHYLOS 100
 
@@ -12,8 +12,6 @@ void createPhylo();
 void removePhylo();
 int phylo(int argc, char * argv[]);
 void printTable();
-
-typedef enum {EATING, WAITING_FORK, THINKING} phylo_state;
 
 typedef struct
 {
@@ -28,15 +26,18 @@ int currentQty = 0;
 pid_t phylosPids[MAX_PHYLOS];
 int phylosIds[MAX_PHYLOS];
 
-int phyloProblem(int initQty){
+int phyloProblem(int argc, char * argv[]){
+    int initQty = argv[0];
     if(initQty > MAX_PHYLOS)
         return -1;
     for (int i = 0; i < initQty; i++){
         createPhylo();
     }
-    char c;
-    while(((c=getchar()) != 'e') || (c != 'E')){
-        switch (c){
+    char c[3];
+    scanf(c, 2, '\n');
+    while((c[0] != 'e') || (c[0] != 'E')){
+        printf("\nToy");
+        switch (c[0]){
             case 'r': case 'R':
                 removePhylo();
                 break;
@@ -46,6 +47,7 @@ int phyloProblem(int initQty){
             default:
                 printTable();
         }
+        scanf(c, 2, '\n');
     }
     return 0;
 }
@@ -68,27 +70,27 @@ void createPhylo(){
     name[7] = currentQty/10 + '0';
     name[8] = currentQty % 10 + '0';
     phylosIds[currentQty] = currentQty;
-    char * argv[3] = {&(phylosIds[currentQty]), &(forks[currentQty]), &(forks[(currentQty+1)%currentQty])};
-    phylosPids[currentQty] = sys_newProcess(name, phylo, 3, argv, S_M_BACKGROUND);
+    void * argv[3] = {&(phylosIds[currentQty]), &(forks[currentQty]), &(forks[(currentQty+1)%(currentQty+1)])};
+    phylosPids[currentQty] = sys_newProcess(name, phylo, 3, (char **)argv, S_M_BACKGROUND);
 
     if(currentQty != 0){
         char post1, post2;
         post1 = post2 = 0;
 
         if((forks[currentQty-1].usedBy == currentQty -1)){
-            wait(forks[currentQty-1].fork);
+            sys_wait_semaphore(forks[currentQty-1].fork);
             post1 = 1;
         }
         if(forks[0].usedBy == currentQty - 1){
-            wait(forks[0].fork);
+            sys_wait_semaphore(forks[0].fork);
             post2 = 1;
         }
         sys_freeProcess(phylosPids[currentQty - 1]);
         name[7] = (currentQty-1)/10 + '0';
         name[8] = (currentQty-1) % 10 + '0';
         phylosIds[currentQty-1] = currentQty -1;
-        char * argv[3] = {&(phylosIds[currentQty-1]), &(forks[currentQty-1]), &(forks[(currentQty)%currentQty])};
-        phylosPids[currentQty] = sys_newProcess(name, phylo, 3, argv, S_M_BACKGROUND);
+        void * argv[3] = {&(phylosIds[currentQty-1]), &(forks[currentQty-1]), &(forks[(currentQty)%currentQty])};
+        phylosPids[currentQty] = sys_newProcess(name, phylo, 3, (char **)argv, S_M_BACKGROUND);
         if(post1)
             sys_post_semaphore(forks[currentQty-1].fork);
         if(post2)
@@ -99,9 +101,6 @@ void createPhylo(){
 
 void removePhylo(){
     currentQty--;
-    char semName[8] = "Fork-00";
-    semName[5] = currentQty/10 + '0';
-    semName[6] = currentQty % 10 + '0';
     sys_closeSem(forks[currentQty].fork);
     if(forks[0].usedBy == phylosIds[currentQty]){
         forks[0].usedBy = -1;
@@ -120,15 +119,12 @@ int phylo(int argc, char * argv[]){
     t_fork * rightFork = (t_fork *)argv[1];
     t_fork * leftFork = (t_fork *)argv[2];
     while(1){
-        phylo_state state = THINKING;
-        sleep(5);
-        state = WAITING_FORK;
-        wait(rightFork->fork);
+        sleep(5000);
+        sys_wait_semaphore(rightFork->fork);
         rightFork->usedBy = id;
-        wait(leftFork->fork);
+        sys_wait_semaphore(leftFork->fork);
         leftFork->usedBy = id;
-        state = EATING;
-        sleep(5);
+        sleep(5000);
         rightFork->usedBy = -1;
         leftFork->usedBy = -1;
         sys_post_semaphore(rightFork->fork);

@@ -25,7 +25,7 @@ void exceptionDispatcher(uint64_t exception, t_stack stackPointer) {
 
 static void zero_division(t_stack stackPointer) {
 	newLine();
-
+	
 	printExceptions("ERROR: DIVISION POR CERO");
 	printStackFrame(stackPointer);
 }

@@ -1,7 +1,6 @@
 #ifndef STDLIB_H_
 #define STDLIB_H_
 #include <stdint.h>
-#define NULL ((void *) 0)
 
 int strlen(char* str);
 

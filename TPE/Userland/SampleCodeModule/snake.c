@@ -158,7 +158,7 @@ static char score[] = "Score: ";
 static char start_message[] = "Press any key to start";
 static char commands[] = "'w' Up ; 's' Down ; 'a' Left ; 'd' Right";
 
-static int ticks = 0;
+static uint64_t ticks = 0;
 int ticks_to_bigger = 15;
 int ticksTillRefresh = 3;
 double snake_speed = 1.5;
@@ -396,10 +396,10 @@ void play(){
   // start_seconds = getseconds();
   // play_seconds = getseconds();
 
-  int auxTicks;
+  uint64_t auxTicks;
 
   while(dead == 0){
-    auxTicks = sys_ticks(&auxTicks);
+    sys_ticks(&auxTicks);
 
     char sec[10];
     // itoa(play_seconds-start_seconds,sec,10);

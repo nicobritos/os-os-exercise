@@ -6,6 +6,7 @@
 #include "snake.h"
 #include "defines.h"
 #include "apps.h"
+#include "phylo.h"
 
 #define MAX_ARGS 10
 
@@ -58,11 +59,18 @@ void parseWithPipe(char *p1, char *p2) {
 }
 
 int parse(char* input, t_mode mode) {
-    char argv[MAX_ARGS] = {0};
+    char * argv[MAX_ARGS] = {0};
     pid_t pid = 0;
 
     if (strcmp(input, "help") == 0) {
         pid = newProcess("help", help, mode);
+    } else if(strcmp(input, "phylo") == 0){
+        argv[0] = 2;
+        pid = newProcessArgs("help", phyloProblem, 1, argv, mode);
+    } else if(strcmp(input, "s") == 0){
+        printf("Hola");
+        sleep(2000);
+        printf("Chau");
     // } else if (strcmp(input, "mem") == 0) {
     //     pid = newProcess("mem", mem, mode);
     // } else if (strcmp(input, "ps") == 0) {

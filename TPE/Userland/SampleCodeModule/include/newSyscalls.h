@@ -45,7 +45,7 @@ uint64_t sys_clear();
 
 uint64_t sys_draw(int x, int y, int red, int green, int blue);
 
-uint64_t *sys_time(uint64_t * dest);
+uint64_t * sys_time(uint64_t * dest);
 
 pid_t sys_getPid();
 
