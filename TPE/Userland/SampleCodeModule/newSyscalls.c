@@ -2,7 +2,7 @@
 
 uint64_t _systemCall();
 
-uint64_t sys_read( int fileDescriptor, void * buff, int length)
+uint64_t sys_read(int fileDescriptor, void * buff, int length)
 {
     return _systemCall(__SYSTEM_CALL_READ, fileDescriptor, buff, length);
 }
@@ -22,7 +22,7 @@ uint64_t sys_draw( int x, int y, int red, int green, int blue)
     return _systemCall(__SYSTEM_CALL_DRAW, x, y, red, green, blue);
 }
 
-uint64_t *sys_time(int * time){
+uint64_t *sys_time(uint64_t * time){
     return (uint64_t*)_systemCall(__SYSTEM_CALL_TIME, time);
 }
 
@@ -46,12 +46,12 @@ void sys_free(void * address)
     _systemCall(__SYSTEM_CALL_FREE,address);    
 }
 
-uint64_t sys_ticks(int * ticks)
+uint64_t sys_ticks(uint64_t * ticks)
 {
     return _systemCall(__SYSTEM_CALL_TICKS,ticks);
 }
 
-uint64_t sys_ticksPerSecond(int * ticks)
+uint64_t sys_ticksPerSecond(uint64_t * ticks)
 {
     return _systemCall(__SYSTEM_CALL_TICKS_PER_SECOND,ticks);
 }
@@ -129,4 +129,8 @@ void sys_printSems(){
 
 int sys_wait_pid(pid_t pid) {
     return _systemCall(__SYSTEM_CALL_WAIT_PID, pid);
+}
+
+void sys_sleep(uint64_t ms) {
+    _systemCall(__SYSTEM_CALL_SLEEP, ms);
 }

@@ -25,3 +25,7 @@ int waitpid(pid_t pid) {
 void killProcess(pid_t pid) {
 	sys_freeProcess(pid);
 }
+
+void sleep(uint64_t ms) {
+	sys_sleep(ms);
+}

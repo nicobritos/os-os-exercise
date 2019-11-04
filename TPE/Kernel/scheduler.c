@@ -6,11 +6,12 @@
 #include "mutex.h"
 #include "time.h"
 
-#define QUANTUM 4
+#define QUANTUM 2
 
 typedef struct processNodeCDT *processNodeADT;
 
 typedef struct processNodeCDT {
+    uint64_t activateOnTicks;
     uint64_t executedOnTicks;
     t_mutexADT waitpidMutex;
 	t_priority priority;
@@ -29,6 +30,7 @@ static uint64_t foregroundProcesses = 0;
 
 static t_process idleProcess = NULL;
 static void (*onProcessKill) (t_process process) = NULL;
+static uint64_t nextProcessActivateOnTicks = 0;
 
 void idleFunction();
 
@@ -72,6 +74,8 @@ uint8_t equalsPid(void *_process, void *_pid);
 void freeProcessNodeReadOnly(void *_processNode);
 
 t_mode getProcessNodeMode(nodeListADT node);
+
+void wakeProcesses();
 
 // Public
 void initializeScheduler() {
@@ -235,6 +239,24 @@ void waitpid(pid_t pid, t_stack currentProcessStack) {
 	}
 }
 
+void sleepScheduler(uint64_t ms, t_stack currentProcessStack) {
+	processNodeADT processNode = getProcessNodeFromNode(currentProcessNode);
+	processNode->activateOnTicks = msToTicks(ms);
+	if (processNode->activateOnTicks == 0) {
+		if (ms > 0)
+			processNode->activateOnTicks = 1;
+		else
+			return;
+	}
+	
+	processNode->activateOnTicks = processNode->activateOnTicks + ticks_elapsed();
+	if (nextProcessActivateOnTicks > processNode->activateOnTicks || nextProcessActivateOnTicks == 0) {
+		nextProcessActivateOnTicks = processNode->activateOnTicks;
+	}
+	
+	lockProcess(getProcessPid(processNode->process), currentProcessStack);
+}
+
 // Iterator
 listADT createProcessList() {
 	listADT newList = duplicateList(readyQueue, duplicateProcessNode);
@@ -268,6 +290,9 @@ void runSchedulerForce(t_stack currentProcessStack, uint8_t force) {
 		return;
 	}
 
+	if (ticks_elapsed() >= nextProcessActivateOnTicks) {
+		wakeProcesses();
+	}
 	if (currentProcessNode != NULL) {
 		processNodeADT myCurrentProcessNode = getProcessNodeFromNode(currentProcessNode);
 
@@ -426,4 +451,26 @@ t_priority getProcessNodePriority(nodeListADT node) {
 t_mode getProcessNodeMode(nodeListADT node) {
 	if (currentProcessNode == NULL) return S_M_INVALID;
 	return getProcessNodeFromNode(currentProcessNode)->mode;
+}
+
+void wakeProcesses() {
+	nodeListADT node = getNodeAtIndexList(waitingQueue, 0);
+	processNodeADT processNode;
+	uint64_t ticks = ticks_elapsed();
+	nextProcessActivateOnTicks = 0;
+
+	while (node != NULL) {
+		processNode = getProcessNodeFromNode(node);
+
+		if (processNode->activateOnTicks > 0) {
+			if (processNode->activateOnTicks <= ticks) {
+				processNode->activateOnTicks = 0;
+				unlockProcess(getProcessPid(processNode->process));
+			} else if (nextProcessActivateOnTicks == 0 || processNode->activateOnTicks < nextProcessActivateOnTicks) {
+				nextProcessActivateOnTicks = processNode->activateOnTicks;
+			}
+		}
+
+		node = getNextNodeList(node);
+	}
 }

@@ -46,6 +46,8 @@
 
 	void waitpid(pid_t pid, t_stack currentProcessStack);
 
+	void sleepScheduler(uint64_t ms, t_stack currentProcessStack);
+
 	// Process iterator
 	listADT createProcessList();
 	uint64_t getProcessListLength(listADT processList);

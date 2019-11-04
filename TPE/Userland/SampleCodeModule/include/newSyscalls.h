@@ -33,7 +33,8 @@ typedef enum {
 	__SYSTEM_CALL_WAIT = 25,
 	__SYSTEM_CALL_POST = 26,
 	__SYSTEM_CALL_PRINT_SEMS = 27,
-	__SYSTEM_CALL_WAIT_PID = 28
+	__SYSTEM_CALL_WAIT_PID = 28,
+	__SYSTEM_CALL_SLEEP = 29
 } t_system_call;
 
 uint64_t sys_read(int fileDescriptor, void * buff, int length);
@@ -42,9 +43,9 @@ uint64_t sys_write(int fileDescriptor, void * buff, int length);
 
 uint64_t sys_clear();
 
-uint64_t sys_draw( int x, int y, int red, int green, int blue);
+uint64_t sys_draw(int x, int y, int red, int green, int blue);
 
-uint64_t *sys_time(int * dest);
+uint64_t *sys_time(uint64_t * dest);
 
 pid_t sys_getPid();
 
@@ -54,9 +55,9 @@ void sys_freeProcess(pid_t pid);
 
 void sys_free(void * address);
 
-uint64_t sys_ticks(int * ticks);
+uint64_t sys_ticks(uint64_t * ticks);
 
-uint64_t sys_ticksPerSecond(int * ticks);
+uint64_t sys_ticksPerSecond(uint64_t * ticks);
 
 uint64_t sys_usedMem();
 
@@ -93,5 +94,7 @@ void sys_post_semaphore(void * sem);
 void sys_printSems();
 
 int sys_wait_pid(pid_t pid);
+
+void sys_sleep(uint64_t ms);
 
 #endif
