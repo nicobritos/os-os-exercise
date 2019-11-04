@@ -1,6 +1,4 @@
 #include <stdint.h>
-#include "include/keyboard-Driver.h"
-#include "include/videoDriver.h"
 #include "time.h"
 #include "include/memManager.h"
 #include "include/processHandler.h"
@@ -8,6 +6,7 @@
 #include "scheduler.h"
 #include "process.h"
 #include "include/ipc.h"
+#include "include/fileManager.h"
 #include "include/semaphore.h"
 
 typedef uint64_t(*systemCall)();
@@ -146,37 +145,12 @@ uint64_t sys_clear() {
  * fd = 0 (stdin)
  */
 uint64_t sys_read(uint64_t fd, char *buffer, uint64_t size){
-	uint64_t i = 0;
-	char c;
-	if (fd == 0){
-		while(size > 0 && (c = get_key_input())) {	    //get_key_input devuelvo 0 si el buffer esta vacio
-			buffer[i++] = c;
-			size--;
-		}
-	}
-	return i;
+	return readFile(fd, buffer, size);
 }
 
 //fd = 1 (stdout)
 uint64_t sys_write(uint64_t fd, char *buffer, uint64_t size){
-	uint64_t i = 0;
-
-	if (fd == 1) {
-		while(size--) {
-			char c = *buffer;
-			if (c == '\n') {
-				newLine();
-			} else if (c == '\b') {
-				backspace();
-			} else {
-				printChar(c,0,255,0);
-			}
-			buffer++;
-			i++;
-		}
-	}
-
-	return i;
+	return writeFile(fd, buffer, size);
 }
 
 uint64_t sys_draw(uint64_t x, uint64_t y, unsigned char r, unsigned char g, unsigned char b) {

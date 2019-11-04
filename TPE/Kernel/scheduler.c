@@ -166,6 +166,7 @@ void lockProcess(pid_t pid, t_stack stackFrame) {
 	moveNode(processNode, readyQueue, waitingQueue);
 
 	if (processNode == currentProcessNode) {
+		updateProcessStack(getProcessStackFrame(getProcessFromNode(currentProcessNode)), stackFrame);
 		currentProcessNode = fetchNextNode();
 	}
 	if (currentProcessNode != NULL)
