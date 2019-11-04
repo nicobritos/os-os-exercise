@@ -537,13 +537,14 @@ char *getProcessModeString(t_mode mode) {
 }
 
 void wakeProcesses() {
-	nodeListADT node = getNodeAtIndexList(waitingQueue, 0);
+	nodeListADT node = getNodeAtIndexList(waitingQueue, 0), nextNode = NULL;
 	processNodeADT processNode;
 	uint64_t ticks = ticks_elapsed();
 	nextProcessActivateOnTicks = 0;
 
 	while (node != NULL) {
 		processNode = getProcessNodeFromNode(node);
+		nextNode = getNextNodeList(node);
 
 		if (processNode->activateOnTicks > 0) {
 			if (processNode->activateOnTicks <= ticks) {
@@ -554,6 +555,6 @@ void wakeProcesses() {
 			}
 		}
 
-		node = getNextNodeList(node);
+		processNode = nextNode;
 	}
 }

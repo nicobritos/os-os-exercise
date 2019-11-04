@@ -8,7 +8,6 @@
 #include "apps.h"
 #include "phylo.h"
 
-
 #define MAX_ARGS 10
 
 int parse(char *input, t_mode mode);
@@ -64,10 +63,9 @@ int parse(char* input, t_mode mode) {
     pid_t pid = 0;
 
     if (strcmp(input, "help") == 0) {
-        pid = newProcess("help", help);
+        pid = newProcess("help", help, S_M_FOREGROUND);
     } else if(strcmp(input, "phylo") == 0){
-        argv[0] = 2;
-        pid = newProcessArgs("help", phyloProblem, 1, argv, mode);
+        // pid = newProcessArgs("help", phyloProblem, 1, argv);
     } else if(strcmp(input, "s") == 0){
         printf("Hola");
         sleep(2000);
@@ -82,15 +80,15 @@ int parse(char* input, t_mode mode) {
     } else if (strncmp(input, "kill ", 5) == 0) {
         char * argv[MAX_ARGS] = {0};
         argv[0] = input+5;
-        pid = newProcessArgs("kill", kill,1, argv);
+        pid = newProcessArgs("kill", kill,1, argv, S_M_FOREGROUND);
     } else if (strncmp(input, "nice ", 5) == 0) {
         char * argv[MAX_ARGS] = {0};
         argv[0] = input+5;
-        pid = newProcessArgs("nice", nice, 2, argv);
+        pid = newProcessArgs("nice", nice, 2, argv, S_M_FOREGROUND);
     } else if (strncmp(input, "block ", 6) == 0) {
         char * argv[MAX_ARGS] = {0};
         argv[0] = input+6;
-        pid = newProcessArgs("block", block, 1, argv);
+        pid = newProcessArgs("block", block, 1, argv, S_M_FOREGROUND);
     // } else if (strncmp(input, "cat ", 4) == 0) {
     //     argv[0] = {input + 4};
     //     pid = newProcessArgs("cat", cat, mode, 1, argv);
@@ -189,10 +187,10 @@ int parse(char* input, t_mode mode) {
 
     if (pid > 0) {
         if (mode == S_M_FOREGROUND) {
-            setProcessMode(pid, S_M_FOREGROUND);
+            // setProcessMode(pid, S_M_FOREGROUND);
             waitpid(pid);
         } else {
-            setProcessMode(pid, S_M_BACKGROUND);
+            // setProcessMode(pid, S_M_BACKGROUND);
         }
     }
     return 0;

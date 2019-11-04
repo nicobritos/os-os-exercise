@@ -4,12 +4,12 @@
 #include "stdlib.h"
 #include "process.h"
 
-pid_t newProcessArgs(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[]){
-    return sys_newProcess(name, foo, argc, argv);
+pid_t newProcessArgs(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[], t_mode mode){
+    return sys_newProcess(name, foo, argc, argv, mode);
 }
 
-pid_t newProcess(char * name, int(* foo)(int argc, char** argv)) {
-	return newProcessArgs(name, foo, 0, NULL);
+pid_t newProcess(char * name, int(* foo)(int argc, char** argv), t_mode mode) {
+	return newProcessArgs(name, foo, 0, NULL, mode);
 }
 
 void freeProcess(pid_t pid){

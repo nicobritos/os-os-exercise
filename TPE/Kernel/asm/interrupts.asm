@@ -228,10 +228,12 @@ _syscallHandler:
   popState  ; restore regs lost by pushcli
   pushState
 
-  mov r9, rsp; pasaje de parametro del puntero a los registros
+  mov r15, rsp; pasaje de parametro del puntero a los registros
 
   push rbp
 	mov rbp, rsp
+
+  push r15; pasaje de parametro del puntero a los registros
 
 	call syscallHandler
 
