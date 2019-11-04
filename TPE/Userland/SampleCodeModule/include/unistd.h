@@ -8,5 +8,7 @@ pid_t newProcess(char * name, int(* foo)(int argc, char** argv), t_mode mode);
 void freeProcess(pid_t pid);
 int getPid();
 int waitpid();
+void killProcess(pid_t pid);
+void changeProcessState(pid_t pid);
 
 #endif

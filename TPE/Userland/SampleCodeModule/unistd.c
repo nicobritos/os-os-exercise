@@ -25,3 +25,16 @@ int waitpid(pid_t pid) {
 void killProcess(pid_t pid) {
 	sys_freeProcess(pid);
 }
+
+void changeProcessState(pid_t pid){
+    t_state state = sys_get_process_state(pid);
+    if (state == P_READY)
+    {
+       //cambiar a P_LOCKED 
+    }
+    else if(state == P_LOCKED){
+        // cambiar a P_READY
+    }
+    
+}
+

@@ -192,3 +192,37 @@ uint64_t replaceChars(char *input, char target, char newChar) {
 	}
 	return result;
 }
+
+uint64_t tokenArgs(char ** argv, char * input, uint64_t max){
+	char buff[100];
+	uint64_t i = 0;
+	uint64_t nbfields = 0;
+
+	char * start_of_field;
+	
+	strcpy(buff,input);
+	start_of_field = buff;
+
+	for (i = 0; buff[i] != 0; i++)
+	{
+		if (buff[i] == ' ')
+		{
+			buff[i] = 0;
+			argv[nbfields] = start_of_field;
+			nbfields++;
+			start_of_field = buff+i+1;
+		}
+	}
+	printf("%s\n",argv[0]);
+	printf("%s\n",argv[1]);
+	return nbfields+1;
+}
+
+void strcpy(char * dest, char * src){
+	int i=0;
+	while(src[i] != 0){
+		dest[i] = src[i];
+		i++;
+	}
+	dest[i] = 0;
+}
