@@ -22,4 +22,8 @@ unsigned int lineCount(char * input);
 
 char * filterVowels(char * dest, char * src);
 
+char *trim(char *input);
+
+uint64_t replaceChars(char *input, char target, char newChar);
+
 #endif /* STDLIB_H_ */

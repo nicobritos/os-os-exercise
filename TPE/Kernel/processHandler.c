@@ -26,8 +26,6 @@ t_process newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, i
     processes[i] = newProcess;
 
     addProcess(newProcess, priority, mode);
-    printString(" new PID: ", 255, 0, 0);
-    printHexa(i);
     return newProcess;
 }
 

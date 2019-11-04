@@ -2,8 +2,6 @@
 #define COMMANDS_H_
 #include <stdint.h>
 
-void printHelp();
-
 void clearScreen();
 
 void time();

@@ -168,3 +168,27 @@ char * filterVowels(char * buffer, char * input){
 	buffer[bufferI] = 0;
 	return buffer;
 }
+
+char *trim(char *input) {
+	char *start = input;
+
+	while (*start == ' ') start++;
+	while (*input) input++;
+	input--;
+	while (input >= start && *input == ' ') input--;
+	*(input + 1) = '\0';
+
+	return start;
+}
+
+uint64_t replaceChars(char *input, char target, char newChar) {
+	uint64_t result = 0;
+	while (*input) {
+		if (*input == target) {
+			*input = newChar;
+			result++;
+		}
+		input++;
+	}
+	return result;
+}
