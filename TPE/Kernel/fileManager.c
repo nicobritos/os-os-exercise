@@ -3,7 +3,6 @@
 #include "processHandler.h"
 #include "fileManager.h"
 #include "memManager.h"
-#include "process.h"
 #include "list.h"
 #include "ipc.h"
 
@@ -22,6 +21,7 @@ typedef struct stdinNodeCDT {
 t_pipeADT getFdNode(fd_t fd);
 uint64_t readStdin(char *buffer, uint64_t size, t_stack currentProcessStackFrame);
 uint64_t writeStdout(char *buffer, uint64_t size);
+void processStdinList();
 
 static listADT stdinList = NULL;
 static t_pipeADT *pipeList = NULL;
@@ -157,6 +157,7 @@ void processStdinList() {
 			stdinNode->size--;
 		}
 		removeNodeList(stdinList, node);
+		unlockProcess(stdinNode->pid);
 
 		if (!c) finished = 1;
 		node = nextNode;
