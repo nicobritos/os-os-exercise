@@ -22,8 +22,8 @@ uint64_t sys_draw( int x, int y, int red, int green, int blue)
     return _systemCall(__SYSTEM_CALL_DRAW, x, y, red, green, blue);
 }
 
-uint64_t *sys_time(){
-    return (uint64_t*)_systemCall(__SYSTEM_CALL_TIME);
+uint64_t *sys_time(int * time){
+    return (uint64_t*)_systemCall(__SYSTEM_CALL_TIME, time);
 }
 
 pid_t sys_getPid()
