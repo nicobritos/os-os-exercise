@@ -31,9 +31,9 @@ pid_t sys_getPid()
     return (pid_t)_systemCall(__SYSTEM_CALL_GET_PID);
 }
 
-pid_t sys_newProcess(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[])
+pid_t sys_newProcess(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[], t_mode mode)
 {
-    return (pid_t)_systemCall(__SYSTEM_CALL_NEW_PROCESS,name,foo,argc,argv);
+    return (pid_t)_systemCall(__SYSTEM_CALL_NEW_PROCESS,name,foo,argc,argv, mode);
 }
 
 void sys_freeProcess(pid_t pid)

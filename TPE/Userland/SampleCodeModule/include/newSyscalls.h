@@ -51,7 +51,7 @@ uint64_t * sys_time(uint64_t * dest);
 
 pid_t sys_getPid();
 
-pid_t sys_newProcess(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[]);
+pid_t sys_newProcess(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[], t_mode mode);
 
 void sys_freeProcess(pid_t pid);
 
