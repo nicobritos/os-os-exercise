@@ -65,16 +65,12 @@ int parse(char* input, t_mode mode) {
 
     if (strcmp(input, "help") == 0) {
         pid = newProcess("help", help, S_M_FOREGROUND);
-    } else if(strcmp(input, "phylo") == 0){
-        argv[0] = 3;
-        pid = newProcessArgs("help", phyloProblem, 1, argv, S_M_BACKGROUND);
-    // } else if (strcmp(input, "mem") == 0) {
-    //     pid = newProcess("mem", mem, mode);
-    // } else if (strcmp(input, "ps") == 0) {
-    //     pid = newProcess("ps", ps, mode);
-    // // } else if (strncmp(input, "loop ", 5) == 0) {
-    //     // argv[0] = {input + 5};
-    //     // pid = newProcessArgs("loop", loop, mode, 1, argv);
+    } else if (strcmp(input, "mem") == 0) {
+        pid = newProcess("mem", mem, S_M_FOREGROUND);
+    } else if (strcmp(input, "ps") == 0) {
+        pid = newProcess("ps", ps, S_M_FOREGROUND);
+    } else if (strcmp(input, "loop") == 0) {
+        pid = newProcess("loop", loop, S_M_BACKGROUND);
     } else if (strncmp(input, "kill ", 5) == 0) {
         char * argv[MAX_ARGS] = {0};
         argv[0] = input+5;
@@ -87,101 +83,29 @@ int parse(char* input, t_mode mode) {
         char * argv[MAX_ARGS] = {0};
         argv[0] = input+6;
         pid = newProcessArgs("block", block, 1, argv, S_M_FOREGROUND);
-    // } else if (strncmp(input, "cat ", 4) == 0) {
-    //     argv[0] = {input + 4};
-    //     pid = newProcessArgs("cat", cat, mode, 1, argv);
-    // } else if (strcmp(input, "wc") == 0) {
-    //     pid = newProcess("wc", wc, mode);
-    // } else if (strcmp(input, "filter") == 0) {
-    //     pid = newProcess("filter", filter, mode);
-    // } else if (strcmp(input, "sem") == 0) {
-    //     pid = newProcess("sem", sem, mode);
+    } else if (strncmp(input, "cat ", 4) == 0) {
+        argv[0] = input + 4;
+        pid = newProcessArgs("cat", cat, 1, argv, S_M_FOREGROUND);
+    } else if(strcmp(input, "wc") == 0){
+        pid = newProcess("wc", wc, S_M_FOREGROUND);
+    } else if(strncmp(input, "filter ", 7) == 0){
+        argv[0] = input + 7;
+        pid = newProcessArgs("filter", filter, 1, argv, S_M_FOREGROUND);
+    } else if (strcmp(input, "sem") == 0) {
+        pid = newProcess("sem", sem, S_M_FOREGROUND);
     // } else if (strcmp(input, "pipe") == 0) {
     //     pid = newProcess("pipe", pipe, mode);
-    // } else if (strcmp(input, "phylo") == 0) {
-    //     pid = newProcess("phylo", phylo, mode);
+    } else if (strcmp(input, "phylo") == 0) {
+        argv[0] = (char *)3;
+        pid = newProcessArgs("help", phyloProblem, 1, argv, S_M_BACKGROUND);
     } else if(strcmp(input, "") == 0){
         return 0;
+    } else if(strcmp(input, "clear") == 0) {
+        pid = newProcess("clear", clear, S_M_FOREGROUND);
     } else {
         printf("\nWrong command");
         return 0;
     }
-
-
-
-
-
-
-
-    // if(strncmp(input, "cat ", 4) == 0) {
-    // char* phrase = &(input[4]);
-    // printf("\n%s", phrase);
-    // return 0;
-    // } else if(strcmp(input,"snake") == 0){
-    // pid_t snakeProcessPid = newProcess("Snake", snake_game);
-    // // Set foreground
-    // waitpid(snakeProcessPid);
-    // return 0;
-    // } else if(strcmp(input, "getTime") == 0) {
-    // printf("\n");
-    // time();
-    // return 0;
-    // } else if(strcmp(input, "clear") == 0) {
-    // clearScreen();
-    // printf("\n");
-    // return 0;
-    // } else if(strcmp(input, "help") == 0) {
-    // printHelp();
-    // return 0;
-    // } else if(strcmp(input, "exit") == 0) {
-    // return 1;
-    // }
-    // else if(strcmp(input, "zero") == 0) {
-    // divisionExc();    
-    // return 0;
-    // } else if(strcmp(input, "invalidOpCode") == 0) {
-    // invalidOpCodeException();
-    // return 0;
-    // }
-    // else if(strcmp(input, "mem") == 0){
-    // printf("\n%l / %l bytes utilizados", usedMem(), freeMem());
-    // return 0;
-    // }
-    // else if(strcmp(input, "wc") == 0){
-    // printf("\n");
-    // char buffer[1000];
-    // int separator = -1;
-    // scanf(buffer, 1000, separator);
-    // printf("\n%d", lineCount(buffer));
-    // return 0;
-    // }
-    // else if(strncmp(input, "filter ", 7) == 0){
-    // char phrase[1000];
-    // printf("\n%s", filterVowels(phrase, &(input[7])));
-    // return 0;
-    // }
-    // // else if(strcmp(input, "new") == 0){
-    // //   void * proceso = newProcess("Hola", 0, 0, 0, 0, 0);
-    // //   printf("\n%x", proceso);
-    // //   return 0;
-    // // }
-    // else if(strncmp(input, "free ", 5) == 0){
-    // char* phrase = &(input[5]);
-    // pid_t i = atox(phrase);
-    // killProcess(i);
-    // return 0;
-    // }
-    // // else if(strncmp(input, "get ", 4) == 0){
-    // //   char* phrase = &(input[4]);
-    // //   int i = atox(phrase);
-    // //   printf("\n%d", getPid(i));
-    // //   return 0;
-    // // }
-    // else if(strcmp(input, "") == 0){
-    // return 0;
-    // }
-
-
 
     if (pid > 0) {
         if (mode == S_M_FOREGROUND) {

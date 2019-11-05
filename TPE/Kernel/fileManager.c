@@ -46,7 +46,7 @@ fd_t openPipe(const char *name, uint8_t mode, t_process process) {
 		}
 		fd++;
 	}
-	if (fd == MAX_PIPES) return NULL;
+	if (fd == MAX_PIPES) return -1;
 
 	t_pipeADT pipe = _openPipe(name, mode, process);
 	pipeList[fd] = pipe;
@@ -64,7 +64,6 @@ void closePipe(fd_t fd, t_process process) {
 uint64_t readFile(fd_t fd, char *buffer, uint64_t size, t_stack currentProcessStackFrame) {
 	if (size == 0) return 0;
 
-	char c;
 	uint64_t i = 0;
 	if (fd == STDOUT) return i;
 	if (fd == STDIN) return readStdin(buffer, size, currentProcessStackFrame);
@@ -82,7 +81,6 @@ uint64_t readFile(fd_t fd, char *buffer, uint64_t size, t_stack currentProcessSt
 uint64_t writeFile(fd_t fd, char *buffer, uint64_t size, t_stack currentProcessStackFrame) {
 	if (size == 0) return 0;
 
-	char c;
 	uint64_t i = 0;
 	if (fd == STDIN) return i;
 	if (fd == STDOUT) return writeStdout(buffer, size);
@@ -145,7 +143,7 @@ void keyWasPressed() {
 void processStdinList() {
 	nodeListADT node = getNodeAtIndexList(stdinList, 0), nextNode = NULL;
 	uint8_t finished = 0;
-	char c;
+	char c = 0;
 
 	while (node != NULL && !finished) {
 		stdinNodeADT stdinNode = (stdinNodeADT) getElementList(node);

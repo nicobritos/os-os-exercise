@@ -7,6 +7,7 @@
 #include "memManager.h"
 #include "processHandler.h"
 #include "interruptHelper.h"
+#include "fileManager.h"
 
 extern uint8_t text;
 extern uint8_t rodata;

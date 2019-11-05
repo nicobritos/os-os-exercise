@@ -8,6 +8,7 @@
 #include "include/ipc.h"
 #include "include/fileManager.h"
 #include "include/semaphore.h"
+#include "include/videoDriver.h"
 
 typedef uint64_t(*systemCall)();
 
@@ -264,7 +265,7 @@ void sys_printProcesses() {
 }
 
 t_state sys_toggle_process_lock(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame) {
-	toggleProcessLock(pid, currentProcessStackFrame);
+	return toggleProcessLock(pid, currentProcessStackFrame);
 }
 
 void sys_sleep(uint64_t ms, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame) {
