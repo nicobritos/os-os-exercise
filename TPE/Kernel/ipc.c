@@ -139,7 +139,7 @@ uint64_t writePipe(t_pipeADT pipe, char *src, uint64_t length, t_stack currentPr
 
 // PRIVATE
 t_pipeADT getPreviousPipeWithName(const char *name) {
-	int16_t difference = -1;
+	int difference = -1;
 	t_pipeADT auxPipe = firstPipe;
 	if (auxPipe == NULL) return NULL;
 

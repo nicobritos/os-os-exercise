@@ -7,6 +7,7 @@
 #include "process.h"
 #include "commands.h"
 #include "newSyscalls.h"
+#include "defines.h"
 
 
 int help(int argc, char **argv) {
@@ -43,6 +44,8 @@ int kill(int argc, char **argv){
 int nice(int argc, char ** input){
     printf("\n");
     char ** argv = malloc(100 * sizeof(char*));
+    if(argv == NULL)
+        return 0;
     uint64_t cant_argc = tokenArgs(argv, input[0], 100);
     if (cant_argc == (uint64_t)argc)
     {
@@ -141,10 +144,9 @@ int wc(int argc, char **argv){
 
 int filter(int argc, char **argv){
     char * s = argv[0];
-    char * dest = malloc(strlen(s));
+    char * dest = malloc(strlen(s) + 1);
 	filterVowels(dest, s);
-    printf("\n");
-    printf(dest);
+    printf("\n%s", dest);
     free(dest);
 	return 1;
 }

@@ -31,7 +31,7 @@ void time(){
 	time[7] = currTime[5] + '0';
 	time[8] = 0;
 
-	printf(time);
+	printf("\n%s", time);
 }
 
 void divisionExc(){

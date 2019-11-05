@@ -248,6 +248,7 @@ void execve(t_process process, int(* wrapper)(int argc, char** argv, int(* start
 
 t_process duplicateProcess(t_process source, pid_t pid) {
     t_process process = createProcess(source->name, (int (*)(int,  char **, int (*)(int,  char **))) source->stackPointer->rip, pid, source->pid, 0, NULL, NULL);
+    if(process == NULL) return NULL;
     process->state = source->state;
     updateProcessStack(process->stackPointer, source->stackPointer);
     return process;

@@ -427,7 +427,7 @@ void play(){
 void showScore(){
     drawString(200,BOTTOM / 2 + 200,"Press enter to continue",255,0,0,3);
     int c;
-    while((c=getchar() != '\n')){
+    while((c=getchar()) != '\n'){
 
     }
 }

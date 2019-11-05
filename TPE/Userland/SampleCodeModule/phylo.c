@@ -80,6 +80,8 @@ void createPhylo(){
     name[7] = currentQty % 10 + '0';
     phylosIds[currentQty] = currentQty;
     argvs[phylosIds[currentQty]] = malloc(3 * sizeof(*(argvs[phylosIds[currentQty]])));
+    if(argvs[phylosIds[currentQty]])
+        return;
     argvs[phylosIds[currentQty]][0] = (void *)&(phylosIds[currentQty]); // puntero al id
     argvs[phylosIds[currentQty]][1] = (void *)&(forks[currentQty]); // puntero al fork de la derecha
     argvs[phylosIds[currentQty]][2] = (void *)&(forks[0]); // puntero al fork de la izquierda
@@ -148,6 +150,7 @@ int phylo(int argc, char * argv[]){
         rightFork->usedBy = -1;
         leftFork->usedBy = -1;
         sys_post_semaphore(rightFork->fork);
+        sys_post_semaphore(leftFork->fork);
     }
     return 0;
 }

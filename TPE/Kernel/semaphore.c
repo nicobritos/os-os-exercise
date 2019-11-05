@@ -10,7 +10,7 @@
 listADT semList = NULL;
 
 uint8_t equals(t_sem * elem, t_sem * other){
-    return strcmp(elem->name, other->name);
+    return (uint8_t)strcmp(elem->name, other->name);
 }
 
 t_sem * createSem(char * name){

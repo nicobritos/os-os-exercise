@@ -24,7 +24,7 @@ int getchar(){
 	char letter = 0;
 	while(1){
 		sys_read(0,&letter, 1); 	/* read -- recibe char * y la longitud (siempre 1) */
-		if(letter == -1 || (letter > 0 && letter < 128 )){
+		if(letter == -1 || (letter > 0)){
 			return letter;
 		}
 	}
@@ -34,7 +34,7 @@ char getCharWithZero() {
 	char c = 0;
 	while(1) {
 		sys_read(0, &c, 1);	
-		if (c >= -1 && c < 128) {
+		if (c >= -1) {
 			return c;
 		}
 	}

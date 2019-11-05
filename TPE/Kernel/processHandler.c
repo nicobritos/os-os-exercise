@@ -16,7 +16,6 @@ t_process newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, i
     for (i = STARTING_PID; i < MAX_PROC && !finished; i++) {
         if (processes[i] == 0) {
             finished = 1;
-            break;
         }
     }
     if (!finished) return NULL;
