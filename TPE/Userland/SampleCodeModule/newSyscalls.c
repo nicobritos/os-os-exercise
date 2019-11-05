@@ -142,3 +142,7 @@ t_state sys_toggle_process_lock(pid_t pid) {
 void sys_sleep(uint64_t ms) {
     _systemCall(__SYSTEM_CALL_SLEEP, ms);
 }
+
+uint8_t sys_redirect_fd(fd_t from, fd_t to) {
+    return _systemCall(__SYSTEM_CALL_REDIRECT_FD, from, to);
+}

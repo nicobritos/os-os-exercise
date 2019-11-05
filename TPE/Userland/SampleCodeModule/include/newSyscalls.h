@@ -3,6 +3,7 @@
 
 #include "process.h"
 #include <stdint.h>
+#include "files.h"
 
 typedef enum {
 	__SYSTEM_CALL_READ = 0,
@@ -36,7 +37,8 @@ typedef enum {
 	__SYSTEM_CALL_WAIT_PID = 28,
 	__SYSTEM_CALL_PRINT_PROCESSES = 29,
 	__SYSTEM_CALL_TOGGLE_PROCESS_LOCK = 30,
-	__SYSTEM_CALL_SLEEP = 31
+	__SYSTEM_CALL_SLEEP = 31,
+	__SYSTEM_CALL_REDIRECT_FD = 32
 } t_system_call;
 
 uint64_t sys_read(int fileDescriptor, void * buff, int length);
@@ -102,5 +104,7 @@ int sys_wait_pid(pid_t pid);
 void sys_printProcesses();
 
 void sys_sleep(uint64_t ms);
+
+uint8_t sys_redirect_fd(fd_t from, fd_t to);
 
 #endif

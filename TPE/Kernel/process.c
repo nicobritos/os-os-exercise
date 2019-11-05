@@ -1,3 +1,4 @@
+#include "fileManager.h"
 #include "videoDriver.h"
 #include "memManager.h"
 #include "process.h"
@@ -8,6 +9,7 @@ typedef struct t_processCDT {
     char * name;
     t_state state; 
     t_stack stackPointer;
+    fd_t fds[MAX_FILES_PER_PROCESS];
     int(* processMemoryLowerAddress)(int argc, char** argv);
 } t_processCDT;
 
@@ -63,10 +65,19 @@ t_process createProcess(char * name, int(* wrapper)(int argc, char** argv, int(*
     newProcess->state = P_READY;
     newProcess->stackPointer = processMemoryUpperAddress - sizeof(t_stackCDT);
     initializeStack((t_stack)(newProcess->stackPointer), wrapper, argc, argv, startingPoint);
+    newProcess->fds[STDIN] = STDIN;
+    newProcess->fds[STDOUT] = STDOUT;
 
     return newProcess;
 }
 
+fd_t getProcessFd(t_process process, fd_t from) {
+    return process->fds[from];
+}
+
+void redirectProcessFd(t_process process, fd_t from, fd_t to) {
+    process->fds[from] = process->fds[to];
+}
 
 void initializeStack(t_stack stackFrame, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
     stackFrame->r15 = 0;

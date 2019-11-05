@@ -19,9 +19,9 @@ uint64_t sys_ticksPerSecond(int * ticks);
 
 uint64_t sys_clear();
 
-uint64_t sys_read(uint64_t fd, char *buffer, uint64_t size);
+uint64_t sys_read(uint64_t fd, char *buffer, uint64_t size, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame);
 
-uint64_t sys_write(uint64_t fd, char *buffer, uint64_t size);
+uint64_t sys_write(uint64_t fd, char *buffer, uint64_t size, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame);
 
 uint64_t sys_draw(uint64_t x, uint64_t y, unsigned char r, unsigned char g, unsigned char b);
 
@@ -53,10 +53,6 @@ void sys_set_process_priority(pid_t pid, t_priority priority);
 
 t_state sys_get_process_state(pid_t pid);
 
-int sys_readPipe(t_pipeADT pipe, char *buffer, uint64_t size, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame);
-
-int sys_writePipe(t_pipeADT pipe, char *buffer, uint64_t size, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame);
-
 t_sem * sys_createSem(char *name);
 
 t_sem * sys_openSem(char *name);
@@ -76,6 +72,8 @@ void sys_printProcesses();
 t_state sys_toggle_process_lock(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame);
 
 void sys_sleep(uint64_t ms, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame);
+
+uint8_t sys_redirect_fd(fd_t from, fd_t to);
 
 systemCall sysCalls[] = { 
 	(systemCall) sys_read,
@@ -98,8 +96,8 @@ systemCall sysCalls[] = {
 	(systemCall) sys_get_process_priority,
 	(systemCall) sys_set_process_priority,
 	(systemCall) sys_get_process_state,
-	(systemCall) sys_readPipe,
-	(systemCall) sys_writePipe,
+	(systemCall) NULL,
+	(systemCall) NULL,
 	(systemCall) sys_createSem,
 	(systemCall) sys_openSem,
 	(systemCall) sys_closeSem,
@@ -109,7 +107,8 @@ systemCall sysCalls[] = {
 	(systemCall) sys_wait_pid,
 	(systemCall) sys_printProcesses,
 	(systemCall) sys_toggle_process_lock,
-	(systemCall) sys_sleep
+	(systemCall) sys_sleep,
+	(systemCall) sys_redirect_fd
 };
 
 void syscallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, uint64_t r9, t_stack stackFrame){
@@ -118,7 +117,8 @@ void syscallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint
 	if (rdi < (sizeof(sysCalls) / sizeof(*sysCalls))) returnValue = sysCalls[rdi](rsi, rdx, rcx, r8, r9, stackFrame);
 	else returnValue = sys_not_implemented();
 
-	updateProcessStackRegister(stackFrame, REGISTER_RAX, returnValue);
+	if (process == getCurrentProcess())
+		updateProcessStackRegister(stackFrame, REGISTER_RAX, returnValue);
 }
 
 uint64_t sys_not_implemented() {
@@ -140,17 +140,12 @@ uint64_t sys_clear() {
 	return 0;
 }
 
-/*
- * https://jameshfisher.com/2018/02/19/how-to-syscall-in-c/
- * fd = 0 (stdin)
- */
-uint64_t sys_read(uint64_t fd, char *buffer, uint64_t size){
-	return readFile(fd, buffer, size);
+uint64_t sys_read(uint64_t fd, char *buffer, uint64_t size, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame){
+	return readFile(getProcessFd(getCurrentProcess(), fd), buffer, size, currentProcessStackFrame);
 }
 
-//fd = 1 (stdout)
-uint64_t sys_write(uint64_t fd, char *buffer, uint64_t size){
-	return writeFile(fd, buffer, size);
+uint64_t sys_write(uint64_t fd, char *buffer, uint64_t size, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame){
+	return writeFile(getProcessFd(getCurrentProcess(), fd), buffer, size, currentProcessStackFrame);
 }
 
 uint64_t sys_draw(uint64_t x, uint64_t y, unsigned char r, unsigned char g, unsigned char b) {
@@ -233,14 +228,6 @@ t_state sys_get_process_state(pid_t pid) {
 	return getProcessStatePid(pid);
 }
 
-int sys_readPipe(t_pipeADT pipe, char *buffer, uint64_t size, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame){
-	return readPipe(pipe, buffer, size, currentProcessStackFrame);
-}
-
-int sys_writePipe(t_pipeADT pipe, char *buffer, uint64_t size, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame){
-	return writePipe(pipe, buffer, size, currentProcessStackFrame);
-}
-
 t_sem * sys_createSem(char *name){
 	return createSem(name);
 }
@@ -263,8 +250,8 @@ void sys_post_semaphore(t_sem * sem){
 
 void sys_printSems(){
 	char * str = semListString();
-	sys_write(1, str, strlen(str));
-	pfree(str, 0);
+	printString(str, 0, 255, 0);
+	pfree(str, SYSTEM_PID);
 }
 
 void sys_wait_pid(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame) {
@@ -279,7 +266,14 @@ t_state sys_toggle_process_lock(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t 
 	toggleProcessLock(pid, currentProcessStackFrame);
 }
 
-
 void sys_sleep(uint64_t ms, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame) {
 	sleepScheduler(ms, currentProcessStackFrame);
+}
+
+uint8_t sys_redirect_fd(fd_t from, fd_t to) {
+	if (from < MAX_FILES_PER_PROCESS) {
+		redirectProcessFd(getCurrentProcess(), from, to);
+		return 1;
+	}
+	return 0;
 }

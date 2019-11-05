@@ -53,6 +53,7 @@ int main(){
 
 	initializeMemoryManager();
 	initializeScheduler();
+	initializeFileManager();
 	load_idt();
 	newProcess("shell", sampleCodeModuleAddress, SYSTEM_PID, 0, NULL, S_P_LOW, S_M_FOREGROUND);
 
