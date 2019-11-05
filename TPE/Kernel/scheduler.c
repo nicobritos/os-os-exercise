@@ -466,7 +466,11 @@ processNodeADT getProcessNodeFromNode(nodeListADT node) {
 
 t_process getProcessFromNode(nodeListADT node) {
 	if (node == NULL) return NULL;
-	return getProcessNodeFromNode(node)->process;
+	processNodeADT processNode = getProcessNodeFromNode(node);
+	if(processNode != NULL)
+		return processNode->process;
+	return NULL;
+	
 }
 
 uint8_t equalsPid(void *processNode, void *_pid) {
@@ -484,12 +488,18 @@ nodeListADT getNodePid(pid_t pid) {
 
 t_priority getProcessNodePriority(nodeListADT node) {
 	if (node == NULL) return S_P_INVALID;
-	return getProcessNodeFromNode(node)->priority;
+	processNodeADT processNode = getProcessNodeFromNode(node);
+	if(processNode != NULL)
+		return processNode->priority;
+	return S_P_INVALID;
 }
 
 t_mode getProcessNodeMode(nodeListADT node) {
 	if (currentProcessNode == NULL) return S_M_INVALID;
-	return getProcessNodeFromNode(currentProcessNode)->mode;
+	processNodeADT processNode = getProcessNodeFromNode(node);
+	if(processNode != NULL)
+		return processNode->mode;
+	return S_M_INVALID;
 }
 
 void printQueue(listADT queue, char *title, uint64_t totalProcesses) {
@@ -547,6 +557,8 @@ void wakeProcesses() {
 
 	while (node != NULL) {
 		processNode = getProcessNodeFromNode(node);
+		if(processNode == NULL)
+			return;
 		nextNode = getNextNodeList(node);
 
 		if (processNode->activateOnTicks > 0) {
