@@ -19,13 +19,12 @@ void parseCommands(char *buffer);
 
 void shell(){
     char *buffer = malloc(BUFFER_LENGTH);
-    int flag = 0;
 
-    while (!flag) {
+    while (1) {
         printf("\nUser $> ");
         scanf(buffer, BUFFER_LENGTH - 1, '\n');
-        // flag = parseCommands(buffer);
-        parseCommands(buffer);
+        // parseCommands(buffer);
+        parse(buffer, S_M_FOREGROUND);
     }
 
     printf("\nGoodbye");
