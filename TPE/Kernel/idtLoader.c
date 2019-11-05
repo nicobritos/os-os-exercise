@@ -1,3 +1,5 @@
+//This is a personal academic project. Dear PVS-Studio, please check it.
+//PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include <stdint.h>       /* Para poder utilizar el tipo de dato uint8_t uint16_t, uint32_t */
 #include <idtLoader.h>
 #include <defs.h>
