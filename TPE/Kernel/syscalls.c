@@ -73,6 +73,8 @@ t_state sys_toggle_process_lock(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t 
 
 void sys_sleep(uint64_t ms, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame);
 
+uint8_t sys_redirect_fd(fd_t from, fd_t to);
+
 systemCall sysCalls[] = { 
 	(systemCall) sys_read,
 	(systemCall) sys_write,
@@ -105,17 +107,18 @@ systemCall sysCalls[] = {
 	(systemCall) sys_wait_pid,
 	(systemCall) sys_printProcesses,
 	(systemCall) sys_toggle_process_lock,
-	(systemCall) sys_sleep
+	(systemCall) sys_sleep,
+	(systemCall) sys_redirect_fd
 };
 
 void syscallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, uint64_t r9, t_stack stackFrame){
 	uint64_t returnValue;
 
-	pid_t pid = getProcessPid(getCurrentProcess());
+	t_process process = getCurrentProcess();
 	if (rdi < sizeof(sysCalls) / sizeof(*sysCalls)) returnValue = sysCalls[rdi](rsi, rdx, rcx, r8, r9, stackFrame);
 	else returnValue = sys_not_implemented();
 
-	if (pid == getProcessPid(getCurrentProcess()))
+	if (process == getCurrentProcess())
 		updateProcessStackRegister(stackFrame, REGISTER_RAX, returnValue);
 }
 
@@ -139,11 +142,11 @@ uint64_t sys_clear() {
 }
 
 uint64_t sys_read(uint64_t fd, char *buffer, uint64_t size, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame){
-	return readFile(fd, buffer, size, currentProcessStackFrame);
+	return readFile(getProcessFd(getCurrentProcess(), fd), buffer, size, currentProcessStackFrame);
 }
 
 uint64_t sys_write(uint64_t fd, char *buffer, uint64_t size, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame){
-	return writeFile(fd, buffer, size, currentProcessStackFrame);
+	return writeFile(getProcessFd(getCurrentProcess(), fd), buffer, size, currentProcessStackFrame);
 }
 
 uint64_t sys_draw(uint64_t x, uint64_t y, unsigned char r, unsigned char g, unsigned char b) {
@@ -264,7 +267,14 @@ t_state sys_toggle_process_lock(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t 
 	toggleProcessLock(pid, currentProcessStackFrame);
 }
 
-
 void sys_sleep(uint64_t ms, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame) {
 	sleepScheduler(ms, currentProcessStackFrame);
+}
+
+uint8_t sys_redirect_fd(fd_t from, fd_t to) {
+	if (from < MAX_FILES_PER_PROCESS) {
+		redirectProcessFd(getCurrentProcess(), from, to);
+		return 1;
+	}
+	return 0;
 }

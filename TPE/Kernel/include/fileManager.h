@@ -1,6 +1,7 @@
 #ifndef __FILE_MANAGER_H
 #define __FILE_MANAGER_H
 #include "process.h"
+#include "files.h"
 
 #define STDIN 0
 #define STDOUT 1
