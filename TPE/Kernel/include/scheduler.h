@@ -40,16 +40,22 @@
 	
 	void unlockProcess(pid_t pid);
 
+	t_state toggleProcessLock(pid_t pid, t_stack stackFrame);
+
 	void setOnProcessKillScheduler(void(_onProcessKill) (t_process process));
 
 	void yieldScheduler(t_stack stackFrame);
 
 	void waitpid(pid_t pid, t_stack currentProcessStack);
 
+	void printProcessesScheduler();
+	
+	void sleepScheduler(uint64_t ms, t_stack currentProcessStack);
+
 	// Process iterator
-	listADT createProcessList();
-	uint64_t getProcessListLength(listADT processList);
-	uint8_t hasNextProcess(listADT processList);
-	t_process getNextProcess(listADT processList);
-	void freeProcessesList(listADT processList);
+	// listADT createProcessList();
+	// uint64_t getProcessListLength(listADT processList);
+	// uint8_t hasNextProcess(listADT processList);
+	// t_process getNextProcess(listADT processList);
+	// void freeProcessesList(listADT processList);
 #endif

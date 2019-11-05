@@ -1,7 +1,6 @@
-#include "includes/stdlib.h"
+#include "stdlib.h"
 #include <stdarg.h> 			/* incluyo esta libreria para usar va_list va_arg va_start en printf y scanf */
-//#include "includes/syscalls.h"
-#include "includes/newSyscalls.h"
+#include "newSyscalls.h"
 
 int printf(const char* format, ...);
 

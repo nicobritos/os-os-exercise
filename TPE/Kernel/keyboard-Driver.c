@@ -1,4 +1,5 @@
 #include "keyboard-Driver.h"
+#include "fileManager.h"
 #include "scan-Codes.h"
 #include <stdint.h>
 #include "videoDriver.h"
@@ -91,6 +92,7 @@ void add_to_buffer(int c) {
 	buffer[writeIndex] = c;
 	writeIndex = (writeIndex + 1)%SIZE;
 	size++;
+  keyWasPressed();
 }
 
 char get_key_input() {

@@ -127,6 +127,14 @@ void freeList(listADT list, void(freeElement) (void * element)) {
 	pfree(list, SYSTEM_PID);
 }
 
+void printList(listADT list, void(printElement) (void * element)) {
+	nodeListADT node = list->firstNode;
+	while (node != NULL) {
+		printElement(node->element);
+		node = node->next;
+	}
+}
+
 // Iterator
 void prepareListIterator(listADT list) {
 	list->currentNodeIterator = NULL;

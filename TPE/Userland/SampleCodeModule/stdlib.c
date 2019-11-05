@@ -1,6 +1,5 @@
-#include "includes/defines.h"
-//#include "includes/syscalls.h"
-#include "includes/newSyscalls.h"
+#include "defines.h"
+#include "newSyscalls.h"
 #include <stdint.h>
 
 
@@ -169,3 +168,61 @@ char * filterVowels(char * buffer, char * input){
 	buffer[bufferI] = 0;
 	return buffer;
 }
+
+char *trim(char *input) {
+	char *start = input;
+
+	while (*start == ' ') start++;
+	while (*input) input++;
+	input--;
+	while (input >= start && *input == ' ') input--;
+	*(input + 1) = '\0';
+
+	return start;
+}
+
+uint64_t replaceChars(char *input, char target, char newChar) {
+	uint64_t result = 0;
+	while (*input) {
+		if (*input == target) {
+			*input = newChar;
+			result++;
+		}
+		input++;
+	}
+	return result;
+}
+void strcpy(char * dest, char * src){
+	int i=0;
+	while(src[i] != 0){
+		dest[i] = src[i];
+		i++;
+	}
+	dest[i] = 0;
+}
+
+uint64_t tokenArgs(char ** argv, char * input, uint64_t max){
+	char buff[100];
+	uint64_t i = 0;
+	uint64_t nbfields = 0;
+
+	char * start_of_field;
+	
+	strcpy(buff,input);
+	start_of_field = buff;
+
+	for (i = 0; buff[i] != 0; i++)
+	{
+		if (buff[i] == ' ')
+		{
+			buff[i] = 0;
+			argv[nbfields] = start_of_field;
+			nbfields++;
+			start_of_field = buff+i+1;
+		}
+	}
+	buff[i] = 0;
+	argv[nbfields] = start_of_field;
+	return nbfields+1;
+}
+

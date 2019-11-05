@@ -1,8 +1,8 @@
-#include "includes/newSyscalls.h"
+#include "newSyscalls.h"
 
 uint64_t _systemCall();
 
-uint64_t sys_read( int fileDescriptor, void * buff, int length)
+uint64_t sys_read(int fileDescriptor, void * buff, int length)
 {
     return _systemCall(__SYSTEM_CALL_READ, fileDescriptor, buff, length);
 }
@@ -22,8 +22,8 @@ uint64_t sys_draw( int x, int y, int red, int green, int blue)
     return _systemCall(__SYSTEM_CALL_DRAW, x, y, red, green, blue);
 }
 
-uint64_t *sys_time(int * dest){
-    return (uint64_t*)_systemCall(__SYSTEM_CALL_TIME, dest);
+uint64_t *sys_time(uint64_t * time){
+    return (uint64_t*)_systemCall(__SYSTEM_CALL_TIME, time);
 }
 
 pid_t sys_getPid()
@@ -31,9 +31,9 @@ pid_t sys_getPid()
     return (pid_t)_systemCall(__SYSTEM_CALL_GET_PID);
 }
 
-pid_t sys_newProcess(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[])
+pid_t sys_newProcess(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[], t_mode mode)
 {
-    return (pid_t)_systemCall(__SYSTEM_CALL_NEW_PROCESS,name,foo,argc,argv);
+    return (pid_t)_systemCall(__SYSTEM_CALL_NEW_PROCESS,name,foo,argc,argv, mode);
 }
 
 void sys_freeProcess(pid_t pid)
@@ -46,12 +46,12 @@ void sys_free(void * address)
     _systemCall(__SYSTEM_CALL_FREE,address);    
 }
 
-uint64_t sys_ticks(int * ticks)
+uint64_t sys_ticks(uint64_t * ticks)
 {
     return _systemCall(__SYSTEM_CALL_TICKS,ticks);
 }
 
-uint64_t sys_ticksPerSecond(int * ticks)
+uint64_t sys_ticksPerSecond(uint64_t * ticks)
 {
     return _systemCall(__SYSTEM_CALL_TICKS_PER_SECOND,ticks);
 }
@@ -115,8 +115,8 @@ void sys_closeSem(void * sem){
     _systemCall(__SYSTEM_CALL_CLOSE_SEM, sem);
 }
 
-void sys_wait_semaphore(void * sem, uint64_t pid){
-    _systemCall(__SYSTEM_CALL_WAIT, sem, pid);
+void sys_wait_semaphore(void * sem){
+    _systemCall(__SYSTEM_CALL_WAIT, sem);
 }
 
 void sys_post_semaphore(void * sem){
@@ -127,6 +127,22 @@ void sys_printSems(){
     _systemCall(__SYSTEM_CALL_PRINT_SEMS);
 }
 
-void sys_wait_pid(pid_t pid) {
-    _systemCall(__SYSTEM_CALL_WAIT_PID, pid);
+int sys_wait_pid(pid_t pid) {
+    return _systemCall(__SYSTEM_CALL_WAIT_PID, pid);
+}
+
+void sys_printProcesses() {
+    _systemCall(__SYSTEM_CALL_PRINT_PROCESSES);
+}
+
+t_state sys_toggle_process_lock(pid_t pid) {
+    return _systemCall(__SYSTEM_CALL_TOGGLE_PROCESS_LOCK, pid);
+}
+
+void sys_sleep(uint64_t ms) {
+    _systemCall(__SYSTEM_CALL_SLEEP, ms);
+}
+
+uint8_t sys_redirect_fd(fd_t from, fd_t to) {
+    return _systemCall(__SYSTEM_CALL_REDIRECT_FD, from, to);
 }

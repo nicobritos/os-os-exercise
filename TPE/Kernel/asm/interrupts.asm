@@ -208,7 +208,7 @@ _killProcessSyscallKernel:
 
   xor rax, rax
   call getProcessPid
-  mov rdi, 7 ; freeProcess (see syscalls.c)
+  mov rdi, 7 ; killProcess (see syscalls.c)
   mov rsi, rax
 
   int 80h
@@ -225,10 +225,15 @@ _syscallHandler:
   call pushcli
 	pop rax
 
-  mov r9, rsp; pasaje de parametro del puntero a los registros
+  popState  ; restore regs lost by pushcli
+  pushState
+
+  mov r15, rsp; pasaje de parametro del puntero a los registros
 
   push rbp
 	mov rbp, rsp
+
+  push r15; pasaje de parametro del puntero a los registros
 
 	call syscallHandler
 

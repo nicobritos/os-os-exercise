@@ -2,9 +2,6 @@
 #define STDLIB_H_
 #include <stdint.h>
 
-
-uint64_t itoa(uint64_t num, char* string, int base);
-
-uint64_t atoi(char c);
+uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base);
 
 #endif /* STDLIB_H_ */
