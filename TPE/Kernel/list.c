@@ -4,8 +4,8 @@
 #include "memManager.h"
 #include "list.h"
 
-#define MAX(x, y) (x > y ? x : y)
-#define MIN(x, y) (x < y ? x : y)
+#define MAX(x, y) ((x) > (y) ? (x) : (y))
+#define MIN(x, y) ((x) < (y) ? (x) : (y))
 
 typedef struct nodeListCDT {
 	void *element;
