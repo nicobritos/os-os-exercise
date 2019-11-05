@@ -1,3 +1,5 @@
+-----------------------------------PVS-STUDIO------------------------------
+
 www.viva64.com/en/w	1	err	Help: The documentation for all analyzer warnings is available here: https://www.viva64.com/en/w/.
 /root/so-tp2/TPE/Bootloader/BMFS/bmfs.c	238	note	V576 Incorrect format. Consider checking the third actual argument of the 'printf' function. The SIGNED integer type argument is expected.
 /root/so-tp2/TPE/Bootloader/BMFS/bmfs.c	254	note	V576 Incorrect format. Consider checking the third actual argument of the 'printf' function. The SIGNED integer type argument is expected.
@@ -34,3 +36,69 @@ www.viva64.com/en/w	1	err	Help: The documentation for all analyzer warnings is a
 /root/so-tp2/TPE/Userland/SampleCodeModule/apps.c	141	note	V576 Incorrect format. Consider checking the second actual argument of the 'printf' function. The SIGNED integer type argument is expected.
 /root/so-tp2/TPE/Userland/SampleCodeModule/apps.c	149	warn	V576 Incorrect format. Consider checking the second actual argument of the 'printf' function. Under certain conditions the pointer can be null.
 /root/so-tp2/TPE/Userland/SampleCodeModule/snake.c	279	warn	V547 Expression 'c != 0' is always true.
+
+--------------------------CPP-Check-------------------------------
+
+[Bootloader/BMFS/bmfs.c:238]: (warning) %d in format string (no. 2) requires 'int' but the argument type is 'unsigned int'.
+[Bootloader/BMFS/bmfs.c:254]: (warning) %lld in format string (no. 2) requires 'long long' but the argument type is 'unsigned long long'.
+[Bootloader/BMFS/bmfs.c:689]: (warning) %lld in format string (no. 1) requires 'long long' but the argument type is 'unsigned long long'.
+[Bootloader/BMFS/bmfs.c:262] -> [Bootloader/BMFS/bmfs.c:264]: (performance) Buffer 'DiskInfo' is being written before its old content has been used.
+[Bootloader/BMFS/bmfs.c:276]: (style) The scope of the variable 'writeSize' can be reduced.
+[Bootloader/BMFS/bmfs.c:451]: (style) The scope of the variable 'percent' can be reduced.
+[Bootloader/BMFS/bmfs.c:725]: (style) The scope of the variable 'tfile' can be reduced.
+[Bootloader/BMFS/bmfs.c:726]: (style) The scope of the variable 'tint' can be reduced.
+[Bootloader/BMFS/bmfs.c:757]: (style) The scope of the variable 'tfile' can be reduced.
+[Bootloader/BMFS/bmfs.c:758]: (style) The scope of the variable 'tint' can be reduced.
+[Kernel/fileManager.c:148]: (style) The scope of the variable 'c' can be reduced.
+[Kernel/fileManager.c:135]: (style) Variable 'c' is assigned a value that is never used.
+[Kernel/keyboard-Driver.c:37]: (style) The scope of the variable 'input_key' can be reduced.
+[Kernel/memManager.c:496]: (style, inconclusive) Consecutive return, break, continue, goto or throw statements are unnecessary.
+[Kernel/memManager.c:518]: (style, inconclusive) Statements following return, break, continue, goto or throw will never be executed.
+[Kernel/memManager.c:528]: (style, inconclusive) Consecutive return, break, continue, goto or throw statements are unnecessary.
+[Kernel/memManager.c:536]: (style, inconclusive) Consecutive return, break, continue, goto or throw statements are unnecessary.
+[Kernel/process.c:68]: (portability) 'processMemoryUpperAddress' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined.
+[Kernel/include/fileManager.h:9] -> [Kernel/include/files.h:7]: (style, inconclusive) The typedef 'fd_t' hides a typedef with the same name.
+[Toolchain/ModulePacker/main.c:113]: (style) The scope of the variable 'read' can be reduced.
+[Userland/SampleCodeModule/snake.c:430]: (style) Variable 'c' is assigned a value that is never used.
+[Userland/SampleCodeModule/stdio.c:98]: (error) va_list 'args' was opened but not closed by va_end().
+[Userland/SampleCodeModule/stdlib.c:226]: (style) Variable 'buff' is assigned a value that is never used.
+[Userland/SampleCodeModule/stdlib.c:163]: (style) Array index 'i' is used before limits check.
+[Userland/SampleCodeModule/_loader.c:13]: (style) The function '_start' is never used.
+[Userland/SampleCodeModule/stdlib.c:120]: (style) The function 'atox' is never used.
+[Kernel/fileManager.c:58]: (style) The function 'closePipe' is never used.
+[Kernel/ipc.c:155]: (style) The function 'createPipeList' is never used.
+[Userland/SampleCodeModule/commands.c:37]: (style) The function 'divisionExc' is never used.
+[Kernel/list.c:93]: (style) The function 'duplicateList' is never used.
+[Kernel/processHandler.c:55]: (style) The function 'duplicateProcessHandler' is never used.
+[Kernel/scheduler.c:443]: (style) The function 'duplicateProcessNode' is never used.
+[Kernel/exceptions.c:16]: (style) The function 'exceptionDispatcher' is never used.
+[Kernel/process.c:245]: (style) The function 'execve' is never used.
+[Kernel/ipc.c:217]: (style) The function 'freePipeList' is never used.
+[Kernel/scheduler.c:456]: (style) The function 'freeProcessNodeReadOnly' is never used.
+[Kernel/scheduler.c:156]: (style) The function 'getCurrentProcessPriority' is never used.
+[Kernel/ipc.c:200]: (style) The function 'getNextPipe' is never used.
+[Userland/SampleCodeModule/unistd.c:21]: (style) The function 'getPid' is never used.
+[Kernel/ipc.c:184]: (style) The function 'getPipeListLength' is never used.
+[Userland/SampleCodeModule/snake.c:435]: (style) The function 'getseconds' is never used.
+[Userland/SampleCodeModule/snake.c:383]: (style) The function 'increaseSize' is never used.
+[Kernel/kernel.c:41]: (style) The function 'initializeKernelBinary' is never used.
+[Userland/SampleCodeModule/commands.c:40]: (style) The function 'invalidOpCodeException' is never used.
+[Kernel/irqDispatcher.c:12]: (style) The function 'irqDispatcher' is never used.
+[Kernel/mutex.c:53]: (style) The function 'isMutexLocked' is never used.
+[Kernel/mutex.c:26]: (style) The function 'lockMutex' is never used.
+[Kernel/naiveConsole.c:57]: (style) The function 'ncClear' is never used.
+[Kernel/naiveConsole.c:27]: (style) The function 'ncNewline' is never used.
+[Kernel/naiveConsole.c:46]: (style) The function 'ncPrintBin' is never used.
+[Kernel/naiveConsole.c:36]: (style) The function 'ncPrintDec' is never used.
+[Kernel/naiveConsole.c:41]: (style) The function 'ncPrintHex' is never used.
+[Kernel/fileManager.c:43]: (style) The function 'openPipe' is never used.
+[Userland/SampleCodeModule/shell.c:34]: (style) The function 'parseCommands' is never used.
+[Kernel/memManager.c:512]: (style) The function 'prealloc' is never used.
+[Userland/SampleCodeModule/stdlib.c:186]: (style) The function 'replaceChars' is never used.
+[Kernel/scheduler.c:222]: (style) The function 'setCurrentProcessMode' is never used.
+[Kernel/scheduler.c:204]: (style) The function 'setCurrentProcessPriority' is never used.
+[Kernel/scheduler.c:253]: (style) The function 'setOnProcessKillScheduler' is never used.
+[Userland/SampleCodeModule/snake.c:447]: (style) The function 'snake_game' is never used.
+[Userland/SampleCodeModule/newSyscalls.c:100]: (style) The function 'sys_readPipe' is never used.
+[Userland/SampleCodeModule/newSyscalls.c:104]: (style) The function 'sys_writePipe' is never used.
+[Kernel/syscalls.c:117]: (style) The function 'syscallHandler' is never used.
