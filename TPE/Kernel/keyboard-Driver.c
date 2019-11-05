@@ -12,6 +12,7 @@ unsigned int get_key();   // esta en keyboard_Driver.asm
 void keyboard_controller();
 void add_to_buffer(int input_key);
 char get_key_input();
+void setActive(uint8_t * key, char value);
 
 #define FALSE 0
 #define TRUE 1
@@ -37,10 +38,7 @@ void keyboard_controller(){
 
   if (scan_code < 0x80) {
       switch (scan_code) {
-        case RSHIFT:
-            SHIFT_ACTIVE=TRUE;
-            break;
-        case LSHIFT:
+        case RSHIFT: case LSHIFT:
             SHIFT_ACTIVE=TRUE;
             break;
         case CAPS:
@@ -76,19 +74,19 @@ void keyboard_controller(){
   else { // Le agregue este switch por que sino quedaba trabada la mayuscula una vez que la apretaba 
 		    switch(scan_code) {
 		  	    case CTRL_R:
-				        CNTRL_ACTIVE = FALSE;	
+				        setActive(&CNTRL_ACTIVE, FALSE);	
 				        break;
-			      case LSHIFT_R:
-				        SHIFT_ACTIVE = FALSE;
-				        break;
-			      case RSHIFT_R:
-				        SHIFT_ACTIVE = FALSE;
+			      case LSHIFT_R: case RSHIFT_R:
+				        setActive(&SHIFT_ACTIVE, FALSE);	
 				        break;
 		      }
   }
    
 }
 
+void setActive(uint8_t * key, char value){
+  *key = value;
+}
 
 void add_to_buffer(int c) {
 	buffer[writeIndex] = c;
