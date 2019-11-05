@@ -26,6 +26,8 @@ int currentQty = 0;
 pid_t phylosPids[MAX_PHYLOS];
 int phylosIds[MAX_PHYLOS];
 
+void ** argvs[MAX_PHYLOS];
+
 int phyloProblem(int argc, char * argv[]){
     int initQty = argv[0];
     if(initQty > MAX_PHYLOS)
@@ -34,6 +36,7 @@ int phyloProblem(int argc, char * argv[]){
         createPhylo();
     }
     char c[3];
+    //printf("Created\n");
     scanf(c, 2, '\n');
     while((c[0] != 'e') || (c[0] != 'E')){
         printf("\nToy");
@@ -49,6 +52,7 @@ int phyloProblem(int argc, char * argv[]){
         }
         scanf(c, 2, '\n');
     }
+    printf("Bye bye\n");
     return 0;
 }
 
@@ -67,11 +71,18 @@ void createPhylo(){
     forks[currentQty].usedBy = -1;
 
     char name[9] = "Phylo-00";
-    name[7] = currentQty/10 + '0';
-    name[8] = currentQty % 10 + '0';
+    name[6] = currentQty/10 + '0';
+    name[7] = currentQty % 10 + '0';
     phylosIds[currentQty] = currentQty;
-    void * argv[3] = {&(phylosIds[currentQty]), &(forks[currentQty]), &(forks[(currentQty+1)%(currentQty+1)])};
-    phylosPids[currentQty] = sys_newProcess(name, phylo, 3, (char **)argv, S_M_BACKGROUND);
+    // printf("Id: %d\n", phylosIds[currentQty]);
+    argvs[phylosIds[currentQty]] = malloc(3 * sizeof(*(argvs[phylosIds[currentQty]])));
+    argvs[phylosIds[currentQty]][0] = (void *)&(phylosIds[currentQty]); // puntero al id
+    argvs[phylosIds[currentQty]][1] = (void *)&(forks[currentQty]); // puntero al fork de la derecha
+    argvs[phylosIds[currentQty]][2] = (void *)&(forks[0]); // puntero al fork de la izquierda
+    //printf("\nId phylo send= %d\n", *((int *)(argvs[phylosIds[currentQty]][0])));
+    //printf("argv send = %x\n", argvs[phylosIds[currentQty]]);
+    phylosPids[currentQty] = sys_newProcess(name, phylo, 3, (char **)argvs[phylosIds[currentQty]], S_M_BACKGROUND);
+    // printf("Created %s - %d\n", name, phylosPids[currentQty]);
 
     if(currentQty != 0){
         char post1, post2;
@@ -86,11 +97,20 @@ void createPhylo(){
             post2 = 1;
         }
         sys_freeProcess(phylosPids[currentQty - 1]);
-        name[7] = (currentQty-1)/10 + '0';
-        name[8] = (currentQty-1) % 10 + '0';
+        // printf("Removed id: %d - %d\n", phylosIds[currentQty - 1], phylosPids[currentQty - 1]);
+        name[6] = (currentQty-1)/10 + '0';
+        name[7] = (currentQty-1) % 10 + '0';
         phylosIds[currentQty-1] = currentQty -1;
-        void * argv[3] = {&(phylosIds[currentQty-1]), &(forks[currentQty-1]), &(forks[(currentQty)%currentQty])};
-        phylosPids[currentQty] = sys_newProcess(name, phylo, 3, (char **)argv, S_M_BACKGROUND);
+        //printf("free: %x", argvs[phylosIds[currentQty]]);
+        free(argvs[phylosIds[currentQty-1]]);
+        argvs[phylosIds[currentQty-1]] = malloc(3 * sizeof(*(argvs[phylosIds[currentQty-1]])));
+        argvs[phylosIds[currentQty-1]][0] = &(phylosIds[currentQty-1]);
+        argvs[phylosIds[currentQty-1]][1] = &(forks[currentQty-1]);
+        argvs[phylosIds[currentQty-1]][2] = &(forks[currentQty]);
+        //printf("\nId phylo send= %d\n", *((int *)(argvs[phylosIds[currentQty-1]][0])));
+        //printf("argv send = %x\n", argvs[phylosIds[currentQty-1]]);
+        phylosPids[currentQty - 1] = sys_newProcess(name, phylo, 3, (char **)argvs[phylosIds[currentQty-1]], S_M_BACKGROUND);
+        // printf("Created id: %d - %d\n", phylosIds[currentQty-1], phylosPids[currentQty-1]);
         if(post1)
             sys_post_semaphore(forks[currentQty-1].fork);
         if(post2)
@@ -112,39 +132,48 @@ void removePhylo(){
     else{
         sys_freeProcess(phylosPids[currentQty]);
     }
+    free(argvs[phylosIds[currentQty]]);
 }
 
 int phylo(int argc, char * argv[]){
+    //for (int i = 0; i < argc; i++)
+    //{
+    //printf("\nargv recieved %x\n", argv);
+    //}
+    
     if(argc != 3)
         return 1;
-    int id = *(argv[0]);
+    int id = *((int *)(argv[0]));
+    //printf("Id phylo received= %d\n", id);
     t_fork * rightFork = (t_fork *)argv[1];
     t_fork * leftFork = (t_fork *)argv[2];
+    free(argv);
     while(1){
-        printf("%d thinking...\n", id);
+        printf("\n%d is thinking...\n", id);
         sleep(5000);
-        printf("Wake\n");
+        printf("%d is hungry\n", id);
         sys_wait_semaphore(rightFork->fork);
         rightFork->usedBy = id;
-        printf("%d took right fork\n", id);
+        printf("%d took his right fork\n", id);
         sys_wait_semaphore(leftFork->fork);
         leftFork->usedBy = id;
-        printf("%d took right fork\n", id);
-        printf("Eating...");
+        printf("%d took his left fork\n", id);
+        printf("%d is eating...\n", id);
         sleep(5000);
+        printf("%d burped\n", id);
         rightFork->usedBy = -1;
         leftFork->usedBy = -1;
-        printf("Finshed eating");
         sys_post_semaphore(rightFork->fork);
+        printf("%d left\n", id);
     }
     return 0;
 }
 
 void printTable(){
     for(int i = 0; i<currentQty; i++){
-        printf("Filosofo %d: %s\n", phylosIds[i], (forks[i].usedBy == phylosIds[i])?((forks[(i+1)%currentQty].usedBy == phylosIds[i])?"EATING":"WAITING FORK"):"THINKING");
         char s[12]="Filosofo 00";
         itoa(forks[i].usedBy, s+9, 10);
         printf("Cubierto %d: USADO POR %s\n", i, (forks[i].usedBy == -1)?"NADIE":s);
+        printf("Filosofo %d: %s\n", phylosIds[i], (forks[i].usedBy == phylosIds[i])?((forks[(i+1)%currentQty].usedBy == phylosIds[i])?"EATING":"WAITING FORK"):"THINKING");
     }
 }

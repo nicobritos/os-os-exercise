@@ -59,18 +59,6 @@ void parseWithPipe(char *p1, char *p2) {
 
 }
 
-void hola2() {
-        printf("Hola");
-        sleep(2000);
-        printf("Chau");
-}
-
-void hola() {
-    newProcess("hola2", hola2, S_M_FOREGROUND);
-    newProcess("hola2", hola2, S_M_FOREGROUND);
-
-}
-
 int parse(char* input, t_mode mode) {
     char * argv[MAX_ARGS] = {0};
     pid_t pid = 0;
@@ -78,10 +66,8 @@ int parse(char* input, t_mode mode) {
     if (strcmp(input, "help") == 0) {
         pid = newProcess("help", help, S_M_FOREGROUND);
     } else if(strcmp(input, "phylo") == 0){
-        argv[0] = 2;
+        argv[0] = 3;
         pid = newProcessArgs("help", phyloProblem, 1, argv, S_M_BACKGROUND);
-    } else if(strcmp(input, "s") == 0){
-        hola();
     // } else if (strcmp(input, "mem") == 0) {
     //     pid = newProcess("mem", mem, mode);
     // } else if (strcmp(input, "ps") == 0) {
