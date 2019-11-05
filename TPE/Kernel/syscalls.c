@@ -114,8 +114,7 @@ systemCall sysCalls[] = {
 void syscallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, uint64_t r9, t_stack stackFrame){
 	uint64_t returnValue;
 
-	t_process process = getCurrentProcess();
-	if (rdi < sizeof(sysCalls) / sizeof(*sysCalls)) returnValue = sysCalls[rdi](rsi, rdx, rcx, r8, r9, stackFrame);
+	if (rdi < (sizeof(sysCalls) / sizeof(*sysCalls))) returnValue = sysCalls[rdi](rsi, rdx, rcx, r8, r9, stackFrame);
 	else returnValue = sys_not_implemented();
 
 	if (process == getCurrentProcess())
