@@ -26,7 +26,7 @@ uint64_t sys_write(uint64_t fd, char *buffer, uint64_t size, uint64_t rcx, uint6
 
 uint64_t sys_draw(uint64_t x, uint64_t y, unsigned char r, unsigned char g, unsigned char b);
 
-uint64_t *sys_time(uint64_t * time);
+int *sys_time(int * time);
 
 uint64_t sys_usedMem();
 
@@ -155,7 +155,7 @@ uint64_t sys_draw(uint64_t x, uint64_t y, unsigned char r, unsigned char g, unsi
 	return 0;
 }
 
-uint64_t *sys_time(uint64_t * time) {
+int *sys_time(int * time) {
 	uint64_t hour = getHour();
 	uint64_t min = getMin();
 	uint64_t sec = getSec(); 

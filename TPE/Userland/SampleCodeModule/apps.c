@@ -19,7 +19,7 @@ int help(int argc, char **argv) {
 	printf("wc - Print the number of lines\n");
 	printf("filter (message) - Filters the vowels from the message\n");
     printf("phylo - Simulates the philosopher's problem\n");
-    printf("sem - Prints the current open semaphores and basic information\n")
+    printf("sem - Prints the current open semaphores and basic information\n");
     printf("clear - Clears the screen \n");
     printf("exit - Exits the terminal");
     return 1;

@@ -4,6 +4,7 @@
 #include "exceptions.h"
 
 void invalidOpCode();
+void div0exc();
 
 
 void clearScreen(){
