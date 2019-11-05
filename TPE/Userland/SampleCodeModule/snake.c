@@ -276,9 +276,7 @@ void incrementSize(){
 int move(){
   char c;
   while( (c = getCharWithZero()) ){
-      if(c!=0){
-        count++;
-      }
+      count++;
       incrementSize();
       for (int i = snake_size - 1; i > 0 ; i--) {
           snake[i].x = snake[i - 1].x;
@@ -426,10 +424,7 @@ void play(){
 
 void showScore(){
     drawString(200,BOTTOM / 2 + 200,"Press enter to continue",255,0,0,3);
-    int c;
-    while((c=getchar()) != '\n'){
-
-    }
+    while(getchar() != '\n');
 }
 
 int getseconds(){

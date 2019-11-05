@@ -46,7 +46,8 @@ int nice(int argc, char ** input){
     char ** argv = malloc(100 * sizeof(char*));
     if(argv == NULL)
         return 0;
-    uint64_t cant_argc = tokenArgs(argv, input[0], 100);
+    char output[100];
+    uint64_t cant_argc = tokenArgs(argv, output, input[0], 100);
     if (cant_argc == (uint64_t)argc)
     {
         t_priority priority;
@@ -111,7 +112,7 @@ int block(int argc, char **argv){
 
 
 int mem(int argc, char ** argv){
-    printf("\n%l / %l bytes utilizados", usedMem(), usedMem() + freeMem());
+    printf("\n%llu / %llu bytes utilizados", usedMem(), usedMem() + freeMem());
     return 1;
 }
 
@@ -122,7 +123,7 @@ int ps(int argc, char ** argv){
 
 int loop(int argc, char **argv){
     while(1){
-        printf("\nHola soy %l", sys_getPid());
+        printf("\nHola soy %lld", sys_getPid());
         sleep(5000);
     }   
     return 1;
@@ -138,14 +139,16 @@ int wc(int argc, char **argv){
     char buffer[1000];
     int separator = -1;
     scanf(buffer, 1000, separator);
-    printf("\n%d", lineCount(buffer));
+    printf("\n%u", lineCount(buffer));
     return 1;
 }
 
 int filter(int argc, char **argv){
     char * s = argv[0];
-    char * dest = malloc(strlen(s) + 1);
-	filterVowels(dest, s);
+    int size = strlen(s) + 1;
+    char * dest = malloc(size);
+	filterVowels(dest, s, size);
+    if(dest == NULL) return 0;
     printf("\n%s", dest);
     free(dest);
 	return 1;

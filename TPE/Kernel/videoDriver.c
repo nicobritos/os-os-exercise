@@ -216,7 +216,7 @@ void putPixel(uint64_t x,uint64_t y, unsigned char r, unsigned char g, unsigned 
 void fillRect(unsigned char x, unsigned char y, uint16_t width, uint16_t height, unsigned char r, unsigned char g, unsigned char b) {
   unsigned char pixelWidth = infoBlock->bpp / 8;
 
-  char *pos = (char *)(uint64_t)(infoBlock->physbase + x*pixelWidth + y*infoBlock->pitch);
+  char *pos = (char *)((uint64_t)(infoBlock->physbase) + (uint64_t)x*(uint64_t)pixelWidth + (uint64_t)y*(uint64_t)infoBlock->pitch);
   int i, j;
 
   for (i = 0; i < height; i++) {
@@ -259,7 +259,7 @@ void drawChar(int  x, int  y, unsigned char myChar, unsigned char r, unsigned ch
 
   unsigned char pixelWidth = infoBlock->bpp / 8;
   int pitch = infoBlock->pitch;
-  char *pos = (char *)(uint64_t)(infoBlock->physbase + x*pixelWidth + y * pitch);
+  char *pos = (char *)((uint64_t)(infoBlock->physbase) + (uint64_t)x*(uint64_t)pixelWidth + (uint64_t)y * (uint64_t)pitch);
 
   for (int i = 0; i < 8; i++){               /* i = fila */
     for (int j = 0; j < 8; j++){             /* j = columna */
@@ -312,7 +312,7 @@ void printChar(unsigned char myChar, unsigned char r, unsigned char g, unsigned 
 void printString(char *str, unsigned char r, unsigned char g, unsigned char b) {
   unsigned char pixelWidth = infoBlock->bpp / 8;
   int pitch = infoBlock->pitch;
-  char *pos = (char *)(uint64_t)(infoBlock->physbase + cursorX*pixelWidth + cursorY*pitch);
+  char *pos = (char *)((uint64_t)(infoBlock->physbase) + (uint64_t)cursorX*(uint64_t)pixelWidth + (uint64_t)cursorY*(uint64_t)pitch);
   int len = strlen(str);
 
   for (int i = 0; i < len; i++){
@@ -322,7 +322,7 @@ void printString(char *str, unsigned char r, unsigned char g, unsigned char b) {
     if (cursorX >= (infoBlock->Xres - 5 - cursorXStart)){
 
       newLine();
-      pos = (char *)(uint64_t)(infoBlock->physbase + cursorX*pixelWidth + cursorY*pitch);
+      pos = (char *)((uint64_t)(infoBlock->physbase) + (uint64_t)cursorX*(uint64_t)pixelWidth + (uint64_t)cursorY*(uint64_t)pitch);
 
     } else {
             pos += fontWidth * pixelWidth;
@@ -334,9 +334,9 @@ void shiftUp() {
 
    int pitch = infoBlock->pitch;
    int destY = cursorYStart;
-   char *dest = (char *)(uint64_t)(infoBlock->physbase + destY*pitch);
+   char *dest = (char *)((uint64_t)(infoBlock->physbase) + (uint64_t)destY*(uint64_t)pitch);
    int srcY = cursorYStart + 20;
-   char *src = (char *)(uint64_t)(infoBlock->physbase + srcY * pitch);
+   char *src = (char *)((uint64_t)(infoBlock->physbase) + (uint64_t)srcY * (uint64_t)pitch);
    int size = infoBlock->Xres * pitch;
    memcpy(dest, src, size);
    cursorY -= 20;
@@ -344,13 +344,13 @@ void shiftUp() {
 }
 
 void printHexa(uint64_t num, uint8_t r, uint8_t g, uint8_t b){
-  static char buffer[64] = { '0' };
+  static char buffer[64] = { 0 };
   uintToBase(num,buffer,16);
   printString(buffer, r, g, b);
 }
 
 void printDec(uint64_t num, uint8_t r, uint8_t g, uint8_t b){
-  static char buffer[64] = { '0' };
+  static char buffer[64] = { 0 };
   uintToBase(num,buffer,10);
   printString(buffer, r, g, b);
 }

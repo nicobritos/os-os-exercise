@@ -144,10 +144,9 @@ void keyWasPressed() {
 
 void processStdinList() {
 	nodeListADT node = getNodeAtIndexList(stdinList, 0), nextNode = NULL;
+	
 	uint8_t finished = 0;
-	char c = 0;
-
-	while (node != NULL && !finished) {
+	for(char c = 0; node != NULL && !finished; node = nextNode){
 		stdinNodeADT stdinNode = (stdinNodeADT) getElementList(node);
 		nextNode = getNextNodeList(node);
 		

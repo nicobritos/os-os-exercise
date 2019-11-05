@@ -8,7 +8,7 @@
 /* 
  * Calcula la longitud del string
  */
-int strlen(char* str){
+unsigned int strlen(char* str){
 	int i = 0;
 	while (*(str + i) != 0){
 		i++;
@@ -22,8 +22,8 @@ int strlen(char* str){
  */
 int strcmp(char* str1, char* str2) {		
 	int i = 0;
-	int length1 = strlen(str1);
-	int length2 = strlen(str2);
+	unsigned int length1 = strlen(str1);
+	unsigned int length2 = strlen(str2);
 	
 	while(i < length1 && i < length2 && str1[i] == str2[i]) {
 		i++;
@@ -157,10 +157,10 @@ unsigned int lineCount(char * input){
 	return count;
 }
 
-char * filterVowels(char * buffer, char * input){
+char * filterVowels(char * buffer, char * input, int maxLength){
 	unsigned int i = 0;
 	unsigned int bufferI = 0;
-	while((input[i] != 0) && (i<200)){
+	while((i<maxLength) && (input[i] != 0)){
 		if((input[i] != 'a') && (input[i] != 'e') && (input[i] != 'i') && (input[i] != 'o') && (input[i] != 'u') && (input[i] != 'A') && (input[i] != 'E') && (input[i] != 'I') && (input[i] != 'O') && (input[i] != 'U') ){
 			buffer[bufferI] = input[i];
 			bufferI++;
@@ -203,8 +203,7 @@ void strcpy(char * dest, char * src){
 	dest[i] = 0;
 }
 
-uint64_t tokenArgs(char ** argv, char * input, uint64_t max){
-	char buff[100];
+uint64_t tokenArgs(char ** argv, char * buff, char * input, uint64_t max){
 	uint64_t i = 0;
 	uint64_t nbfields = 0;
 
@@ -213,7 +212,7 @@ uint64_t tokenArgs(char ** argv, char * input, uint64_t max){
 	strcpy(buff,input);
 	start_of_field = buff;
 
-	for (i = 0; buff[i] != 0; i++)
+	for (i = 0; i<max && buff[i] != 0; i++)
 	{
 		if (buff[i] == ' ')
 		{

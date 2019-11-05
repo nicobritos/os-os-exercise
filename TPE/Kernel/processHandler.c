@@ -16,11 +16,10 @@ t_process newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, i
     for (i = STARTING_PID; i < MAX_PROC && !finished; i++) {
         if (processes[i] == 0) {
             finished = 1;
-            break; // por alguna razon que desconozco, si comento esto, se rompe
         }
     }
     if (!finished) return NULL;
-
+    i--;
     t_process newProcess = createProcess(name, processWrapper, i, ppid, argc, argv, (void *) foo);
     if (newProcess == NULL) {
         return NULL;

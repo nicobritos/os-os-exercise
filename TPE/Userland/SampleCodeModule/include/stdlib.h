@@ -2,7 +2,7 @@
 #define STDLIB_H_
 #include <stdint.h>
 
-int strlen(char* str);
+unsigned int strlen(char* str);
 
 int strcmp(char* str1, char* str2);
 
@@ -20,12 +20,12 @@ void free(void * address);
 
 unsigned int lineCount(char * input);
 
-char * filterVowels(char * dest, char * src);
+char * filterVowels(char * dest, char * src, int maxLength);
 
 char *trim(char *input);
 
 uint64_t replaceChars(char *input, char target, char newChar);
 
-uint64_t tokenArgs(char ** argv, char * input, uint64_t max);
+uint64_t tokenArgs(char ** argv, char * output, char * input, uint64_t max);
 
 #endif /* STDLIB_H_ */

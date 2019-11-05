@@ -72,7 +72,7 @@ void *duplicateProcessNode(void *_processNode);
 
 void freeProcessNodeReadOnly(void *_processNode);
 
-uint8_t equalsPid(void *_process, void *_pid);
+int equalsPid(void *_process, void *_pid);
 
 void freeProcessNodeReadOnly(void *_processNode);
 
@@ -473,7 +473,7 @@ t_process getProcessFromNode(nodeListADT node) {
 	
 }
 
-uint8_t equalsPid(void *processNode, void *_pid) {
+int equalsPid(void *processNode, void *_pid) {
 	t_process process = ((processNodeADT) processNode)->process;
 	pid_t pid = (pid_t) _pid;
 	return getProcessPid(process) == pid;

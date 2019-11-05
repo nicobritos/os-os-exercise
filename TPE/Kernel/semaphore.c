@@ -9,8 +9,8 @@
 
 listADT semList = NULL;
 
-uint8_t equals(t_sem * elem, t_sem * other){
-    return (uint8_t)strcmp(elem->name, other->name);
+int equals(t_sem * elem, t_sem * other){
+    return strcmp(elem->name, other->name);
 }
 
 t_sem * createSem(char * name){
@@ -40,7 +40,7 @@ t_sem * openSem(char * name){
 
 void closeSem(t_sem * sem){
     if(!isEmptyList(semList)){
-        removeNodeList(semList, searchNodeList(semList, sem, (uint8_t (*)(void *, void *))equals));
+        removeNodeList(semList, searchNodeList(semList, sem, (int (*)(void *, void *))equals));
         freeList(sem->processes, NULL);
         pfree(sem, SYSTEM_PID);
     }

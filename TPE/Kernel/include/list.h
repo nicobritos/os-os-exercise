@@ -25,7 +25,7 @@
 
 	uint64_t getSizeList(listADT list);
 
-	nodeListADT searchNodeList(listADT list, void *comparing, uint8_t(searchFunction) (void * element, void * comparing));
+	nodeListADT searchNodeList(listADT list, void *comparing, int(searchFunction) (void * element, void * comparing));
 
 	listADT duplicateList(listADT list, void *(duplicateElement) (void * element));
 

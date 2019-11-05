@@ -49,7 +49,9 @@ int printf(const char* format, ...){
 	char buffer[200];
 	char *str;
 	int length, num;
+	unsigned int unum;
 	long long unsigned llunum;
+	long long signed lldnum;
 
 	while(*(index) != 0){
 								/* No hay mas argumentos */
@@ -61,7 +63,12 @@ int printf(const char* format, ...){
 					sys_write(1,buffer, length);	
 					index++;
 					break;
-
+				case 'u':
+					unum = (unsigned int) va_arg(args, unsigned int);   /* Guarda en num el siguiente argumento 'int' */
+					length = itoa(unum, buffer, 10);  /* Convierte el int guardado en num en string, (el 10 es la base de num) y guarda en length la longitud */
+					sys_write(1,buffer, length);	
+					index++;
+					break;
 				case 'c':
 					putchar((char) va_arg(args, int));
 					index++;
@@ -80,10 +87,22 @@ int printf(const char* format, ...){
 					index ++;
 					break;
 				case 'l':
-					llunum = (long long unsigned) va_arg(args, long long unsigned);
-					length = itoa(llunum, buffer, 10);
-					sys_write(1, buffer, length);
 					index++;
+					if(*(index + 1) == 'l'){
+						index++;
+						if(*(index + 1) == 'u'){
+							llunum = (long long unsigned) va_arg(args, long long unsigned);
+							length = itoa(llunum, buffer, 10);
+							sys_write(1, buffer, length);
+							index++;
+						}
+						else if(*(index + 1) == 'd'){
+							lldnum = (long long signed) va_arg(args, long long signed);
+							length = itoa(lldnum, buffer, 10);
+							sys_write(1, buffer, length);
+							index++;
+						}
+					}
 					break;
 					
 
@@ -94,7 +113,7 @@ int printf(const char* format, ...){
 		
 		index++;
 	}
-	
+	va_end(args);
 	return 0;
 }
 

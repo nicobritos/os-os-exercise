@@ -65,7 +65,7 @@ t_process createProcess(char * name, int(* wrapper)(int argc, char** argv, int(*
     }
     void * processMemoryUpperAddress = newProcess->processMemoryLowerAddress + PROC_SIZE - 1;
     newProcess->state = P_READY;
-    newProcess->stackPointer = processMemoryUpperAddress - sizeof(t_stackCDT);
+    newProcess->stackPointer = (void *)((char *)processMemoryUpperAddress - sizeof(t_stackCDT));
     initializeStack((t_stack)(newProcess->stackPointer), wrapper, argc, argv, startingPoint);
     newProcess->fds[STDIN] = STDIN;
     newProcess->fds[STDOUT] = STDOUT;

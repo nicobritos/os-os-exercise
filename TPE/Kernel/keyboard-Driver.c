@@ -34,7 +34,6 @@ int write_index = 0;
  
 void keyboard_controller(){
   unsigned int scan_code = get_key();
-  char input_key;
 
   if (scan_code < 0x80) {
       switch (scan_code) {
@@ -48,7 +47,7 @@ void keyboard_controller(){
             CNTRL_ACTIVE = TRUE;
             break;
       }
-
+      char input_key;
       if (SHIFT_ACTIVE) {
         input_key = getShiftAsciiKey(scan_code);
         add_to_buffer(input_key);

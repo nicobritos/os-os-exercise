@@ -82,7 +82,7 @@ uint64_t getSizeList(listADT list) {
 	return list->size;
 }
 
-nodeListADT searchNodeList(listADT list, void *comparing, uint8_t(searchFunction) (void * element, void * comparing)) {
+nodeListADT searchNodeList(listADT list, void *comparing, int (searchFunction) (void * element, void * comparing)) {
 	nodeListADT node = list->firstNode;
 	while (node != NULL && !searchFunction(node->element, comparing)) {
 		node = node->next;
