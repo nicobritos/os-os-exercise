@@ -6,6 +6,7 @@
 #include "include/process.h"
 #include "include/stdio.h"
 #include "include/unistd.h"
+#include "include/defines.h"
 
 #define MAX_PHYLOS 100
 
@@ -50,9 +51,11 @@ int phyloProblem(int argc, char * argv[]){
                 return 0;
             case 'r': case 'R':
                 removePhylo();
+                printf("Filosofo removido\n");
                 break;
             case 'a': case 'A':
                 addPhylo();
+                printf("Filosofo agregado\n");
                 break;
             default:
                 printTable();
@@ -80,7 +83,7 @@ void createPhylo(){
     name[7] = currentQty % 10 + '0';
     phylosIds[currentQty] = currentQty;
     argvs[phylosIds[currentQty]] = malloc(3 * sizeof(*(argvs[phylosIds[currentQty]])));
-    if(argvs[phylosIds[currentQty]])
+    if(argvs[phylosIds[currentQty]] == NULL)
         return;
     argvs[phylosIds[currentQty]][0] = (void *)&(phylosIds[currentQty]); // puntero al id
     argvs[phylosIds[currentQty]][1] = (void *)&(forks[currentQty]); // puntero al fork de la derecha
@@ -92,10 +95,12 @@ void createPhylo(){
         post1 = post2 = 0;
 
         if((forks[currentQty-1].usedBy == currentQty -1)){
+            printf("\nEsperando que el filosofo %d suelte el cubierto izquierdo para agregar uno nuevo\n", phylosIds[currentQty-1]);
             sys_wait_semaphore(forks[currentQty-1].fork);
             post1 = 1;
         }
         if(forks[0].usedBy == currentQty - 1){
+            printf("\nEsperando que el filosofo %d suelte el cubierto izquierdo para agregar uno nuevo\n", phylosIds[currentQty-1]);
             sys_wait_semaphore(forks[0].fork);
             post2 = 1;
         }
@@ -118,19 +123,27 @@ void createPhylo(){
 }
 
 void removePhylo(){
-    if(currentQty == 0)
-        return;
-    currentQty--;
-    sys_closeSem(forks[currentQty].fork);
-    if(forks[0].usedBy == phylosIds[currentQty]){
-        forks[0].usedBy = -1;
-        sys_freeProcess(phylosPids[currentQty]);
-        sys_post_semaphore(forks[0].fork);
+    if(currentQty != 0){
+        char post1, post2;
+        post1 = post2 = 0;
+
+        if((forks[currentQty-1].usedBy == currentQty -1)){
+            printf("Esperando que el filosofo %d suelte el cubierto derecho para removerlo\n", phylosIds[currentQty-1]);
+            sys_wait_semaphore(forks[currentQty-1].fork);
+            post1 = 1;
+        }
+        if(forks[0].usedBy == currentQty - 1){
+            printf("Esperando que el filosofo %d suelte el cubierto izquierdo para removerlo\n", phylosIds[currentQty-1]);
+            sys_wait_semaphore(forks[0].fork);
+            post2 = 1;
+        }
+        sys_freeProcess(phylosPids[currentQty - 1]);
+        free(argvs[phylosIds[currentQty-1]]);
+        if(post1)
+            sys_post_semaphore(forks[currentQty-1].fork);
+        if(post2)
+            sys_post_semaphore(forks[0].fork);
     }
-    else{
-        sys_freeProcess(phylosPids[currentQty]);
-    }
-    free(argvs[phylosIds[currentQty]]);
 }
 
 int phylo(int argc, char * argv[]){
