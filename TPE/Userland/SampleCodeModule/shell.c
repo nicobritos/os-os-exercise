@@ -86,7 +86,7 @@ int parse(char* input, t_mode mode, fd_t stdin, fd_t stdout) {
     } else if (strcmp(input, "ps") == 0) {
         pid = newProcess("ps", ps, mode);
     } else if (strcmp(input, "loop") == 0) {
-        pid = newProcess("loop", loop, S_M_BACKGROUND);
+        pid = newProcess("loop", loop, mode = S_M_BACKGROUND);
     } else if (strncmp(input, "kill ", 5) == 0) {
         char * argv[MAX_ARGS] = {0};
         argv[0] = input+5;
