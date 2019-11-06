@@ -157,6 +157,7 @@ void processStdinList() {
 		}
 		removeNodeList(stdinList, node);
 		unlockProcess(stdinNode->pid);
+		pfree(stdinNode, SYSTEM_PID);
 
 		if (!c) finished = 1;
 		node = nextNode;

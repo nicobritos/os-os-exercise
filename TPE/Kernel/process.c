@@ -59,8 +59,8 @@ t_process createProcess(char * name, int(* wrapper)(int argc, char** argv, int(*
     strcpy(newProcess->name, name);
     newProcess->processMemoryLowerAddress = pmalloc(PROC_SIZE, pid);
     if (newProcess->processMemoryLowerAddress == NULL) {
-        pfree(newProcess, pid);
         pfree(newProcess->name, pid);
+        pfree(newProcess, pid);
         return NULL;
     }
     void * processMemoryUpperAddress = newProcess->processMemoryLowerAddress + PROC_SIZE - 1;

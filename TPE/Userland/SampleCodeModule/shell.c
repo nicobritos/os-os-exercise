@@ -26,7 +26,7 @@ void shell(){
         // parseCommands(buffer);
         parse(buffer, S_M_FOREGROUND);
     }
-
+    free(buffer);
     printf("\nGoodbye");
     return;
 }
