@@ -74,7 +74,7 @@ void moveNodeToIndexList(listADT destination, listADT source, nodeListADT node, 
 }
 
 uint8_t isEmptyList(listADT list) {
-	return list->size == 0;
+	return (list == NULL) || (list->size == 0);
 }
 
 uint64_t getSizeList(listADT list) {
@@ -142,6 +142,7 @@ void prepareListIterator(listADT list) {
 }
 
 uint8_t hasNextListIterator(listADT list) {
+	
 	return ((list != NULL) && (list->currentNodeIterator != NULL) && (list->currentNodeIterator->next != NULL));
 }
 

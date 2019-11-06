@@ -79,7 +79,7 @@ t_sem * getNextSemIterator(){
 
 char * semListString(){
     char * buffer = pmalloc(MAX_STR_SIZE, 0);
-    if(isEmptyList){
+    if(isEmptyList(semList)){
         strncpy(buffer, "No hay semaforos", MAX_STR_SIZE);
     } else {
         uint64_t i = 0;

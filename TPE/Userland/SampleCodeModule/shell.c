@@ -10,13 +10,14 @@
 #include "apps.h"
 #include "phylo.h"
 #include "process.h"
+#include "files.h"
 
 #define MAX_ARGS 10
 
 // int parse(char *input, t_mode mode);
-int parse(char *input);
-void parseWithPipe(char *p1, char *p2);
-// void parseCommands(char *buffer);
+int parse(char *input, t_mode mode, fd_t stdin, fd_t stdout);
+void parseWithPipe(char *p1, char *p2, fd_t stdin);
+void parseCommands(char *buffer, fd_t stdin, fd_t stdout);
 
 void shell(){
     char *buffer = malloc(BUFFER_LENGTH);
@@ -25,50 +26,59 @@ void shell(){
         printf("User $> ");
         scanf(buffer, BUFFER_LENGTH - 1, '\n');
         printf("\n");
-        // parseCommands(buffer);
-        // parse(buffer, S_M_FOREGROUND);
-        parse(buffer);
+        parseCommands(buffer, 0, 1);
     }
     free(buffer);
     printf("\nGoodbye");
     return;
 }
 
-// void parseCommands(char *buffer) {
-//     char *start = buffer = trim(buffer);
-//     char *firstWord = NULL, *secondWord = NULL;
+void parseCommands(char *buffer, fd_t stdin, fd_t stdout) {
+    char *start = buffer = trim(buffer);
+    char *firstWord = NULL, *secondWord = NULL;
 
-//     while (*buffer) {
-//         if (*buffer == '|') {
-//             if (firstWord == NULL) {
-//                 firstWord = start;
-//                 start = buffer + 1;
-//             } else {
-//                 secondWord = start;
-//                 parseWithPipe(firstWord, secondWord);
-//                 return;
-//             }
-//         }
-//         buffer++;
-//     }
+    while (*buffer) {
+        if(*buffer == '|'){
+            firstWord = start;
+            firstWord[(uint64_t)buffer - (uint64_t)start] = 0;
+            firstWord = trim(firstWord);
+            secondWord = trim(buffer + 1);
+            parseWithPipe(firstWord, secondWord, stdin);
+            return;
+        }
+        buffer++;
+    }
 
-//     t_mode mode = *(buffer - 1) == '&' ? S_M_BACKGROUND : S_M_FOREGROUND;
-//     if (mode == S_M_BACKGROUND) {
-//         *(buffer - 1) = '\0';
-//     }
-//     parse(start, mode);
-// }
+    t_mode mode = *(buffer - 1) == '&' ? S_M_BACKGROUND : S_M_FOREGROUND;
+    if (mode == S_M_BACKGROUND) {
+        *(buffer - 1) = '\0';
+    }
+    parse(start, mode, stdin, stdout);
+}
 
-void parseWithPipe(char *p1, char *p2) {
-
+void parseWithPipe(char *p1, char *p2, fd_t stdin) {
+    printf("%s\n%s\n", p1, p2);
+    char * aux = p1;
+    while (*(aux)){
+        aux++;
+    }
+    t_mode mode = *(aux - 1) == '&' ? S_M_BACKGROUND : S_M_FOREGROUND;
+    if (mode == S_M_BACKGROUND) {
+        *(aux - 1) = '\0';
+    }
+    // createpipe
+    // cambiarle el stdout
+    parse(p1, mode, stdin, 0);
+    //cabiarle el stdin
+    parseCommands(p2, stdin, 0);
 }
 
 // int parse(char* input, t_mode mode) {
-int parse(char* input) {
+int parse(char* input, t_mode mode, fd_t stdin, fd_t stdout) {
     char * argv[MAX_ARGS] = {0};
     pid_t pid = 0;
 
-    t_mode mode = S_M_INVALID;
+    //t_mode mode = S_M_INVALID;
     if (strcmp(input, "help") == 0) {
         pid = newProcess("help", help, mode = S_M_FOREGROUND);
     } else if (strcmp(input, "mem") == 0) {
