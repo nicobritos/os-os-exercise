@@ -7,7 +7,7 @@
 
 static t_process *processes;
 
-void _killProcessSyscallKernel();
+void _killProcessSyscallKernel(int returnValue);
 void _reboot();
 
 void initializeProcessHandler() {
@@ -17,12 +17,12 @@ void initializeProcessHandler() {
     }
 }
 
-t_process newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], t_priority priority, t_mode mode) {
+t_process newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], t_priority priority, t_mode mode, t_stack stackFrame) {
     char finished = 0;
     pid_t i;
     
     for (i = STARTING_PID; i < MAX_PROC && !finished; i++) {
-        if (processes[i] == 0) {
+        if (processes[i] == NULL) {
             finished = 1;
         }
     }
@@ -32,17 +32,20 @@ t_process newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, i
     t_process newProcess = createProcess(name, processWrapper, i, ppid, argc, argv, (void *) foo);
     if (newProcess == NULL) return NULL;
     processes[i] = newProcess;
-    addProcess(newProcess, priority, mode);
+    addProcess(newProcess, priority, mode, stackFrame);
     
     return newProcess;
 }
 
+int8_t execveProcessHandler(t_process process, int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
+    return execve(process, processWrapper, argc, argv, startingPoint);
+}
+
 // This code is NOT executed inside interrupt
-// So I need to enter one to get the stackFrame
+// So I need to enter one to get the current stackFrame
 int processWrapper(int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
     int retValue = startingPoint(argc, argv);
-    // TODO: add return value if process(ses) are waiting for it to end
-    _killProcessSyscallKernel();
+    _killProcessSyscallKernel(retValue);
     while (1);
     return retValue;
 }
@@ -60,19 +63,22 @@ int8_t killProcessHandler(pid_t pid, t_stack currentProcessStackFrame) {
     return returnValue;
 }
 
-t_process duplicateProcessHandler(t_process source) {
+t_process duplicateProcessHandler(t_process source, t_stack stackFrame) {
     char finished = 0;
     pid_t i;
-    for (i = 0; i < MAX_PROC && !finished; i++) {
-        if (processes[i] == 0) {
+    for (i = STARTING_PID; i < MAX_PROC && !finished; i++) {
+        if (processes[i] == NULL) {
             finished = 1;
         }
     }
     if (!finished) return NULL;
+    i--;
 
-    t_process process = duplicateProcess(source, i);
+    t_process process = duplicateProcess(source, i, stackFrame);
+    if (process == NULL) return NULL;
+
     processes[i] = process;
-    addProcess(process, getCurrentProcessState(), getCurrentProcessMode());
+    addProcess(process, getCurrentProcessPriority(), S_M_BACKGROUND, stackFrame);
 
     return process;
 }

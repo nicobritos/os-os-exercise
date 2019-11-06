@@ -128,7 +128,7 @@ uint64_t readStdin(char *buffer, uint64_t size, t_stack currentProcessStackFrame
 		node->pid = getProcessPid(getCurrentProcess());
 
 		addElementToIndexList(stdinList, node, getSizeList(stdinList));
-		lockProcess(node->pid, currentProcessStackFrame);
+		lockProcess(node->pid, currentProcessStackFrame, L_IO);
 	} else {
 		do {
 			buffer[i++] = c;
@@ -157,7 +157,7 @@ void processStdinList() {
 			stdinNode->size--;
 		}
 		removeNodeList(stdinList, node);
-		unlockProcess(stdinNode->pid);
+		unlockProcess(stdinNode->pid, L_IO);
 		pfree(stdinNode, SYSTEM_PID);
 
 		if (!c) finished = 1;

@@ -18,7 +18,7 @@ t_mutexADT createMutex(){
 }
 
 void closeMutex(t_mutexADT mutex) {
-    postMutex(mutex);
+    postMutex(mutex, 0);
     freeList(mutex->processes, NULL);
     pfree(mutex, SYSTEM_PID);
 }
@@ -27,25 +27,26 @@ void lockMutex(t_mutexADT mutex) {
     mutex->locked = 1;
 }
 
-void waitMutex(t_mutexADT mutex, uint64_t pid, t_stack currentProcessStackFrame){
+void waitMutex(t_mutexADT mutex, t_process process, t_stack currentProcessStackFrame){
     if (!mutex->locked) mutex->locked = 1;
 
-    addElementToIndexList(mutex->processes, (void *)pid, getSizeList(mutex->processes));
-    lockProcess(pid, currentProcessStackFrame);
+    addElementToIndexList(mutex->processes, (void *)process, getSizeList(mutex->processes));
+    lockProcess(getProcessPid(process), currentProcessStackFrame, L_IO);
 }
 
-void postMutex(t_mutexADT mutex) {
+void postMutex(t_mutexADT mutex, uint64_t returnValue) {
     if (mutex->locked) {
         mutex->locked = 0;
 
         if (!isEmptyList(mutex->processes)) {
             nodeListADT node = getNodeAtIndexList(mutex->processes, 0);
 
-            for (uint64_t i = 0; i < getSizeList(mutex->processes) - 1; i++) {
-                unlockProcess((pid_t) getElementList(node));
+            for (uint64_t i = 0; i < getSizeList(mutex->processes); i++) {
+                t_process process = (t_process) getElementList(node);
+                updateProcessStackRegister(getProcessStackFrame(process), REGISTER_RAX, returnValue);
+                unlockProcess(getProcessPid(process), L_IO);
                 node = getNextNodeList(node);
             }
-            unlockProcess((pid_t) getElementList(node));    
         }
     }
 }

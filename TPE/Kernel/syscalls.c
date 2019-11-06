@@ -38,7 +38,7 @@ void *sys_malloc(uint64_t size);
 
 void sys_free(void * address);
 
-pid_t sys_new_process(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[], t_mode mode);
+pid_t sys_new_process(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[], t_mode mode, t_stack currentProcessStackFrame);
 
 int8_t sys_free_process(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack stackFrame);
 
@@ -48,7 +48,7 @@ void sys_yield(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t 
 
 t_mode sys_get_process_mode(pid_t pid);
 
-void sys_set_process_mode(pid_t pid, t_mode mode);
+void sys_set_process_mode(pid_t pid, t_mode mode, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack stackFrame);
 
 t_priority sys_get_process_priority(pid_t pid);
 
@@ -82,6 +82,9 @@ fd_t sys_openPipe(const char *name, uint64_t mode);
 
 void sys_closePipe(fd_t fd);
 
+pid_t sys_fork(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame);
+
+int8_t sys_execve(int argc, char * argv[], int(* startingPoint)(int argc, char** argv));
 
 systemCall sysCalls[] = { 
 	(systemCall) sys_read,
@@ -104,8 +107,6 @@ systemCall sysCalls[] = {
 	(systemCall) sys_get_process_priority,
 	(systemCall) sys_set_process_priority,
 	(systemCall) sys_get_process_state,
-	(systemCall) NULL,
-	(systemCall) NULL,
 	(systemCall) sys_createSem,
 	(systemCall) sys_openSem,
 	(systemCall) sys_closeSem,
@@ -118,7 +119,9 @@ systemCall sysCalls[] = {
 	(systemCall) sys_sleep,
 	(systemCall) sys_redirect_fd,
 	(systemCall) sys_openPipe,
-	(systemCall) sys_closePipe
+	(systemCall) sys_closePipe,
+	(systemCall) sys_fork,
+	(systemCall) sys_execve
 };
 
 void syscallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, uint64_t r9, t_stack stackFrame){
@@ -203,8 +206,8 @@ void sys_free(void * address){
 	pfree(address, getProcessPid(getCurrentProcess()));
 }
 
-pid_t sys_new_process(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[], t_mode mode){
-	return getProcessPid(newProcess(name, foo, getProcessPid(getCurrentProcess()), argc, argv, S_P_LOW, mode));
+pid_t sys_new_process(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[], t_mode mode, t_stack currentProcessStackFrame){
+	return getProcessPid(newProcess(name, foo, getProcessPid(getCurrentProcess()), argc, argv, S_P_LOW, mode, currentProcessStackFrame));
 }
 
 int8_t sys_free_process(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack stackFrame) {
@@ -223,8 +226,8 @@ t_mode sys_get_process_mode(pid_t pid) {
 	return getProcessMode(pid);
 }
 
-void sys_set_process_mode(pid_t pid, t_mode mode) {
-	setProcessMode(pid, mode);
+void sys_set_process_mode(pid_t pid, t_mode mode, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack stackFrame) {
+	setProcessMode(pid, mode, stackFrame);
 }
 
 t_priority sys_get_process_priority(pid_t pid) {
@@ -296,4 +299,15 @@ fd_t sys_openPipe(const char *name, uint64_t mode){
 
 void sys_closePipe(fd_t fd){
 	closePipe(fd, getCurrentProcess());
+}
+
+pid_t sys_fork(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame) {
+	pid_t pid = getProcessPid(duplicateProcessHandler(getCurrentProcess(), currentProcessStackFrame));
+	printProcessesScheduler();
+	if (pid >= 0) return 0;
+	return -1;
+}
+
+int8_t sys_execve(int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
+	return execveProcessHandler(getCurrentProcess(), argc, argv, startingPoint);
 }

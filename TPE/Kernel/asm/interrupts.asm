@@ -202,6 +202,8 @@ _killProcessSyscallKernel:
   push rbp
   mov rbp, rsp
 
+  push rdi ; returnValue
+
   xor rax, rax
   call getCurrentProcess
   mov rdi, rax
@@ -210,6 +212,8 @@ _killProcessSyscallKernel:
   call getProcessPid
   mov rdi, 7 ; killProcess (see syscalls.c)
   mov rsi, rax
+
+  pop rax ; returnValue is expected to be in RAX
 
   int 80h
 

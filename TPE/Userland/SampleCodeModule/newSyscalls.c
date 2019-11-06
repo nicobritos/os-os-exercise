@@ -97,14 +97,6 @@ t_state sys_get_process_state(pid_t pid) {
     return (t_state) _systemCall(__SYSTEM_CALL_GET_PROCESS_STATE, pid);
 }
 
-int sys_readPipe(void * pipe, char *buffer, uint64_t size){
-    return _systemCall(__SYSTEM_CALL_READ_PIPE, pipe, buffer, size);
-}
-
-int sys_writePipe(void * pipe, char *buffer, uint64_t size){
-    return _systemCall(__SYSTEM_CALL_WRITE_PIPE, pipe, buffer, size);
-}
-
 void * sys_createSem(char *name){
     return (void *)_systemCall(__SYSTEM_CALL_CREATE_SEM, name);
 }
@@ -155,4 +147,12 @@ fd_t sys_openPipe(const char *name, uint64_t mode){
 
 void sys_closePipe(fd_t fd){
     _systemCall(__SYSTEM_CALL_OPEN_PIPE);
+}
+
+pid_t sys_fork() {
+    return _systemCall(__SYSTEM_CALL_FORK);
+}
+
+int8_t sys_execve(int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {   
+    return _systemCall(__SYSTEM_CALL_EXECVE, argc, argv, startingPoint);
 }

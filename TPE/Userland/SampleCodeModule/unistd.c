@@ -41,3 +41,11 @@ t_state toogleProcessLock(pid_t pid){
 void sleep(uint64_t ms) {
 	sys_sleep(ms);
 }
+
+pid_t fork() {
+	return sys_fork();
+}
+
+int8_t execve(int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
+	return sys_execve(argc, argv, startingPoint);
+}

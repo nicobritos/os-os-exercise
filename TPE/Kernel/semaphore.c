@@ -4,6 +4,7 @@
 #include "include/memManager.h"
 #include "include/lib.h"
 #include "include/scheduler.h"
+#include "include/process.h"
 
 #define MAX_STR_SIZE 500
 
@@ -52,7 +53,7 @@ void waitSemaphore(t_sem * sem, uint64_t pid, t_stack currentProcessStackFrame){
     (sem->value)--;
     if(sem->value < 0){
         addElementToIndexList(sem->processes, (void *)pid, getSizeList(sem->processes));
-        lockProcess(pid, currentProcessStackFrame);
+        lockProcess(pid, currentProcessStackFrame, L_IO);
     }
 }
 
@@ -61,7 +62,7 @@ void postSemaphore(t_sem * sem){
     if(!isEmptyList(sem->processes)){
         uint64_t pid = (uint64_t) getElementList(getNodeAtIndexList(sem->processes, 0));
         removeNodeAtIndexList(sem->processes, 0);
-        unlockProcess(pid);
+        unlockProcess(pid, L_IO);
     }
 }
 

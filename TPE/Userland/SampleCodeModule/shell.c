@@ -111,6 +111,10 @@ int parse(char* input, t_mode mode, fd_t stdin, fd_t stdout) {
         pid = newProcess("sem", sem, mode);
     // } else if (strcmp(input, "pipe") == 0) {
     //     pid = newProcess("pipe", pipe, mode);
+    } else if (strcmp(input, "fork") == 0) {
+        pid = fork();
+        printf("%l\n", (uint64_t) pid);
+        printf("HOLA %d\n", getPid());
     } else if (strcmp(input, "phylo") == 0) {
         argv[0] = (char *)3;
         pid = newProcessArgs("phylo", phyloProblem, 1, argv, mode = S_M_FOREGROUND);
@@ -125,8 +129,6 @@ int parse(char* input, t_mode mode, fd_t stdin, fd_t stdout) {
 
     if (pid == -1) {
         printf("Error creating process\n");
-    } else if (mode == S_M_FOREGROUND) {
-        waitpid(pid);
     } 
     return 0;
 }
