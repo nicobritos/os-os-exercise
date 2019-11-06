@@ -32,42 +32,58 @@ int phylosIds[MAX_PHYLOS];
 void ** argvs[MAX_PHYLOS];
 
 int phyloProblem(int argc, char * argv[]){
-    printf("\nPresione:\n\tE para salir\n\tA para agregar filosofo\n\tR para remover filosofo\n\tO cualquier otra tecla para imprimir el estado de la mesa\n");
+    currentQty = 0;
     uint64_t initQty = (uint64_t)argv[0];
-    if(initQty > MAX_PHYLOS)
+    if(initQty > MAX_PHYLOS || initQty < 3){
+        printf("Tiene que haber entre 3 y 100 filosofos");
         return -1;
+    }
+    printf("Bienvenido al problema de los filosofos comensales, presione ENTER para continuar\n");
+    while(getchar() != '\n');
+    printf("Presione:\n\tH para obtener ayuda\n\tE para salir\n\tA para agregar filosofo\n\tR para remover filosofo\n\tCualquier otra tecla para imprimir el estado de la mesa\n");
     for (int i = 0; i < initQty; i++){
         createPhylo();
     }
-    char c[3];
-    scanf(c, 2, '\n');
+
     while(1){
-        switch (c[0]){
+        switch (getchar()){
+            case 'h': case 'H':
+                printf("Presione:\n\tH para obtener ayuda\n\tE para salir\n\tA para agregar filosofo\n\tR para remover filosofo\n\tCualquier otra tecla para imprimir el estado de la mesa\n");
+                break;
             case 'e': case 'E':
+                printf("Saliendo\n");
+                printf("Guardando los cubiertos...\n");
+                for(int i = 0; i< currentQty; i++){
+                    sys_closeSem(forks[i].fork);
+                }
+                printf("Listo\n");
+                printf("Echando a los filosofos de la cocina...\n");
                 for(int i = 0; i< currentQty; i++){
                     killProcess(phylosPids[i]);
+                    free(argvs[phylosIds[i]]);
                 }
+                printf("Listo\n");
                 printf("\nBye bye\n");
                 return 0;
             case 'r': case 'R':
                 removePhylo();
-                printf("Filosofo removido\n");
                 break;
             case 'a': case 'A':
                 addPhylo();
-                printf("Filosofo agregado\n");
                 break;
             default:
                 printTable();
         }
-        scanf(c, 2, '\n');
     }
 }
 
 void addPhylo(){
-    if(currentQty >= MAX_PHYLOS)
-        return;
-    createPhylo();
+    if(currentQty >= MAX_PHYLOS){
+        printf("No se pueden agregar mas filosofos (maximo 100)\n");
+    }
+    else{
+        createPhylo();
+    }
 }
 
 void createPhylo(){
@@ -77,6 +93,7 @@ void createPhylo(){
     forks[currentQty].fork = sys_createSem(semName);
     sys_post_semaphore(forks[currentQty].fork); // para marcar que empieza libre
     forks[currentQty].usedBy = -1;
+    printf("Poniendo un cubierto mas\n");
 
     char name[9] = "Phylo-00";
     name[6] = currentQty/10 + '0';
@@ -120,29 +137,52 @@ void createPhylo(){
             sys_post_semaphore(forks[0].fork);
     }
     currentQty++;
+    printf("Filosofo agregado\n");
 }
 
 void removePhylo(){
-    if(currentQty != 0){
-        char post1, post2;
-        post1 = post2 = 0;
+    if(currentQty >= 4){
+        char post2 = 0;
 
         if((forks[currentQty-1].usedBy == currentQty -1)){
             printf("Esperando que el filosofo %d suelte el cubierto derecho para removerlo\n", phylosIds[currentQty-1]);
             sys_wait_semaphore(forks[currentQty-1].fork);
-            post1 = 1;
+        } else if ((forks[currentQty-1].usedBy == currentQty - 2)){
+            printf("Esperando que el filosofo %d suelte el cubierto derecho para remover el cubierto\n", phylosIds[currentQty-2]);
+            sys_wait_semaphore(forks[currentQty-1].fork);
         }
         if(forks[0].usedBy == currentQty - 1){
             printf("Esperando que el filosofo %d suelte el cubierto izquierdo para removerlo\n", phylosIds[currentQty-1]);
             sys_wait_semaphore(forks[0].fork);
             post2 = 1;
         }
+        printf("Rearmando la mesa\n");
+        if(forks[currentQty - 2].usedBy == currentQty - 2){
+            printf("Esperando que el filosofo %d suelte su cubierto derecho para reubicarlo y darle otro cubierto\n", phylosIds[currentQty-2]);
+            sys_wait_semaphore(forks[currentQty-2].fork);
+        }
+        sys_freeProcess(phylosPids[currentQty - 2]);
+        char name[9] = "Phylo-00";
+        name[6] = (currentQty-2)/10 + '0';
+        name[7] = (currentQty-2) % 10 + '0';
+        phylosIds[currentQty-2] = currentQty -2;
+        free(argvs[phylosIds[currentQty-2]]);
+        argvs[phylosIds[currentQty-2]] = malloc(3 * sizeof(*(argvs[phylosIds[currentQty-2]])));
+        argvs[phylosIds[currentQty-2]][0] = &(phylosIds[currentQty-2]);
+        argvs[phylosIds[currentQty-2]][1] = &(forks[currentQty-2]);
+        argvs[phylosIds[currentQty-2]][2] = &(forks[currentQty-1]);
+        phylosPids[currentQty - 2] = sys_newProcess(name, phylo, 3, (char **)argvs[phylosIds[currentQty-2]], S_M_BACKGROUND);
         sys_freeProcess(phylosPids[currentQty - 1]);
         free(argvs[phylosIds[currentQty-1]]);
-        if(post1)
-            sys_post_semaphore(forks[currentQty-1].fork);
+        sys_post_semaphore(forks[currentQty-2].fork);
+        sys_closeSem(forks[currentQty-1].fork);
         if(post2)
             sys_post_semaphore(forks[0].fork);
+        currentQty--;
+        printf("Filosofo removido\n");
+    }
+    else{
+        printf("No se pueden remover mas filosofos (minimo 3)\n");
     }
 }
 
@@ -169,10 +209,12 @@ int phylo(int argc, char * argv[]){
 }
 
 void printTable(){
+    printf("\n-----------------------------------------------------------\n");
     for(int i = 0; i<currentQty; i++){
         char s[12]="Filosofo 00";
         itoa(forks[i].usedBy, s+9, 10);
-        printf("\nCubierto %d: USADO POR %s\n", i, (forks[i].usedBy == -1)?"NADIE":s);
+        printf("Cubierto %d: USADO POR %s\n", i, (forks[i].usedBy == -1)?"NADIE":s);
         printf("Filosofo %d: %s\n", phylosIds[i], (forks[i].usedBy == phylosIds[i])?((forks[(i+1)%currentQty].usedBy == phylosIds[i])?"EATING":"WAITING FORK"):"THINKING");
     }
+    printf("-----------------------------------------------------------\n");
 }

@@ -10,11 +10,12 @@
 listADT semList = NULL;
 
 int equals(t_sem * elem, t_sem * other){
-    return strcmp(elem->name, other->name);
+    return !strcmp(elem->name, other->name);
 }
 
 t_sem * createSem(char * name){
     t_sem * newSem = pmalloc(sizeof(t_sem), SYSTEM_PID);
+    newSem->name = pmalloc(strlen(name)+1, SYSTEM_PID);
     strcpy(newSem->name, name);
     newSem->value = 0;
     newSem->processes = createList();
@@ -39,9 +40,10 @@ t_sem * openSem(char * name){
 }
 
 void closeSem(t_sem * sem){
-    if(!isEmptyList(semList)){
+    if(!isEmptyList(semList) && sem != NULL){
         removeNodeList(semList, searchNodeList(semList, sem, (int (*)(void *, void *))equals));
         freeList(sem->processes, NULL);
+        pfree(sem->name, SYSTEM_PID);
         pfree(sem, SYSTEM_PID);
     }
 }

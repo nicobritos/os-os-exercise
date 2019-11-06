@@ -255,6 +255,7 @@ void sys_post_semaphore(t_sem * sem){
 void sys_printSems(){
 	char * str = semListString();
 	printString(str, 0, 255, 0);
+	newLine();
 	pfree(str, SYSTEM_PID);
 }
 

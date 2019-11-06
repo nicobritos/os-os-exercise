@@ -136,7 +136,7 @@ int wc(int argc, char **argv){
     char buffer[1000];
     int separator = -1;
     scanf(buffer, 1000, separator);
-    printf("\n%u", lineCount(buffer));
+    printf("\n%u\n", lineCount(buffer));
     return 1;
 }
 
