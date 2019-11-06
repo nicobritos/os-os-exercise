@@ -78,6 +78,11 @@ void sys_sleep(uint64_t ms, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r
 
 uint8_t sys_redirect_fd(fd_t from, fd_t to);
 
+fd_t sys_openPipe(const char *name, uint64_t mode);
+
+void sys_closePipe(fd_t fd);
+
+
 systemCall sysCalls[] = { 
 	(systemCall) sys_read,
 	(systemCall) sys_write,
@@ -111,7 +116,9 @@ systemCall sysCalls[] = {
 	(systemCall) sys_printProcesses,
 	(systemCall) sys_toggle_process_lock,
 	(systemCall) sys_sleep,
-	(systemCall) sys_redirect_fd
+	(systemCall) sys_redirect_fd,
+	(systemCall) sys_openPipe,
+	(systemCall) sys_closePipe
 };
 
 void syscallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, uint64_t r9, t_stack stackFrame){
@@ -281,4 +288,12 @@ uint8_t sys_redirect_fd(fd_t from, fd_t to) {
 		return 1;
 	}
 	return 0;
+}
+
+fd_t sys_openPipe(const char *name, uint64_t mode){
+	return openPipe(name, mode, getCurrentProcess());
+}
+
+void sys_closePipe(fd_t fd){
+	closePipe(fd, getCurrentProcess());
 }

@@ -148,3 +148,11 @@ void sys_sleep(uint64_t ms) {
 uint8_t sys_redirect_fd(fd_t from, fd_t to) {
     return _systemCall(__SYSTEM_CALL_REDIRECT_FD, from, to);
 }
+
+fd_t sys_openPipe(const char *name, uint64_t mode){
+    return _systemCall(__SYSTEM_CALL_OPEN_PIPE, name, mode);
+}
+
+void sys_closePipe(fd_t fd){
+    _systemCall(__SYSTEM_CALL_OPEN_PIPE);
+}

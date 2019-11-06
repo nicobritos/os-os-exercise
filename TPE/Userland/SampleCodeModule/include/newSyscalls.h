@@ -38,7 +38,9 @@ typedef enum {
 	__SYSTEM_CALL_PRINT_PROCESSES = 29,
 	__SYSTEM_CALL_TOGGLE_PROCESS_LOCK = 30,
 	__SYSTEM_CALL_SLEEP = 31,
-	__SYSTEM_CALL_REDIRECT_FD = 32
+	__SYSTEM_CALL_REDIRECT_FD = 32,
+	__SYSTEM_CALL_OPEN_PIPE = 33,
+	__SYSTEM_CALL_CLOSE_PIPE = 34
 } t_system_call;
 
 uint64_t sys_read(int fileDescriptor, void * buff, int length);
@@ -106,5 +108,9 @@ void sys_printProcesses();
 void sys_sleep(uint64_t ms);
 
 uint8_t sys_redirect_fd(fd_t from, fd_t to);
+
+fd_t sys_openPipe(const char *name, uint64_t mode);
+
+void sys_closePipe(fd_t fd);
 
 #endif

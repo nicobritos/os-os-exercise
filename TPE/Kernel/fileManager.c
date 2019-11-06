@@ -41,7 +41,7 @@ void initializeFileManager() {
 	stdinList = createList();
 }
 
-fd_t openPipe(const char *name, uint8_t mode, t_process process) {
+fd_t openPipe(const char *name, uint64_t mode, t_process process) {
 	fd_t fd = 0;
 	while (fd < MAX_PIPES) {
 		if (pipeList[fd] == NULL) {
