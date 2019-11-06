@@ -5,14 +5,22 @@
 
 #define STARTING_PID (SYSTEM_PID + 1)
 
-static t_process processes[MAX_PROC] = {0};
+static t_process *processes;
 
 void _killProcessSyscallKernel();
 void _reboot();
 
+void initializeProcessHandler() {
+    processes = pmalloc(sizeof(*processes) * MAX_PROC, SYSTEM_PID);
+    for (uint64_t i = 0; i < MAX_PROC; ++i) {
+        processes[i] = NULL;
+    }
+}
+
 t_process newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, int argc, char * argv[], t_priority priority, t_mode mode) {
     char finished = 0;
     pid_t i;
+    
     for (i = STARTING_PID; i < MAX_PROC && !finished; i++) {
         if (processes[i] == 0) {
             finished = 1;
@@ -20,13 +28,12 @@ t_process newProcess(char * name, int(* foo)(int argc, char** argv), int ppid, i
     }
     if (!finished) return NULL;
     i--;
-    t_process newProcess = createProcess(name, processWrapper, i, ppid, argc, argv, (void *) foo);
-    if (newProcess == NULL) {
-        return NULL;
-    }
-    processes[i] = newProcess;
 
+    t_process newProcess = createProcess(name, processWrapper, i, ppid, argc, argv, (void *) foo);
+    if (newProcess == NULL) return NULL;
+    processes[i] = newProcess;
     addProcess(newProcess, priority, mode);
+    
     return newProcess;
 }
 
@@ -40,15 +47,17 @@ int processWrapper(int argc, char * argv[], int(* startingPoint)(int argc, char*
     return retValue;
 }
 
-void killProcessHandler(pid_t pid, t_stack currentProcessStackFrame) {
+int8_t killProcessHandler(pid_t pid, t_stack currentProcessStackFrame) {
+    int8_t returnValue = 0;
+
     if (pid != SYSTEM_PID && pid < MAX_PROC) {
         t_process process = processes[pid];
         processes[pid] = 0;
-        killProcess(pid, currentProcessStackFrame);
+        returnValue = killProcess(pid, currentProcessStackFrame);
         freeProcess(process);
-    } else if (pid == SYSTEM_PID) {
-        updateProcessStackRegister(currentProcessStackFrame, REGISTER_RIP, (uint64_t) _reboot);
     }
+
+    return returnValue;
 }
 
 t_process duplicateProcessHandler(t_process source) {

@@ -231,14 +231,17 @@ t_state getProcessState(t_process process) {
 }
 
 t_stack getProcessStackFrame(t_process process) {
+    if (process == NULL) return NULL;
     return process->stackPointer;
 }
 
 pid_t getProcessPid(t_process process) {
+    if (process == NULL) return -1;
     return process->pid;
 }
 
 pid_t getProcessPPid(t_process process) {
+    if (process == NULL) return -1;
     return process->pPid;
 }
 

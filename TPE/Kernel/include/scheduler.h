@@ -14,7 +14,7 @@
 	
 	uint8_t addProcess(t_process process, t_priority priority, t_mode mode);
 	
-	void killProcess(pid_t pid, t_stack stackFrame);
+	int8_t killProcess(pid_t pid, t_stack stackFrame);
 	
 	t_process getCurrentProcess();
 	

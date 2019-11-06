@@ -38,9 +38,9 @@ pid_t sys_newProcess(char * name, int(* foo)(int argc, char** argv), int argc, c
     return (pid_t)_systemCall(__SYSTEM_CALL_NEW_PROCESS,name,foo,argc,argv, mode);
 }
 
-void sys_freeProcess(pid_t pid)
+int8_t sys_freeProcess(pid_t pid)
 {
-    _systemCall(__SYSTEM_CALL_FREE_PROCESS, pid);
+    return _systemCall(__SYSTEM_CALL_FREE_PROCESS, pid);
 }
 
 void sys_free(void * address)

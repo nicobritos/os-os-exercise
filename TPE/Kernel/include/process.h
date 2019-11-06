@@ -7,7 +7,6 @@
 
 #define PROC_SIZE 4096
 #define SYSTEM_PID 0
-#define MAX_PROC 20
 #define MAX_FILES_PER_PROCESS 20
 
 typedef int64_t pid_t;
