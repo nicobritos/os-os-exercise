@@ -125,14 +125,14 @@ uint8_t addProcess(t_process process, t_priority priority, t_mode mode) {
 	return 1;
 }
 
-void killProcess(pid_t pid, t_stack stackFrame) {
+int8_t killProcess(pid_t pid, t_stack stackFrame) {
 	nodeListADT processNode = getNodeReadyQueue(pid);
 	if (processNode == NULL) {
 		processNode = getNodeWaitingQueue(pid);
-		if (processNode == NULL) return;
+		if (processNode == NULL) return 0;
 
 		removeProcess(processNode, waitingQueue);
-		return;
+		return 1;
 	}
 
 	if (processNode == currentProcessNode) {
@@ -146,6 +146,7 @@ void killProcess(pid_t pid, t_stack stackFrame) {
 	}
 
 	removeProcess(processNode, readyQueue);
+	return 1;
 }
 
 t_process getCurrentProcess() {
@@ -270,11 +271,15 @@ void waitpid(pid_t pid, t_stack currentProcessStack) {
 void printProcessesScheduler() {
 	uint64_t total = getSizeList(readyQueue) + getSizeList(waitingQueue);
 	newLine();
-	printString("Processes:", 0, 255, 0);
+	printString("Processes: (", 0, 255, 0);
+	printDec(total, 0, 255, 0);
+	printString("/", 0, 255, 0);
+	printDec(MAX_PROC, 0, 255, 0);
+	printString(")", 0, 255, 0);
 	newLine();
-	printQueue(readyQueue, "Ready queue: ", total);
+	printQueue(readyQueue, "Ready queue: (", total);
 	newLine();
-	printQueue(waitingQueue, "Waiting queue: ", total);
+	printQueue(waitingQueue, "Waiting queue: (", total);
 	newLine();
 }
 
@@ -542,9 +547,7 @@ char *getProcessModeString(t_mode mode) {
 		case S_M_FOREGROUND: return "FOREGROUND";
 		case S_M_BACKGROUND: return "BACKGROUND";
 		default: {
-			printHexa(mode, 0, 255, 255);
 			return "INVALID";
-
 		}
   }
 }

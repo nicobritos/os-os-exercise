@@ -4,14 +4,14 @@
 #include "stdio.h"
 #include "unistd.h"
 #include "stdlib.h"
-#include "process.h"
-#include "commands.h"
 #include "newSyscalls.h"
+#include "commands.h"
 #include "defines.h"
+#include "process.h"
 
 
 int help(int argc, char **argv) {
-    printf("\nhelp - display available commands \n");
+    printf("help - display available commands \n");
 	printf("mem - Prints the memory state\n");
     printf("ps - Prints all the running processes basic information\n");
     printf("loop - Prints a salute and his pid every 5 seconds\n");
@@ -24,25 +24,24 @@ int help(int argc, char **argv) {
     printf("phylo - Simulates the philosopher's problem\n");
     printf("sem - Prints the current open semaphores and basic information\n");
     printf("clear - Clears the screen \n");
-    printf("exit - Exits the terminal");
+    printf("exit - Exits the terminal\n");
     return 1;
 }
 
 int kill(int argc, char **argv){
-    printf("\n");
     pid_t pid = atoi(argv[0]);
-    if(pid == -1){
-        printf("Please enter a number");
+    if(pid == -1 || argv[0] == '\0'){
+        printf("Please enter a valid PID\n");
         return 0;
-        }
-    else{
-        killProcess(pid);
-        printf("Process killed\n");
+    } else {
+        if (killProcess(pid))
+            printf("Process killed\n");
+        else
+            printf("Error killing process (invalid PID?)\n");
     }
     return 1;
 }
 int nice(int argc, char ** input){
-    printf("\n");
     char ** argv = malloc(100 * sizeof(char*));
     if(argv == NULL)
         return 0;
@@ -85,11 +84,10 @@ int nice(int argc, char ** input){
     
 }
 int block(int argc, char **argv){
-    printf("\n");
     pid_t pid = atoi(argv[0]);
 
     if(pid == -1){
-        printf("Please enter a number");
+        printf("Please enter a number\n");
         return 0;
         }
     else{
@@ -104,7 +102,7 @@ int block(int argc, char **argv){
         }
         else
         {
-            printf("Proceso no lockeado ni listo");
+            printf("Proceso no lockeado ni listo\n");
         }
     }
     return 1;
@@ -112,7 +110,7 @@ int block(int argc, char **argv){
 
 
 int mem(int argc, char ** argv){
-    printf("\n%llu / %llu bytes utilizados", usedMem(), usedMem() + freeMem());
+    printf("%llu / %llu bytes utilizados\n", usedMem(), usedMem() + freeMem());
     return 1;
 }
 
@@ -123,19 +121,18 @@ int ps(int argc, char ** argv){
 
 int loop(int argc, char **argv){
     while(1){
-        printf("\nHola soy %lld", sys_getPid());
+        printf("Hola soy PID: %lld\n", sys_getPid());
         sleep(5000);
     }   
     return 1;
 }
 
 int cat(int argc, char **argv){
-    printf("\n%s", argv[0]);
+    printf("%s", argv[0]);
     return 1;
 }
 
 int wc(int argc, char **argv){
-    printf("\n");
     char buffer[1000];
     int separator = -1;
     scanf(buffer, 1000, separator);

@@ -14,10 +14,6 @@ pid_t newProcess(char * name, int(* foo)(int argc, char** argv), t_mode mode) {
 	return newProcessArgs(name, foo, 0, NULL, mode);
 }
 
-void freeProcess(pid_t pid){
-    sys_freeProcess(pid);
-}
-
 int getPid(){
     return sys_getPid();
 }
@@ -26,8 +22,8 @@ int waitpid(pid_t pid) {
 	return sys_wait_pid(pid);
 }
 
-void killProcess(pid_t pid) {
-	sys_freeProcess(pid);
+int8_t killProcess(pid_t pid) {
+	return sys_freeProcess(pid);
 }
 
 void setProcessMode(pid_t pid, t_mode mode) {   

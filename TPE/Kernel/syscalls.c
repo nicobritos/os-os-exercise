@@ -40,7 +40,7 @@ void sys_free(void * address);
 
 pid_t sys_new_process(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[], t_mode mode);
 
-void sys_free_process(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack stackFrame);
+int8_t sys_free_process(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack stackFrame);
 
 pid_t sys_get_pid();
 
@@ -197,11 +197,11 @@ void sys_free(void * address){
 }
 
 pid_t sys_new_process(char * name, int(* foo)(int argc, char** argv), int argc, char * argv[], t_mode mode){
-	return getProcessPid(newProcess(name, foo, getProcessPPid(getCurrentProcess()), argc, argv, S_P_LOW, mode));
+	return getProcessPid(newProcess(name, foo, getProcessPid(getCurrentProcess()), argc, argv, S_P_LOW, mode));
 }
 
-void sys_free_process(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack stackFrame) {
-	killProcessHandler(pid, stackFrame);
+int8_t sys_free_process(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack stackFrame) {
+	return killProcessHandler(pid, stackFrame);
 }
 
 pid_t sys_get_pid(){

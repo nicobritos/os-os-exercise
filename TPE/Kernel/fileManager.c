@@ -5,6 +5,7 @@
 #include "processHandler.h"
 #include "fileManager.h"
 #include "memManager.h"
+#include "scheduler.h"
 #include "list.h"
 #include "ipc.h"
 
@@ -68,7 +69,7 @@ uint64_t readFile(fd_t fd, char *buffer, uint64_t size, t_stack currentProcessSt
 
 	uint64_t i = 0;
 	if (fd == STDOUT) return i;
-	if (fd == STDIN) return readStdin(buffer, size, currentProcessStackFrame);
+	if (fd == STDIN && getCurrentProcessMode() == S_M_FOREGROUND) return readStdin(buffer, size, currentProcessStackFrame);
 
 	if (fd >= STARTING_PIPE_FD && fd < MAX_PIPES - STARTING_PIPE_FD) {
 		fd -= STARTING_PIPE_FD;
@@ -132,7 +133,7 @@ uint64_t readStdin(char *buffer, uint64_t size, t_stack currentProcessStackFrame
 		do {
 			buffer[i++] = c;
 			size--;			
-		} while(size > 0 && (c = get_key_input()));
+		} while (size > 0 && (c = get_key_input()));
 	}
 	
 	return i;

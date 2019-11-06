@@ -101,7 +101,7 @@ int itoa(int value, char* buffer, int base){
 /*
  * Convierte  string a int 
  */
-int atoi(char * s){ 		
+int64_t atoi(char * s){ 		
 	int i = 0;
 	int num = 0;
 	while(s[i]){

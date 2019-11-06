@@ -72,19 +72,27 @@ int strlen(const char* str){
 	return i;
 }
 
-void strcpy(char * dest, const char * src){
-	while(src){
-		*dest = *src;
+void strcpy(char * dst, const char * src){
+	while(*src){
+		*dst = *src;
 		src++;
+		dst++;
 	}
+	*dst = '\0';
 }
 
-void strncpy(char * dest, const char * src, int n){
-	while(src && n>0){
-		*dest = *src;
+void strncpy(char * dst, const char * src, int n){
+	if (!n) return;
+	while(*src && n>0){
+		*dst = *src;
 		src++;
+		dst++;
 		n--;
 	}
+	if (n)
+		*dst = '\0';
+	else
+		*(dst - 1) = '\0';
 }
 
 int itoa(int value, char* buffer, int base){			
