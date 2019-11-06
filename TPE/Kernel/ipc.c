@@ -6,6 +6,8 @@
 #include "include/lib.h"
 #include "include/ipc.h"
 
+#define MAX_STR_SIZE 500
+
 typedef struct t_pipeCDT {
 	t_process readingProcess;
 	t_process writingProcess;
@@ -39,7 +41,7 @@ t_pipeADT _openPipe(const char *name, uint8_t mode, t_process process) {
 		if (mode & _PIPE_CREATE) {
 			newPipe = firstPipe = pmalloc(sizeof(t_pipeCDT), SYSTEM_PID);
 			if (newPipe == NULL) return NULL; // TODO: Error
-			
+			newPipe->name = pmalloc(strlen(name) + 1, SYSTEM_PID);
 			strcpy(newPipe->name,name);
 			newPipe->next = newPipe->previous = NULL;
 		} else {
@@ -92,6 +94,7 @@ void _closePipe(t_pipeADT pipe, t_process process) {
 	if (process == pipe->writingProcess) pipe->writingProcess = NULL;
 
 	if (pipe->readingProcess == NULL && pipe->writingProcess == NULL) {
+		pfree(pipe->name, SYSTEM_PID);
 		pfree(pipe, SYSTEM_PID);
 	}
 }
@@ -227,4 +230,50 @@ void freePipeList(t_pipe_listADT pipeList) {
 		}
 		pfree(pipeList, SYSTEM_PID);
 	}
+}
+
+char * pipeListString(){
+	char * str = pmalloc(MAX_STR_SIZE, getProcessPid(getCurrentProcess()));
+	t_pipe_listADT pipeList =  createPipeList();
+	uint64_t i = 0;
+	if(!hasNextPipe(pipeList)){
+		strncpy(str, "No hay pipes", MAX_STR_SIZE);
+	}
+	else{
+		while (hasNextPipe(pipeList))
+		{
+			t_pipeADT pipe = getNextPipe(pipeList);
+			strncpy(str + i, pipe->name, MAX_STR_SIZE - i);
+			i += strlen(pipe->name);
+			if(i < MAX_STR_SIZE){
+				str[i++] = ':';
+				if(i < MAX_STR_SIZE){
+					str[i++] = ' ';
+					if(i < MAX_STR_SIZE){
+						str[i++] = '\n';
+					}
+					else{
+						str[MAX_STR_SIZE - 1] = 0;
+						return str;
+					}
+				}
+				else{
+					str[MAX_STR_SIZE - 1] = 0;
+					return str;
+				}
+			}
+			else{
+				str[MAX_STR_SIZE - 1] = 0;
+				return str;
+			}
+				
+		}
+		if( i < MAX_STR_SIZE)
+			str[i] = 0;
+		else{
+			str[MAX_STR_SIZE - 1] = 0;
+		}
+	}
+	freePipeList(pipeList);
+	return str;
 }

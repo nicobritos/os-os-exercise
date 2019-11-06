@@ -125,8 +125,8 @@ void sys_post_semaphore(void * sem){
     _systemCall(__SYSTEM_CALL_POST, sem);
 }
 
-void sys_printSems(){
-    _systemCall(__SYSTEM_CALL_PRINT_SEMS);
+char * sys_printSems(){
+    return (char *)_systemCall(__SYSTEM_CALL_PRINT_SEMS);
 }
 
 int sys_wait_pid(pid_t pid) {
@@ -155,4 +155,8 @@ fd_t sys_openPipe(const char *name, uint64_t mode){
 
 void sys_closePipe(fd_t fd){
     _systemCall(__SYSTEM_CALL_OPEN_PIPE);
+}
+
+char * sys_printPipes(){
+    return (char *)_systemCall(__SYSTEM_CALL_PRINT_PIPES);
 }
