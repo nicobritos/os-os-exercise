@@ -79,24 +79,32 @@ t_sem * getNextSemIterator(){
 
 char * semListString(){
     char * buffer = pmalloc(MAX_STR_SIZE, 0);
-    uint64_t i = 0;
-    prepareSemListIterator();
-    while (hasNextSemListIterator())
-    {
-        t_sem * sem = getNextSemIterator();
-        strncpy(buffer + i, sem->name, MAX_STR_SIZE - i);
-        i += strlen(sem->name);
-        if(i < MAX_STR_SIZE){
-            buffer[i++] = ':';
+    if(isEmptyList){
+        strncpy(buffer, "No hay semaforos", MAX_STR_SIZE);
+    } else {
+        uint64_t i = 0;
+        prepareSemListIterator();
+        while (hasNextSemListIterator())
+        {
+            t_sem * sem = getNextSemIterator();
+            strncpy(buffer + i, sem->name, MAX_STR_SIZE - i);
+            i += strlen(sem->name);
             if(i < MAX_STR_SIZE){
-                buffer[i++] = ' ';
+                buffer[i++] = ':';
                 if(i < MAX_STR_SIZE){
-                    char aux[10];
-                    itoa(sem->value, aux, 10);
-                    strncpy(buffer + i, aux, MAX_STR_SIZE - i);
-                    i += strlen(aux);
+                    buffer[i++] = ' ';
                     if(i < MAX_STR_SIZE){
-                        buffer[i++] = '\n';
+                        char aux[10];
+                        itoa(sem->value, aux, 10);
+                        strncpy(buffer + i, aux, MAX_STR_SIZE - i);
+                        i += strlen(aux);
+                        if(i < MAX_STR_SIZE){
+                            buffer[i++] = '\n';
+                        }
+                        else{
+                            buffer[MAX_STR_SIZE - 1] = 0;
+                            return buffer;
+                        }
                     }
                     else{
                         buffer[MAX_STR_SIZE - 1] = 0;
@@ -112,17 +120,13 @@ char * semListString(){
                 buffer[MAX_STR_SIZE - 1] = 0;
                 return buffer;
             }
+            
         }
+        if( i < MAX_STR_SIZE)
+            buffer[i] = 0;
         else{
             buffer[MAX_STR_SIZE - 1] = 0;
-            return buffer;
         }
-        
-    }
-    if( i < MAX_STR_SIZE)
-        buffer[i] = 0;
-    else{
-        buffer[MAX_STR_SIZE - 1] = 0;
     }
     return buffer;
 }

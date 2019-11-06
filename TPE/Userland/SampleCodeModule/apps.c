@@ -24,7 +24,6 @@ int help(int argc, char **argv) {
     printf("phylo - Simulates the philosopher's problem\n");
     printf("sem - Prints the current open semaphores and basic information\n");
     printf("clear - Clears the screen \n");
-    printf("exit - Exits the terminal\n");
     return 1;
 }
 
