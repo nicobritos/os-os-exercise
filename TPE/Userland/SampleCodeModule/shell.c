@@ -22,7 +22,13 @@ void parseCommands(char *buffer, fd_t stdin, fd_t stdout, uint64_t * currentFdAv
 
 void shell(){
     char *buffer = malloc(BUFFER_LENGTH);
+    if(buffer == NULL)
+        return;
     uint64_t * i = malloc(sizeof(*i));
+    if(i == NULL){
+        free(buffer);
+        return;
+    }
     while (1) {
         *i = 2;
         printf("User $> ");
@@ -74,9 +80,8 @@ void parseWithPipe(char *p1, char *p2, fd_t stdin, uint64_t * currentFdAvailable
 }
 
 int parse(char* input, t_mode mode, fd_t stdin, fd_t stdout) {
-    sys_redirect_fd(0, stdin);
-    sys_redirect_fd(1, stdout);
-    char * argv[MAX_ARGS] = {0};
+    // sys_redirect_fd(STDIN, stdin);
+    // sys_redirect_fd(STDOUT, stdout);
     pid_t pid = 0;
 
     if (strcmp(input, "help") == 0) {
@@ -94,26 +99,59 @@ int parse(char* input, t_mode mode, fd_t stdin, fd_t stdout) {
     } else if (strncmp(input, "nice ", 5) == 0) {
         char * argv[MAX_ARGS] = {0};
         argv[0] = input+5;
-        pid = newProcessArgs("nice", nice, 2, argv, mode);
+        pid = newProcessArgs("nice", nice, 2, argv, mode = S_M_FOREGROUND);
     } else if (strncmp(input, "block ", 6) == 0) {
         char * argv[MAX_ARGS] = {0};
         argv[0] = input+6;
-        pid = newProcessArgs("block", block, 1, argv, mode);
+        pid = newProcessArgs("block", block, 1, argv, mode = S_M_FOREGROUND);
     } else if (strncmp(input, "cat ", 4) == 0) {
-        argv[0] = input + 4;
-        pid = newProcessArgs("cat", cat, 1, argv, mode);
+        char ** argvToSend = malloc(sizeof(*argvToSend));
+        if(argvToSend == NULL){
+            printf("Not enough memory");
+            return 1;
+        }
+        argvToSend[0] = malloc(sizeof(input));
+        if(argvToSend[0] == NULL){
+            free(argvToSend);
+            printf("Not enough memory");
+            return 1;
+        }
+        strcpy(argvToSend[0], input + 4);
+        pid = newProcessArgs("cat", cat, 1, argvToSend, mode);
     } else if(strcmp(input, "wc") == 0){
         pid = newProcess("wc", wc, mode);
-    } else if(strncmp(input, "filter ", 7) == 0){
-        argv[0] = input + 7;
-        pid = newProcessArgs("filter", filter, 1, argv, mode);
+    } else if(strncmp(input, "filter", 6) == 0){
+        if(input[6] != ' ')
+            return 0;
+        char ** argvToSend = malloc(sizeof(*argvToSend));
+        if(argvToSend == NULL){
+            printf("Not enough memory");
+            return 1;
+        }
+        argvToSend[0] = malloc(sizeof(input));
+        if(argvToSend[0] == NULL){
+            free(argvToSend);
+            printf("Not enough memory");
+            return 1;
+        }
+        strcpy(argvToSend[0], input + 7);
+        pid = newProcessArgs("filter", filter, 1, argvToSend, mode);
     } else if (strcmp(input, "sem") == 0) {
         pid = newProcess("sem", sem, mode);
-    // } else if (strcmp(input, "pipe") == 0) {
-    //     pid = newProcess("pipe", pipe, mode);
-    } else if (strcmp(input, "phylo") == 0) {
-        argv[0] = (char *)3;
-        pid = newProcessArgs("phylo", phyloProblem, 1, argv, mode = S_M_FOREGROUND);
+    } else if (strcmp(input, "pipe") == 0) {
+        pid = newProcess("pipe", pipe, mode);
+    } else if (strncmp(input, "phylo", 5) == 0) {
+        char ** argvToSend = malloc(sizeof(*argvToSend));
+        if(argvToSend == NULL){
+            printf("Not enough memory");
+            return 1;
+        }
+        if(input[5] == ' '){
+            argvToSend[0] = (char *) atoi(input + 5);
+        } else {
+            argvToSend[0] = (char *) 3;
+        }
+        pid = newProcessArgs("phylo", phyloProblem, 1, argvToSend, mode);
     } else if(strcmp(input, "") == 0){
         return 0;
     } else if(strcmp(input, "clear") == 0) {

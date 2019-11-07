@@ -57,9 +57,9 @@ t_process createProcess(char * name, int(* wrapper)(int argc, char** argv, int(*
     }
     newProcess->pid = pid;
     newProcess->pPid = pPid;
-    newProcess->name = pmalloc(strlen(name) + 1, SYSTEM_PID);
+    newProcess->name = pmalloc(strlen(name) + 1, pid);
     strcpy(newProcess->name, name);
-    newProcess->processMemoryLowerAddress = pmalloc(PROC_SIZE, SYSTEM_PID);
+    newProcess->processMemoryLowerAddress = pmalloc(PROC_SIZE, pid);
     if (newProcess->processMemoryLowerAddress == NULL) {
         pfree(newProcess->name, pid);
         pfree(newProcess, pid);
@@ -148,7 +148,7 @@ void updateProcessStack(t_stack dst, t_stack src) {
 void freeProcess(t_process process) {
     pfree(process->processMemoryLowerAddress, process->pid);
     pfree(process->name, process->pid);
-    pfree(process, process->pid);
+    pfree(process, SYSTEM_PID);
 }
 
 void updateProcessStackRegister(t_stack stackFrame, t_process_register processRegister, uint64_t value) {

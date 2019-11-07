@@ -235,14 +235,19 @@ void freePipeList(t_pipe_listADT pipeList) {
 char * pipeListString(){
 	char * str = pmalloc(MAX_STR_SIZE, getProcessPid(getCurrentProcess()));
 	t_pipe_listADT pipeList =  createPipeList();
-	uint64_t i = 0;
 	if(!hasNextPipe(pipeList)){
 		strncpy(str, "No hay pipes", MAX_STR_SIZE);
 	}
 	else{
+		uint64_t i = 0;
 		while (hasNextPipe(pipeList))
 		{
 			t_pipeADT pipe = getNextPipe(pipeList);
+			if(pipe == NULL){
+				str[i] = 0;
+				freePipeList(pipeList);
+				return str;
+			}
 			strncpy(str + i, pipe->name, MAX_STR_SIZE - i);
 			i += strlen(pipe->name);
 			if(i < MAX_STR_SIZE){
