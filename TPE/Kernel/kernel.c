@@ -59,7 +59,7 @@ int main(){
 	initializeFileManager();
 	initializeProcessHandler();
 	load_idt();
-	newProcess("sh", sampleCodeModuleAddress, SYSTEM_PID, 0, NULL, S_P_LOW, S_M_FOREGROUND);
+	newProcess("sh", sampleCodeModuleAddress, SYSTEM_PID, 0, NULL, S_P_LOW, S_M_FOREGROUND, NULL);
 
 	pushsti();
 	idleKernel();

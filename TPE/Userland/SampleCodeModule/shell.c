@@ -10,77 +10,91 @@
 #include "apps.h"
 #include "phylo.h"
 #include "process.h"
+#include "files.h"
+#include "newSyscalls.h"
 
 #define MAX_ARGS 10
 
 // int parse(char *input, t_mode mode);
-int parse(char *input);
-void parseWithPipe(char *p1, char *p2);
-// void parseCommands(char *buffer);
+int parse(char *input, t_mode mode, fd_t stdin, fd_t stdout);
+void parseWithPipe(char *p1, char *p2, fd_t stdin, uint64_t * currentFdAvailable);
+void parseCommands(char *buffer, fd_t stdin, fd_t stdout, uint64_t * currentFdAvailable);
 
 void shell(){
     char *buffer = malloc(BUFFER_LENGTH);
-
+    if(buffer == NULL)
+        return;
+    uint64_t * i = malloc(sizeof(*i));
+    if(i == NULL){
+        free(buffer);
+        return;
+    }
     while (1) {
+        *i = 2;
         printf("User $> ");
         scanf(buffer, BUFFER_LENGTH - 1, '\n');
         printf("\n");
-        // parseCommands(buffer);
-        // parse(buffer, S_M_FOREGROUND);
-        parse(buffer);
+        parseCommands(buffer, STDIN, STDOUT, i);
     }
+    free(i);
     free(buffer);
     printf("\nGoodbye");
     return;
 }
 
-// void parseCommands(char *buffer) {
-//     char *start = buffer = trim(buffer);
-//     char *firstWord = NULL, *secondWord = NULL;
+void parseCommands(char *buffer, fd_t stdin, fd_t stdout, uint64_t * currentFdAvailable) {
+    char *start = buffer = trim(buffer);
+    char *firstWord = NULL, *secondWord = NULL;
 
-//     while (*buffer) {
-//         if (*buffer == '|') {
-//             if (firstWord == NULL) {
-//                 firstWord = start;
-//                 start = buffer + 1;
-//             } else {
-//                 secondWord = start;
-//                 parseWithPipe(firstWord, secondWord);
-//                 return;
-//             }
-//         }
-//         buffer++;
-//     }
+    while (*buffer) {
+        if(*buffer == '|'){
+            firstWord = start;
+            firstWord[(uint64_t)buffer - (uint64_t)start] = 0;
+            firstWord = trim(firstWord);
+            secondWord = trim(buffer + 1);
+            parseWithPipe(firstWord, secondWord, stdin, currentFdAvailable);
+            return;
+        }
+        buffer++;
+    }
 
-//     t_mode mode = *(buffer - 1) == '&' ? S_M_BACKGROUND : S_M_FOREGROUND;
-//     if (mode == S_M_BACKGROUND) {
-//         *(buffer - 1) = '\0';
-//     }
-//     parse(start, mode);
-// }
-
-void parseWithPipe(char *p1, char *p2) {
-
+    t_mode mode = *(buffer - 1) == '&' ? S_M_BACKGROUND : S_M_FOREGROUND;
+    if (mode == S_M_BACKGROUND) {
+        *(buffer - 1) = '\0';
+    }
+    parse(start, mode, stdin, stdout);
 }
 
-// int parse(char* input, t_mode mode) {
-int parse(char* input) {
-    char * argv[MAX_ARGS] = {0};
+void parseWithPipe(char *p1, char *p2, fd_t stdin, uint64_t * currentFdAvailable) {
+    char * aux = p1;
+    while (*(aux)){
+        aux++;
+    }
+    t_mode mode = *(aux - 1) == '&' ? S_M_BACKGROUND : S_M_FOREGROUND;
+    if (mode == S_M_BACKGROUND) {
+        *(aux - 1) = '\0';
+    }
+    (*currentFdAvailable)++;
+    parse(p1, mode, stdin, (*currentFdAvailable) - 1);
+    parseCommands(p2, (*currentFdAvailable) - 1, 1, currentFdAvailable);
+}
+
+int parse(char* input, t_mode mode, fd_t stdin, fd_t stdout) {
+    // sys_redirect_fd(STDIN, stdin);
+    // sys_redirect_fd(STDOUT, stdout);
     pid_t pid = 0;
 
-    t_mode mode = S_M_INVALID;
     if (strcmp(input, "help") == 0) {
-        pid = newProcess("help", help, mode = S_M_FOREGROUND);
+        pid = newProcess("help", help, mode);
     } else if (strcmp(input, "mem") == 0) {
-        pid = newProcess("mem", mem, mode = S_M_FOREGROUND);
+        pid = newProcess("mem", mem, mode);
     } else if (strcmp(input, "ps") == 0) {
-        pid = newProcess("ps", ps, mode = S_M_FOREGROUND);
+        pid = newProcess("ps", ps, mode);
     } else if (strcmp(input, "loop") == 0) {
         pid = newProcess("loop", loop, mode = S_M_BACKGROUND);
     } else if (strncmp(input, "kill ", 5) == 0) {
         char * argv[MAX_ARGS] = {0};
         argv[0] = input+5;
-        // pid = newProcessArgs("kill", kill,1, argv, mode = S_M_FOREGROUND);
         kill(1, argv);
     } else if (strncmp(input, "nice ", 5) == 0) {
         char * argv[MAX_ARGS] = {0};
@@ -91,20 +105,53 @@ int parse(char* input) {
         argv[0] = input+6;
         pid = newProcessArgs("block", block, 1, argv, mode = S_M_FOREGROUND);
     } else if (strncmp(input, "cat ", 4) == 0) {
-        argv[0] = input + 4;
-        pid = newProcessArgs("cat", cat, 1, argv, mode = S_M_FOREGROUND);
+        char ** argvToSend = malloc(sizeof(*argvToSend));
+        if(argvToSend == NULL){
+            printf("Not enough memory");
+            return 1;
+        }
+        argvToSend[0] = malloc(sizeof(input));
+        if(argvToSend[0] == NULL){
+            free(argvToSend);
+            printf("Not enough memory");
+            return 1;
+        }
+        strcpy(argvToSend[0], input + 4);
+        pid = newProcessArgs("cat", cat, 1, argvToSend, mode);
     } else if(strcmp(input, "wc") == 0){
-        pid = newProcess("wc", wc, mode = S_M_FOREGROUND);
-    } else if(strncmp(input, "filter ", 7) == 0){
-        argv[0] = input + 7;
-        pid = newProcessArgs("filter", filter, 1, argv, mode = S_M_FOREGROUND);
+        pid = newProcess("wc", wc, mode);
+    } else if(strncmp(input, "filter", 6) == 0){
+        if(input[6] != ' ')
+            return 0;
+        char ** argvToSend = malloc(sizeof(*argvToSend));
+        if(argvToSend == NULL){
+            printf("Not enough memory");
+            return 1;
+        }
+        argvToSend[0] = malloc(sizeof(input));
+        if(argvToSend[0] == NULL){
+            free(argvToSend);
+            printf("Not enough memory");
+            return 1;
+        }
+        strcpy(argvToSend[0], input + 7);
+        pid = newProcessArgs("filter", filter, 1, argvToSend, mode);
     } else if (strcmp(input, "sem") == 0) {
-        pid = newProcess("sem", sem, mode = S_M_FOREGROUND);
-    // } else if (strcmp(input, "pipe") == 0) {
-    //     pid = newProcess("pipe", pipe, mode);
-    } else if (strcmp(input, "phylo") == 0) {
-        argv[0] = (char *)3;
-        pid = newProcessArgs("phylo", phyloProblem, 1, argv, mode = S_M_FOREGROUND);
+        pid = newProcess("sem", sem, mode);
+    } else if (strcmp(input, "pipe") == 0) {
+        pid = newProcess("pipe", pipe, mode);
+    } else if (strncmp(input, "phylo", 5) == 0) {
+        char ** argvToSend = malloc(sizeof(*argvToSend));
+        if(argvToSend == NULL){
+            printf("Not enough memory");
+            return 1;
+        }
+        if(input[5] == ' '){
+            argvToSend[0] = (char *) atoi(input + 5);
+        } else {
+            argvToSend[0] = (char *) 3;
+        }
+        pid = newProcessArgs("phylo", phyloProblem, 1, argvToSend, mode);
     } else if(strcmp(input, "") == 0){
         return 0;
     } else if(strcmp(input, "clear") == 0) {
@@ -116,8 +163,6 @@ int parse(char* input) {
 
     if (pid == -1) {
         printf("Error creating process\n");
-    } else if (mode == S_M_FOREGROUND) {
-        waitpid(pid);
     } 
     return 0;
 }

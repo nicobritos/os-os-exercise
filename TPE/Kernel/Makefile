@@ -13,11 +13,15 @@ STATICLIBS=
 
 all: buddy # por default hace buddy
 
-buddy: $(KERNEL)
+buddy: buddyAux $(KERNEL)
+
+buddyAux:
 	sed -i '1d' $(MODO_H)
 	echo '#define MODO_BUDDY' >> $(MODO_H)
 
-freeList: $(KERNEL)
+freeList: freeListAux $(KERNEL)
+
+freeListAux:
 	sed -i '1d' $(MODO_H)
 	echo '#define MODO_FREE_LIST' >> $(MODO_H)
 

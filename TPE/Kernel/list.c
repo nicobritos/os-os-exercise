@@ -18,7 +18,6 @@ typedef struct listCDT {
 	nodeListADT lastNode;
 	uint64_t size;
 	nodeListADT currentNodeIterator;
-	uint64_t initializedIterator;
 } listCDT;
 
 // Declarations
@@ -31,7 +30,7 @@ void freeNode(nodeListADT node);
 listADT createList() {
 	listADT list = pmalloc(sizeof(listCDT), SYSTEM_PID);
 	list->firstNode = list->lastNode = list->currentNodeIterator = NULL;
-	list->size = list->initializedIterator = 0;
+	list->size = 0;
 	return list;
 }
 
@@ -75,7 +74,7 @@ void moveNodeToIndexList(listADT destination, listADT source, nodeListADT node, 
 }
 
 uint8_t isEmptyList(listADT list) {
-	return list->size == 0;
+	return (list == NULL) || (list->size == 0);
 }
 
 uint64_t getSizeList(listADT list) {
@@ -139,20 +138,16 @@ void printList(listADT list, void(printElement) (void * element)) {
 
 // Iterator
 void prepareListIterator(listADT list) {
-	list->currentNodeIterator = NULL;
-	list->initializedIterator = 0;
+	list->currentNodeIterator = list->firstNode;
 }
 
 uint8_t hasNextListIterator(listADT list) {
-	return list->initializedIterator == 0 || list->currentNodeIterator->next != NULL;
+	
+	return ((list != NULL) && (list->currentNodeIterator != NULL) && (list->currentNodeIterator->next != NULL));
 }
 
 nodeListADT getNextNodeListIterator(listADT list) {
 	if (!hasNextListIterator(list)) return NULL;
-	if (list->initializedIterator == 0) {
-		list->initializedIterator = 1;
-		return list->currentNodeIterator = list->firstNode;
-	}
 	return list->currentNodeIterator = list->currentNodeIterator->next;
 }
 

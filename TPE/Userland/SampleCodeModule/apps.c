@@ -24,15 +24,16 @@ int help(int argc, char **argv) {
     printf("phylo - Simulates the philosopher's problem\n");
     printf("sem - Prints the current open semaphores and basic information\n");
     printf("clear - Clears the screen \n");
-    printf("exit - Exits the terminal\n");
     return 1;
 }
 
 int kill(int argc, char **argv){
     pid_t pid = atoi(argv[0]);
-    if(pid == -1 || argv[0] == '\0'){
+    if(pid == -1){
         printf("Please enter a valid PID\n");
         return 0;
+    } else if(pid == 1){
+        printf("Can't kill shell\n");
     } else {
         if (killProcess(pid))
             printf("Process killed\n");
@@ -58,12 +59,10 @@ int nice(int argc, char ** input){
         else{
             if(strcmp(argv[1], "high") == 0) {
                 priority = S_P_HIGH;
-                //printf("high\n");
 
             }
             else if(strcmp(argv[1], "low") == 0){
                 priority = S_P_LOW;
-                //printf("low\n");
             }
             else{
                 printf("Please enter a valid priority (\"high\" or \"low\")\n");
@@ -121,14 +120,16 @@ int ps(int argc, char ** argv){
 
 int loop(int argc, char **argv){
     while(1){
-        printf("Hola soy PID: %lld\n", sys_getPid());
+        printf("\nHola soy PID: %lld\n", sys_getPid());
         sleep(5000);
     }   
     return 1;
 }
 
 int cat(int argc, char **argv){
-    printf("%s", argv[0]);
+    printf("%s\n", argv[0]);
+    free(argv[0]);
+    free(argv);
     return 1;
 }
 
@@ -146,8 +147,10 @@ int filter(int argc, char **argv){
     char * dest = malloc(size);
 	filterVowels(dest, s, size);
     if(dest == NULL) return 0;
-    printf("\n%s", dest);
+    printf("%s\n", dest);
     free(dest);
+    free(argv[0]);
+    free(argv);
 	return 1;
 }
 
@@ -157,6 +160,15 @@ int clear(int argc, char** argv){
 }
 
 int sem(int argc, char** argv){
-    sys_printSems();
+    char * str = sys_printSems();
+    printf("%s\n", str);
+    free(str);
+    return 1;
+}
+
+int pipe(int argc, char** argv){
+    char * str = sys_printPipes();
+    printf("%s\n", str);
+    free(str);
     return 1;
 }

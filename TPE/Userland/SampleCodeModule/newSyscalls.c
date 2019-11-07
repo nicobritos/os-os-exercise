@@ -97,14 +97,6 @@ t_state sys_get_process_state(pid_t pid) {
     return (t_state) _systemCall(__SYSTEM_CALL_GET_PROCESS_STATE, pid);
 }
 
-int sys_readPipe(void * pipe, char *buffer, uint64_t size){
-    return _systemCall(__SYSTEM_CALL_READ_PIPE, pipe, buffer, size);
-}
-
-int sys_writePipe(void * pipe, char *buffer, uint64_t size){
-    return _systemCall(__SYSTEM_CALL_WRITE_PIPE, pipe, buffer, size);
-}
-
 void * sys_createSem(char *name){
     return (void *)_systemCall(__SYSTEM_CALL_CREATE_SEM, name);
 }
@@ -125,8 +117,8 @@ void sys_post_semaphore(void * sem){
     _systemCall(__SYSTEM_CALL_POST, sem);
 }
 
-void sys_printSems(){
-    _systemCall(__SYSTEM_CALL_PRINT_SEMS);
+char * sys_printSems(){
+    return (char *)_systemCall(__SYSTEM_CALL_PRINT_SEMS);
 }
 
 int sys_wait_pid(pid_t pid) {
@@ -147,4 +139,16 @@ void sys_sleep(uint64_t ms) {
 
 uint8_t sys_redirect_fd(fd_t from, fd_t to) {
     return _systemCall(__SYSTEM_CALL_REDIRECT_FD, from, to);
+}
+
+fd_t sys_openPipe(const char *name, uint64_t mode){
+    return _systemCall(__SYSTEM_CALL_OPEN_PIPE, name, mode);
+}
+
+void sys_closePipe(fd_t fd){
+    _systemCall(__SYSTEM_CALL_OPEN_PIPE);
+}
+
+char * sys_printPipes(){
+    return (char *)_systemCall(__SYSTEM_CALL_PRINT_PIPES);
 }

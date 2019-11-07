@@ -34,6 +34,7 @@ void ** argvs[MAX_PHYLOS];
 int phyloProblem(int argc, char * argv[]){
     currentQty = 0;
     uint64_t initQty = (uint64_t)argv[0];
+    free(argv);
     if(initQty > MAX_PHYLOS || initQty < 3){
         printf("Tiene que haber entre 3 y 100 filosofos");
         return -1;

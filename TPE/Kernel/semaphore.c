@@ -4,6 +4,7 @@
 #include "include/memManager.h"
 #include "include/lib.h"
 #include "include/scheduler.h"
+#include "include/process.h"
 
 #define MAX_STR_SIZE 500
 
@@ -52,7 +53,7 @@ void waitSemaphore(t_sem * sem, uint64_t pid, t_stack currentProcessStackFrame){
     (sem->value)--;
     if(sem->value < 0){
         addElementToIndexList(sem->processes, (void *)pid, getSizeList(sem->processes));
-        lockProcess(pid, currentProcessStackFrame);
+        lockProcess(pid, currentProcessStackFrame, L_IO);
     }
 }
 
@@ -61,7 +62,7 @@ void postSemaphore(t_sem * sem){
     if(!isEmptyList(sem->processes)){
         uint64_t pid = (uint64_t) getElementList(getNodeAtIndexList(sem->processes, 0));
         removeNodeAtIndexList(sem->processes, 0);
-        unlockProcess(pid);
+        unlockProcess(pid, L_IO);
     }
 }
 
@@ -78,25 +79,33 @@ t_sem * getNextSemIterator(){
 }
 
 char * semListString(){
-    char * buffer = pmalloc(MAX_STR_SIZE, 0);
-    uint64_t i = 0;
-    prepareSemListIterator();
-    while (hasNextSemListIterator())
-    {
-        t_sem * sem = getNextSemIterator();
-        strncpy(buffer + i, sem->name, MAX_STR_SIZE - i);
-        i += strlen(sem->name);
-        if(i < MAX_STR_SIZE){
-            buffer[i++] = ':';
+    char * buffer = pmalloc(MAX_STR_SIZE, getProcessPid(getCurrentProcess()));
+    if(isEmptyList(semList)){
+        strncpy(buffer, "No hay semaforos", MAX_STR_SIZE);
+    } else {
+        uint64_t i = 0;
+        prepareSemListIterator();
+        while (hasNextSemListIterator())
+        {
+            t_sem * sem = getNextSemIterator();
+            strncpy(buffer + i, sem->name, MAX_STR_SIZE - i);
+            i += strlen(sem->name);
             if(i < MAX_STR_SIZE){
-                buffer[i++] = ' ';
+                buffer[i++] = ':';
                 if(i < MAX_STR_SIZE){
-                    char aux[10];
-                    itoa(sem->value, aux, 10);
-                    strncpy(buffer + i, aux, MAX_STR_SIZE - i);
-                    i += strlen(aux);
+                    buffer[i++] = ' ';
                     if(i < MAX_STR_SIZE){
-                        buffer[i++] = '\n';
+                        char aux[10];
+                        itoa(sem->value, aux, 10);
+                        strncpy(buffer + i, aux, MAX_STR_SIZE - i);
+                        i += strlen(aux);
+                        if(i < MAX_STR_SIZE){
+                            buffer[i++] = '\n';
+                        }
+                        else{
+                            buffer[MAX_STR_SIZE - 1] = 0;
+                            return buffer;
+                        }
                     }
                     else{
                         buffer[MAX_STR_SIZE - 1] = 0;
@@ -112,17 +121,13 @@ char * semListString(){
                 buffer[MAX_STR_SIZE - 1] = 0;
                 return buffer;
             }
+            
         }
+        if( i < MAX_STR_SIZE)
+            buffer[i] = 0;
         else{
             buffer[MAX_STR_SIZE - 1] = 0;
-            return buffer;
         }
-        
-    }
-    if( i < MAX_STR_SIZE)
-        buffer[i] = 0;
-    else{
-        buffer[MAX_STR_SIZE - 1] = 0;
     }
     return buffer;
 }

@@ -10,7 +10,7 @@ int strncmp(char* str1, char* str2, int n);
 
 int itoa(int num, char* string, int base);
 
-int atoi(char * s);
+int64_t atoi(char * s);
 
 int atox(char * s);
 
@@ -27,5 +27,7 @@ char *trim(char *input);
 uint64_t replaceChars(char *input, char target, char newChar);
 
 uint64_t tokenArgs(char ** argv, char * output, char * input, uint64_t max);
+
+void strcpy(char * dest, char * src);
 
 #endif /* STDLIB_H_ */

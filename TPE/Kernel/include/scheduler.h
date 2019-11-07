@@ -12,7 +12,7 @@
 
 	void runScheduler(t_stack currentProcessStack);
 	
-	uint8_t addProcess(t_process process, t_priority priority, t_mode mode);
+	uint8_t addProcess(t_process process, t_priority priority, t_mode mode, t_stack currentProcessStack);
 	
 	int8_t killProcess(pid_t pid, t_stack stackFrame);
 	
@@ -32,13 +32,13 @@
 
 	void setProcessPriority(pid_t pid, t_priority priority);
 
-	void setCurrentProcessMode(t_mode mode);
+	void setCurrentProcessMode(t_mode mode, t_stack currentProcessStack);
 	
-	void setProcessMode(pid_t pid, t_mode mode);
+	void setProcessMode(pid_t pid, t_mode mode, t_stack currentProcessStack);
 	
-	void lockProcess(pid_t pid, t_stack stackFrame);
+	void lockProcess(pid_t pid, t_stack stackFrame, t_lock_reason lockReason);
 	
-	void unlockProcess(pid_t pid);
+	void unlockProcess(pid_t pid, t_lock_reason lockReason);
 
 	t_state toggleProcessLock(pid_t pid, t_stack stackFrame);
 
@@ -52,10 +52,4 @@
 	
 	void sleepScheduler(uint64_t ms, t_stack currentProcessStack);
 
-	// Process iterator
-	// listADT createProcessList();
-	// uint64_t getProcessListLength(listADT processList);
-	// uint8_t hasNextProcess(listADT processList);
-	// t_process getNextProcess(listADT processList);
-	// void freeProcessesList(listADT processList);
 #endif
