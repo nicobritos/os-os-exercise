@@ -156,6 +156,15 @@ int clear(int argc, char** argv){
 }
 
 int sem(int argc, char** argv){
-    sys_printSems();
+    char * str = sys_printSems();
+    printf("%s\n", str);
+    free(str);
+    return 1;
+}
+
+int pipe(int argc, char** argv){
+    char * str = sys_printPipes();
+    printf("%s\n", str);
+    free(str);
     return 1;
 }

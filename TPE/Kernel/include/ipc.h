@@ -31,5 +31,7 @@
 	uint8_t hasNextPipe(t_pipe_listADT pipeList);
 	t_pipeADT getNextPipe(t_pipe_listADT pipeList);
 	void freePipeList(t_pipe_listADT pipeList);
+
+	char * pipeListString();
 	
 #endif

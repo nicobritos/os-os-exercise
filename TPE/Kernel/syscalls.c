@@ -66,7 +66,9 @@ void sys_wait_semaphore(t_sem * sem, uint64_t pid, uint64_t rdx, uint64_t rcx, u
 
 void sys_post_semaphore(t_sem * sem);
 
-void sys_printSems();
+char * sys_printSems();
+
+char * sys_printPipes();
 
 void sys_wait_pid(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame);
 
@@ -115,7 +117,8 @@ systemCall sysCalls[] = {
 	(systemCall) sys_sleep,
 	(systemCall) sys_redirect_fd,
 	(systemCall) sys_openPipe,
-	(systemCall) sys_closePipe
+	(systemCall) sys_closePipe,
+	(systemCall) sys_printPipes
 };
 
 void syscallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, uint64_t r9, t_stack stackFrame){
@@ -256,11 +259,12 @@ void sys_post_semaphore(t_sem * sem){
 	postSemaphore(sem);
 }
 
-void sys_printSems(){
-	char * str = semListString();
-	printString(str, 0, 255, 0);
-	newLine();
-	pfree(str, SYSTEM_PID);
+char * sys_printSems(){ // FIJARSE EL MALLOC SE HAGA CON CURRENT PID
+	return semListString();
+}
+
+char * sys_printPipes(){
+	return pipeListString();
 }
 
 void sys_wait_pid(pid_t pid, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame) {

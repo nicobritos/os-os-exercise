@@ -26,19 +26,22 @@ typedef enum {
 	__SYSTEM_CALL_GET_PROCESS_PRIORITY = 17,
 	__SYSTEM_CALL_SET_PROCESS_PRIORITY = 18,
 	__SYSTEM_CALL_GET_PROCESS_STATE = 19,
-	__SYSTEM_CALL_CREATE_SEM = 20,
-	__SYSTEM_CALL_OPEN_SEM = 21,
-	__SYSTEM_CALL_CLOSE_SEM = 22,
-	__SYSTEM_CALL_WAIT = 23,
-	__SYSTEM_CALL_POST = 24,
-	__SYSTEM_CALL_PRINT_SEMS = 25,
-	__SYSTEM_CALL_WAIT_PID = 26,
-	__SYSTEM_CALL_PRINT_PROCESSES = 27,
-	__SYSTEM_CALL_TOGGLE_PROCESS_LOCK = 28,
-	__SYSTEM_CALL_SLEEP = 29,
-	__SYSTEM_CALL_REDIRECT_FD = 30,
-	__SYSTEM_CALL_OPEN_PIPE = 31,
-	__SYSTEM_CALL_CLOSE_PIPE = 32
+	__SYSTEM_CALL_READ_PIPE = 20,
+	__SYSTEM_CALL_WRITE_PIPE = 21,
+	__SYSTEM_CALL_CREATE_SEM = 22,
+	__SYSTEM_CALL_OPEN_SEM = 23,
+	__SYSTEM_CALL_CLOSE_SEM = 24,
+	__SYSTEM_CALL_WAIT = 25,
+	__SYSTEM_CALL_POST = 26,
+	__SYSTEM_CALL_PRINT_SEMS = 27,
+	__SYSTEM_CALL_WAIT_PID = 28,
+	__SYSTEM_CALL_PRINT_PROCESSES = 29,
+	__SYSTEM_CALL_TOGGLE_PROCESS_LOCK = 30,
+	__SYSTEM_CALL_SLEEP = 31,
+	__SYSTEM_CALL_REDIRECT_FD = 32,
+	__SYSTEM_CALL_OPEN_PIPE = 33,
+	__SYSTEM_CALL_CLOSE_PIPE = 34,
+	__SYSTEM_CALL_PRINT_PIPES = 35
 } t_system_call;
 
 uint64_t sys_read(int fileDescriptor, void * buff, int length);
@@ -97,7 +100,7 @@ void sys_wait_semaphore(void * sem);
 
 void sys_post_semaphore(void * sem);
 
-void sys_printSems();
+char * sys_printSems();
 
 int sys_wait_pid(pid_t pid);
 
@@ -110,5 +113,7 @@ uint8_t sys_redirect_fd(fd_t from, fd_t to);
 fd_t sys_openPipe(const char *name, uint64_t mode);
 
 void sys_closePipe(fd_t fd);
+
+char * sys_printPipes();
 
 #endif
