@@ -91,6 +91,7 @@ void add_to_buffer(int c) {
 	buffer[writeIndex] = c;
 	writeIndex = (writeIndex + 1)%SIZE;
 	size++;
+
   keyWasPressed();
 }
 

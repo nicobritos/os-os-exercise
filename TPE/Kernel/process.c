@@ -9,8 +9,9 @@ typedef struct t_processCDT {
     pid_t pid;
     pid_t pPid;
     char * name;
-    t_state state; 
+    t_state state;
     t_stack stackPointer;
+    t_lock_reason lockReason;
     fd_t fds[MAX_FILES_PER_PROCESS];
     int(* processMemoryLowerAddress)(int argc, char** argv);
 } t_processCDT;
@@ -47,9 +48,10 @@ typedef struct t_stackCDT {
 
 void initializeStack(t_stack stackFrame, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), int argc, char * argv[], int(* startingPoint)(int argc, char** argv));
 char *getProcessStateString(t_state state);
+char *getProcessLockReasonString(t_lock_reason lockReason);
 
 t_process createProcess(char * name, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), pid_t pid, pid_t pPid, int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
-    t_process newProcess = pmalloc(sizeof(t_processCDT), pid);
+    t_process newProcess = pmalloc(sizeof(t_processCDT), SYSTEM_PID);
     if(newProcess == NULL) {
         return NULL;
     }
@@ -69,16 +71,20 @@ t_process createProcess(char * name, int(* wrapper)(int argc, char** argv, int(*
     initializeStack((t_stack)(newProcess->stackPointer), wrapper, argc, argv, startingPoint);
     newProcess->fds[STDIN] = STDIN;
     newProcess->fds[STDOUT] = STDOUT;
+    newProcess->lockReason = L_INVALID;
 
     return newProcess;
 }
 
 fd_t getProcessFd(t_process process, fd_t from) {
-    return process->fds[from];
+    if (from < MAX_FILES_PER_PROCESS)
+        return process->fds[from];
+    return 0;
 }
 
 void redirectProcessFd(t_process process, fd_t from, fd_t to) {
-    process->fds[from] = process->fds[to];
+    if (from < MAX_FILES_PER_PROCESS)
+        process->fds[from] = to;
 }
 
 void initializeStack(t_stack stackFrame, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
@@ -110,12 +116,6 @@ void initializeStack(t_stack stackFrame, int(* wrapper)(int argc, char** argv, i
     stackFrame->ss = 0;
 }
 
-void freeProcess(t_process process) {
-    pfree(process->processMemoryLowerAddress, process->pid);
-    pfree(process->name, process->pid);
-    pfree(process, process->pid);
-}
-
 void updateProcessStack(t_stack dst, t_stack src) {
     dst->r15 = src->r15;
     dst->r14 = src->r14;
@@ -143,6 +143,12 @@ void updateProcessStack(t_stack dst, t_stack src) {
     dst->fs = src->fs;
     dst->cs = src->cs;
     dst->ss = src->ss;
+}
+
+void freeProcess(t_process process) {
+    pfree(process->processMemoryLowerAddress, process->pid);
+    pfree(process->name, process->pid);
+    pfree(process, SYSTEM_PID);
 }
 
 void updateProcessStackRegister(t_stack stackFrame, t_process_register processRegister, uint64_t value) {
@@ -221,8 +227,10 @@ void updateProcessStackRegister(t_stack stackFrame, t_process_register processRe
     }
 }
 
-void setProcessState(t_process process, t_state state) {
+void setProcessState(t_process process, t_state state, t_lock_reason lockReason) {
     process->state = state;
+    if (state == P_LOCKED)
+        process->lockReason = lockReason;
 }
 
 t_state getProcessState(t_process process) {
@@ -230,9 +238,70 @@ t_state getProcessState(t_process process) {
     return P_INVALID;
 }
 
+t_lock_reason getProcessLockReason(t_process process) {
+    if (process != NULL) return process->lockReason;
+    return L_INVALID;
+}
+
 t_stack getProcessStackFrame(t_process process) {
     if (process == NULL) return NULL;
     return process->stackPointer;
+}
+
+uint64_t getProcessStackFrameRegister(t_process process, t_process_register processRegister) {
+    if (process == NULL) return 0;
+    t_stack stackFrame = process->stackPointer;
+    switch (processRegister) {
+        case REGISTER_R15:
+            return stackFrame->r15;
+        case REGISTER_R14:
+            return stackFrame->r14;
+        case REGISTER_R13:
+            return stackFrame->r13;
+        case REGISTER_R12:
+            return stackFrame->r12;
+        case REGISTER_R11:
+            return stackFrame->r11;
+        case REGISTER_R10:
+            return stackFrame->r10;
+        case REGISTER_R9:
+            return stackFrame->r9;
+        case REGISTER_R8:
+            return stackFrame->r8;
+
+        case REGISTER_RSI:
+            return stackFrame->rsi;
+        case REGISTER_RDI:
+            return stackFrame->rdi;
+        case REGISTER_RBP:
+            return stackFrame->rbp;
+
+        case REGISTER_RDX:
+            return stackFrame->rdx;
+        case REGISTER_RCX:
+            return stackFrame->rcx;
+        case REGISTER_RBX:
+            return stackFrame->rbx;
+        case REGISTER_RAX:
+            return stackFrame->rax;
+
+        case REGISTER_GS:
+            return stackFrame->gs;
+        case REGISTER_FS:
+            return stackFrame->fs;
+
+        case REGISTER_RIP:
+            return stackFrame->rip;
+        case REGISTER_CS:
+            return stackFrame->cs;
+        case REGISTER_RFLAGS:
+            return stackFrame->rflags;
+        case REGISTER_RSP:
+            return stackFrame->rsp;
+        case REGISTER_SS:
+            return stackFrame->ss;
+        default: return 0;
+    }
 }
 
 pid_t getProcessPid(t_process process) {
@@ -245,36 +314,14 @@ pid_t getProcessPPid(t_process process) {
     return process->pPid;
 }
 
-void execve(t_process process, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
+int8_t execve(t_process process, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
     initializeStack(process->stackPointer, wrapper, argc, argv, startingPoint);
+    return 1;
 }
 
-t_process duplicateProcess(t_process source, pid_t pid) {
-    t_process process = createProcess(source->name, (int (*)(int,  char **, int (*)(int,  char **))) source->stackPointer->rip, pid, source->pid, 0, NULL, NULL);
-    if(process == NULL) return NULL;
-    process->state = source->state;
-    updateProcessStack(process->stackPointer, source->stackPointer);
-    return process;
-}
-
-t_process duplicateProcessReadOnly(t_process source) {
-    t_process process = pmalloc(sizeof(t_processCDT), SYSTEM_PID);
-    process->pid = source->pid;
-    process->pPid = source->pPid;
-    process->name = source->name;
-    process->state = source->state;
-    process->processMemoryLowerAddress = source->processMemoryLowerAddress;
-
-    process->stackPointer = pmalloc(sizeof(t_stackCDT), SYSTEM_PID);
-    memcpy(process->stackPointer, source->stackPointer, sizeof(t_stackCDT));
-
-    return process;
-}
-
-void freeProcessReadOnly(t_process process) {
-    pfree(process->stackPointer, SYSTEM_PID);
-    pfree(process->name, SYSTEM_PID);
-    pfree(process, SYSTEM_PID);
+void hello() {
+    printString("HGO", 255, 0 ,0);
+    while(1);
 }
 
 void printStackFrame(t_stack stackFrame) {
@@ -296,10 +343,16 @@ void printProcess(t_process process) {
     printDec(process->pPid, 0, 255, 0);
     printString(" | ", 0, 255, 0);
     printString(getProcessStateString(process->state), 0, 255, 0);
+    printString(" | ", 0, 255, 0);
+    if (process->state != P_LOCKED) {
+        printString(getProcessLockReasonString(L_INVALID), 0, 255, 0);
+    } else {
+        printString(getProcessLockReasonString(process->lockReason), 0, 255, 0);
+    }
 }
 
 void printProcessHeader() {
-    printString("NAME | PID | PPID | STATE", 0, 255, 0);
+    printString("NAME | PID | PPID | STATE | LOCK REASON", 0, 255, 0);
 }
 
 char *getProcessStateString(t_state state) {
@@ -309,5 +362,15 @@ char *getProcessStateString(t_state state) {
         case P_DEAD: return "DEAD";
         case P_LOCKED: return "LOCKED";
         default: return "INVALID";
+    }
+}
+
+char *getProcessLockReasonString(t_lock_reason lockReason) {
+    switch (lockReason) {
+        case L_IO: return "I/O";
+        case L_FOREGROUND: return "FOREGROUND STACK";
+        case L_TIME: return "TIME";
+        case L_ARBITRARY: return "ARBITRARY";
+        default: return "---";
     }
 }

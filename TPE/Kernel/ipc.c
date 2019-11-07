@@ -101,7 +101,7 @@ void _closePipe(t_pipeADT pipe, t_process process) {
 
 uint64_t readPipe(t_pipeADT pipe, char *dst, uint64_t length, t_stack currentProcessStackFrame){
 	if(pipe->readingPointer == pipe->writingPointer){ // no hay nada mas que leer
-		lockProcess(getProcessPid(pipe->readingProcess), currentProcessStackFrame);
+		lockProcess(getProcessPid(pipe->readingProcess), currentProcessStackFrame, L_IO);
 	}
 	uint64_t i;
 	for (i = 0; i < length; i++)
@@ -115,14 +115,14 @@ uint64_t readPipe(t_pipeADT pipe, char *dst, uint64_t length, t_stack currentPro
 	}
 	dst[i] = 0;
 	if( (getProcessState(pipe->writingProcess) == P_LOCKED) && (length != 0)){ // genere espacio
-		unlockProcess(getProcessPid(pipe->writingProcess));
+		unlockProcess(getProcessPid(pipe->writingProcess), L_IO);
 	}
 	return i;
 }
 
 uint64_t writePipe(t_pipeADT pipe, char *src, uint64_t length, t_stack currentProcessStackFrame){
 	if((pipe->readingPointer + 1 == pipe->writingPointer) || ((pipe->writingPointer == pipe->buffer + _PIPE_BUFFER - 1) && (pipe->readingPointer == pipe->buffer))){ // no hay espacio para escribir
-		lockProcess(getProcessPid(pipe->writingProcess), currentProcessStackFrame);
+		lockProcess(getProcessPid(pipe->writingProcess), currentProcessStackFrame, L_IO);
 	}
 	uint64_t i;
 	for (i = 0; i < length; i++)
@@ -135,7 +135,7 @@ uint64_t writePipe(t_pipeADT pipe, char *src, uint64_t length, t_stack currentPr
 		}
 	}
 	if((getProcessState(pipe->readingProcess) == P_LOCKED) && (length != 0)){ // hay algo para leer
-		unlockProcess(getProcessPid(pipe->readingProcess));
+		unlockProcess(getProcessPid(pipe->readingProcess), L_IO);
 	}
 	return i;
 }
@@ -235,14 +235,19 @@ void freePipeList(t_pipe_listADT pipeList) {
 char * pipeListString(){
 	char * str = pmalloc(MAX_STR_SIZE, getProcessPid(getCurrentProcess()));
 	t_pipe_listADT pipeList =  createPipeList();
-	uint64_t i = 0;
 	if(!hasNextPipe(pipeList)){
 		strncpy(str, "No hay pipes", MAX_STR_SIZE);
 	}
 	else{
+		uint64_t i = 0;
 		while (hasNextPipe(pipeList))
 		{
 			t_pipeADT pipe = getNextPipe(pipeList);
+			if(pipe == NULL){
+				str[i] = 0;
+				freePipeList(pipeList);
+				return str;
+			}
 			strncpy(str + i, pipe->name, MAX_STR_SIZE - i);
 			i += strlen(pipe->name);
 			if(i < MAX_STR_SIZE){

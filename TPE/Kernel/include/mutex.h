@@ -10,8 +10,8 @@ t_mutexADT createMutex();
 void closeMutex(t_mutexADT mutex);
 
 void lockMutex(t_mutexADT mutex);
-void waitMutex(t_mutexADT mutex, uint64_t pid, t_stack currentProcessStackFrame);
-void postMutex(t_mutexADT mutex);
+void waitMutex(t_mutexADT mutex, t_process process, t_stack currentProcessStackFrame);
+void postMutex(t_mutexADT mutex, uint64_t returnValue);
 uint8_t isMutexLocked(t_mutexADT mutex);
 
 #endif

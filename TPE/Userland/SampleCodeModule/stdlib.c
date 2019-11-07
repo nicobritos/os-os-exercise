@@ -3,6 +3,7 @@
 #include "defines.h"
 #include "newSyscalls.h"
 #include <stdint.h>
+#include "stdlib.h"
 
 
 /* 
