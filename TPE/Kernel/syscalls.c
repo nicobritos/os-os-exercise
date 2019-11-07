@@ -82,10 +82,6 @@ fd_t sys_openPipe(const char *name, uint64_t mode);
 
 void sys_closePipe(fd_t fd);
 
-pid_t sys_fork(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame);
-
-int8_t sys_execve(int argc, char * argv[], int(* startingPoint)(int argc, char** argv));
-
 systemCall sysCalls[] = { 
 	(systemCall) sys_read,
 	(systemCall) sys_write,
@@ -119,9 +115,7 @@ systemCall sysCalls[] = {
 	(systemCall) sys_sleep,
 	(systemCall) sys_redirect_fd,
 	(systemCall) sys_openPipe,
-	(systemCall) sys_closePipe,
-	(systemCall) sys_fork,
-	(systemCall) sys_execve
+	(systemCall) sys_closePipe
 };
 
 void syscallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, uint64_t r9, t_stack stackFrame){
@@ -299,15 +293,4 @@ fd_t sys_openPipe(const char *name, uint64_t mode){
 
 void sys_closePipe(fd_t fd){
 	closePipe(fd, getCurrentProcess());
-}
-
-pid_t sys_fork(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, t_stack currentProcessStackFrame) {
-	pid_t pid = getProcessPid(duplicateProcessHandler(getCurrentProcess(), currentProcessStackFrame));
-	printProcessesScheduler();
-	if (pid >= 0) return 0;
-	return -1;
-}
-
-int8_t sys_execve(int argc, char * argv[], int(* startingPoint)(int argc, char** argv)) {
-	return execveProcessHandler(getCurrentProcess(), argc, argv, startingPoint);
 }

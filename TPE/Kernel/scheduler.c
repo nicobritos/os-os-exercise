@@ -68,13 +68,7 @@ processNodeADT getProcessNodeFromNode(nodeListADT node);
 
 t_process getProcessFromNode(nodeListADT node);
 
-void *duplicateProcessNode(void *_processNode);
-
-void freeProcessNodeReadOnly(void *_processNode);
-
 int equalsPid(void *_process, void *_pid);
-
-void freeProcessNodeReadOnly(void *_processNode);
 
 t_mode getProcessNodeMode(nodeListADT node);
 
@@ -332,33 +326,6 @@ void sleepScheduler(uint64_t ms, t_stack currentProcessStack) {
 	lockProcess(getProcessPid(processNode->process), currentProcessStack, L_TIME);
 }
 
-// Iterator
-// listADT createProcessList() {
-// 	listADT newList = duplicateList(readyQueue, duplicateProcessNode);
-// 	return duplicateAndConcatList(newList, waitingQueue, duplicateProcessNode);
-// }
-
-// uint8_t hasNextProcess(listADT list) {
-// 	return hasNextListIterator(list);
-// }
-
-// uint64_t getProcessListLength(listADT list) {
-// 	return getSizeList(list);
-// }
-
-// t_process getNextProcess(listADT list) {
-// 	if (!hasNextProcess(list)) return NULL;
-// 	nodeListADT processNode = getNextNodeListIterator(list);
-// 	if (processNode != NULL) {
-// 		return getProcessFromNode(processNode);
-// 	}
-// 	return NULL;
-// }
-
-// void freeProcessesList(listADT list) {
-// 	freeList(list, freeProcessNodeReadOnly);
-// }
-
 // Private
 void runSchedulerForce(t_stack currentProcessStack, uint8_t force) {
 	if (!initialized) {
@@ -476,25 +443,6 @@ void moveNode(nodeListADT processNode, listADT fromQueue, listADT toQueue) {
 	moveNodeToIndexList(toQueue, fromQueue, processNode, getSizeList(toQueue));
 }
 
-void *duplicateProcessNode(void *_processNode) {
-	processNodeADT processNode = (processNodeADT) _processNode;
-
-	processNodeADT newProcessNode = pmalloc(sizeof(processNodeCDT), SYSTEM_PID);
-
-	newProcessNode->process = duplicateProcessReadOnly(processNode->process);
-	newProcessNode->executedOnTicks = processNode->executedOnTicks;
-	newProcessNode->priority = processNode->priority;
-	newProcessNode->mode = processNode->mode;
-
-	return (void*)newProcessNode;
-}
-
-void freeProcessNodeReadOnly(void *_processNode) {
-	processNodeADT processNode = (processNodeADT) _processNode;
-	freeProcessReadOnly(processNode->process);
-	pfree(processNode, SYSTEM_PID);
-}
-
 processNodeADT getProcessNodeFromNode(nodeListADT node) {
 	if (node == NULL) return NULL;
 	return (processNodeADT)(getElementList(node));
@@ -506,7 +454,6 @@ t_process getProcessFromNode(nodeListADT node) {
 	if(processNode != NULL)
 		return processNode->process;
 	return NULL;
-	
 }
 
 int equalsPid(void *processNode, void *_pid) {

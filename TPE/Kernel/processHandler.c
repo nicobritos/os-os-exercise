@@ -63,26 +63,6 @@ int8_t killProcessHandler(pid_t pid, t_stack currentProcessStackFrame) {
     return returnValue;
 }
 
-t_process duplicateProcessHandler(t_process source, t_stack stackFrame) {
-    char finished = 0;
-    pid_t i;
-    for (i = STARTING_PID; i < MAX_PROC && !finished; i++) {
-        if (processes[i] == NULL) {
-            finished = 1;
-        }
-    }
-    if (!finished) return NULL;
-    i--;
-
-    t_process process = duplicateProcess(source, i, stackFrame);
-    if (process == NULL) return NULL;
-
-    processes[i] = process;
-    addProcess(process, getCurrentProcessPriority(), S_M_BACKGROUND, stackFrame);
-
-    return process;
-}
-
 t_process getProcess(pid_t pid) {
     if (pid >= MAX_PROC || processes[pid] == 0) return NULL;
     return processes[pid];

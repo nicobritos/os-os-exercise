@@ -74,12 +74,6 @@ pid_t getProcessPPid(t_process process);
 
 int8_t execve(t_process process, int(* wrapper)(int argc, char** argv, int(* startingPoint)(int argc, char** argv)), int argc, char * argv[], int(* startingPoint)(int argc, char** argv));
 
-t_process duplicateProcess(t_process source, pid_t pid, t_stack stackFrame);
-
-t_process duplicateProcessReadOnly(t_process source);
-
-void freeProcessReadOnly(t_process process);
-
 void printStackFrame(t_stack stackFrame);
 
 void printProcess(t_process process);

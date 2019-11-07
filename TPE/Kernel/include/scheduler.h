@@ -52,10 +52,4 @@
 	
 	void sleepScheduler(uint64_t ms, t_stack currentProcessStack);
 
-	// Process iterator
-	// listADT createProcessList();
-	// uint64_t getProcessListLength(listADT processList);
-	// uint8_t hasNextProcess(listADT processList);
-	// t_process getNextProcess(listADT processList);
-	// void freeProcessesList(listADT processList);
 #endif
